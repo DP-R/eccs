@@ -1,0 +1,116 @@
+// ======================
+// Browser Lock
+// ======================
+
+let lock;
+
+function showLock() {
+    if (lock) return;
+
+    lock = document.createElement("div");
+
+    lock.style =
+        "position:fixed;inset:0;background:#111;color:#fff;" +
+        "z-index:2147483647;display:grid;place-items:center;" +
+        "font:30px sans-serif;";
+
+    lock.innerHTML =
+        "<div>Browser Locked<br><br>" +
+        "<input id='pin' type='password' autofocus></div>";
+
+    document.documentElement.append(lock);
+
+    pin.onkeydown = e => {
+        if (e.key == "Enter" && pin.value == "5664") {
+            lock.remove();
+            lock = null;
+            localStorage.lock = 0;
+        }
+    };
+}
+
+if (localStorage.lock != "0")
+    showLock();
+
+document.addEventListener("keydown", e => {
+
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() == "l") {
+        e.preventDefault();
+        localStorage.lock = 1;
+        showLock();
+    }
+
+});
+
+
+const ex = {
+
+uname:"14937314",
+
+pwd:"Code1ink@5",
+
+ooc:`Opened and examined the pkg. As per examination order / instructions
+Contents: as per invoice
+Verified description, marks, number and quantity as per import documents`,
+
+lv:`Opened and examined the pkg. As per examination order / instructions
+Contents:
+Declared value for the given quantity seems low, may be forwarded for assessment
+Verified description, marks, number and quantity as per import documents`,
+
+hq:`Opened and examined the pkg. As per examination order / instructions
+Contents:
+Declared quantity seems higher than what has been declared.
+Verified description, marks, number and quantity as per import documents`
+
+};
+
+
+document.addEventListener("input", e => {
+
+    let t = e.target;
+
+    if (t.tagName != "INPUT" &&
+        t.tagName != "TEXTAREA")
+        return;
+
+    let s = ex[t.value.trim()];
+
+    if (!s)
+        return;
+
+    let p = s.indexOf("|");
+
+    t.value = s.replace("|","");
+
+    t.focus();
+
+    if (p != -1)
+        t.setSelectionRange(p,p);
+
+});
+
+
+function resizeTA(){
+
+    let t=document.querySelector(
+        'textarea[name="InspRemarks"]'
+    );
+
+    if(!t) return;
+
+    t.rows=8;
+    t.cols=100;
+
+    t.style.width="900px";
+    t.style.height="480px";
+}
+
+window.addEventListener("load",resizeTA);
+
+new MutationObserver(resizeTA).observe(document.documentElement,{
+    childList:true,
+    subtree:true
+});
+
+
