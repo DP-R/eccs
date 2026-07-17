@@ -4,6 +4,28 @@
 
 let done = 0;
 
+// Initialize toggle state (default to true if not set)
+if (localStorage.autoXrayEnabled === undefined) {
+    localStorage.autoXrayEnabled = "true";
+}
+
+function showToast(message) {
+    let toast = document.getElementById('eccs-toast-alert');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'eccs-toast-alert';
+        toast.style = "position:fixed;top:20px;right:20px;background:#1e293b;color:#f8fafc;padding:10px 20px;border-radius:6px;z-index:2147483647;font-family:sans-serif;font-size:14px;font-weight:bold;box-shadow:0 4px 12px rgba(0,0,0,0.25);transition:opacity 0.3s;border:1px solid #475569;";
+        document.documentElement.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.opacity = '1';
+    
+    if (window.toastTimeout) clearTimeout(window.toastTimeout);
+    window.toastTimeout = setTimeout(() => {
+        toast.style.opacity = '0';
+    }, 2000);
+}
+
 function getScannedHawb() {
     const tds = Array.from(document.querySelectorAll('td'));
     const targetTd = tds.find(td => td.textContent.includes('Scanned HAWB :'));
@@ -24,6 +46,11 @@ function getNoOfPackages() {
 }
 
 function automateXray() {
+    // Stop immediately if the toggle is disabled
+    if (localStorage.autoXrayEnabled === "false") {
+        return;
+    }
+
     if (done) return;
 
     // --- PAGE 2: Auto-click "X-Ray Clear" button ---
@@ -58,6 +85,11 @@ function automateXray() {
         }
         
         setTimeout(() => {
+            // Re-check state right before execution in case the user toggled it off during the 7s delay
+            if (localStorage.autoXrayEnabled === "false") {
+                done = 0;
+                return;
+            }
             if (clearButton && typeof clearButton.click === 'function') {
                 clearButton.click();
             }
@@ -92,6 +124,13 @@ function automateXray() {
                     input.value = hawbNo;
                     
                     setTimeout(() => {
+                        // Re-check state right before submit in case user toggled it off
+                        if (localStorage.autoXrayEnabled === "false") {
+                            input.dataset.automated = '';
+                            done = 0;
+                            return;
+                        }
+
                         // 1. Trigger change event to fire inline onchange handler
                         input.dispatchEvent(new Event('change', { bubbles: true }));
                         
@@ -111,6 +150,23 @@ function automateXray() {
         }
     }
 }
+
+// Listen for Ctrl + Shift + A shortcut to toggle auto-clearance
+document.addEventListener("keydown", e => {
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        
+        const isEnabled = localStorage.autoXrayEnabled === "true";
+        localStorage.autoXrayEnabled = isEnabled ? "false" : "true";
+        
+        showToast(`Auto X-Ray: ${isEnabled ? 'DISABLED' : 'ENABLED'}`);
+        
+        // If re-enabled, immediately trigger verification
+        if (!isEnabled) {
+            automateXray();
+        }
+    }
+});
 
 // Run on window load
 window.addEventListener("load", automateXray);
