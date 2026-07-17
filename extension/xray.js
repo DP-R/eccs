@@ -4,6 +4,25 @@
 
 let done = 0;
 
+function getScannedHawb() {
+    const tds = Array.from(document.querySelectorAll('td'));
+    const targetTd = tds.find(td => td.textContent.includes('Scanned HAWB :'));
+    if (targetTd && targetTd.nextElementSibling) {
+        return targetTd.nextElementSibling.textContent.replace(/\s+/g, '').trim();
+    }
+    return null;
+}
+
+function getNoOfPackages() {
+    const tds = Array.from(document.querySelectorAll('td'));
+    const targetTd = tds.find(td => td.textContent.includes('No of packages :'));
+    if (targetTd && targetTd.nextElementSibling) {
+        const parsed = parseInt(targetTd.nextElementSibling.textContent.trim(), 10);
+        return isNaN(parsed) ? 1 : parsed;
+    }
+    return 1;
+}
+
 function automateXray() {
     if (done) return;
 
@@ -12,22 +31,31 @@ function automateXray() {
     if (clearButton) {
         done = 1;
         
-        // Parse the number of packages on the details page
-        let numPackages = 1;
-        const tds = Array.from(document.querySelectorAll('td'));
-        const targetTd = tds.find(td => td.textContent.includes('No of packages :'));
-        if (targetTd && targetTd.nextElementSibling) {
-            const parsed = parseInt(targetTd.nextElementSibling.textContent.trim(), 10);
-            if (!isNaN(parsed)) {
-                numPackages = parsed;
+        const scannedHawb = getScannedHawb();
+        const numPackages = getNoOfPackages();
+        
+        // Determine if this is a subsequent package of a multi-package HAWB
+        let isSubsequent = false;
+        if (scannedHawb && sessionStorage.currentHawb === scannedHawb) {
+            const progress = parseInt(sessionStorage.currentProgress, 10) || 0;
+            if (progress >= 1) {
+                isSubsequent = true;
             }
         }
         
-        // Multiple packages -> click instantaneously (100ms)
-        // Single package -> wait 7000ms (7 seconds)
-        const delay = numPackages > 1 ? 100 : 7000;
+        // Delay logic:
+        // - First package of any HAWB (single or multi-package): 7000ms (7 seconds)
+        // - Subsequent packages of a multi-package HAWB: 100ms (instantaneous)
+        const delay = (numPackages > 1 && isSubsequent) ? 100 : 7000;
         
-        console.log(`ECCS Automation: HAWB has ${numPackages} packages. Clicking clear in ${delay}ms...`);
+        console.log(`ECCS Automation: HAWB ${scannedHawb} (${numPackages} packages). isSubsequent=${isSubsequent}. Clicking clear in ${delay}ms...`);
+        
+        // Track that we are about to clear the package
+        if (scannedHawb) {
+            sessionStorage.currentHawb = scannedHawb;
+            const currentProg = parseInt(sessionStorage.currentProgress, 10) || 0;
+            sessionStorage.currentProgress = currentProg + 1;
+        }
         
         setTimeout(() => {
             if (clearButton && typeof clearButton.click === 'function') {
@@ -56,7 +84,11 @@ function automateXray() {
                     input.dataset.automated = 'true';
                     done = 1;
                     
-                    // Paste the stripped barcode/hawb number
+                    // Sync sessionStorage state with Page 1 progress
+                    sessionStorage.currentHawb = hawbNo;
+                    sessionStorage.currentProgress = current;
+                    
+                    // Paste the HAWB number
                     input.value = hawbNo;
                     
                     setTimeout(() => {
