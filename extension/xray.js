@@ -11,11 +11,29 @@ function automateXray() {
     const clearButton = document.querySelector('input[value="X-Ray Clear"]');
     if (clearButton) {
         done = 1;
+        
+        // Parse the number of packages on the details page
+        let numPackages = 1;
+        const tds = Array.from(document.querySelectorAll('td'));
+        const targetTd = tds.find(td => td.textContent.includes('No of packages :'));
+        if (targetTd && targetTd.nextElementSibling) {
+            const parsed = parseInt(targetTd.nextElementSibling.textContent.trim(), 10);
+            if (!isNaN(parsed)) {
+                numPackages = parsed;
+            }
+        }
+        
+        // Multiple packages -> click instantaneously (100ms)
+        // Single package -> wait 7000ms (7 seconds)
+        const delay = numPackages > 1 ? 100 : 7000;
+        
+        console.log(`ECCS Automation: HAWB has ${numPackages} packages. Clicking clear in ${delay}ms...`);
+        
         setTimeout(() => {
             if (clearButton && typeof clearButton.click === 'function') {
                 clearButton.click();
             }
-        }, 100); // Click instantaneously (100ms)
+        }, delay);
         return;
     }
 
