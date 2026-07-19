@@ -1,27 +1,32 @@
 /**
  * ====================================================================
- * ECCS Automated Site Dump & Crawl Console Script
+ * ECCS Safe Automated Site Crawling Console Script
  * ====================================================================
  * Copy and paste this script directly into your browser's DevTools console 
  * while logged into the ECCS portal.
  * 
- * Features:
- * 1. Crawls all navbar menus, submenus, and page links.
- * 2. Parses JavaScript inline actions (e.g. CreateExamReport, submitCheckBoxForm).
- * 3. Discovers all forms, buttons, inputs (including hidden fields), and action endpoints.
- * 4. Downloads a single consolidated JSON bundle containing all offline HTML pages,
- *    form definitions, button actions, and site structure.
- * 5. Includes a built-in offline HTML unpacker.
+ * Safety & Form Inspection Features:
+ * 1. Strictly READ-ONLY (uses GET fetch only, NEVER calls form.submit() or click()).
+ * 2. Blacklists any mutating endpoints (e.g. submit, update, delete, save, clear).
+ * 3. Form Validation Analyzer: Statically analyzes form fields and identifies
+ *    compulsory/required fields without submitting any form.
+ * 4. Exports a single JSON package with all captured pages, forms, and validation specs.
  */
 
 (async () => {
-    console.log("%c[ECCS Crawler] Starting Site Exploration...", "color: #3b82f6; font-size: 16px; font-weight: bold;");
+    console.log("%c[ECCS Safe Crawler] Starting Read-Only Site Exploration...", "color: #3b82f6; font-size: 16px; font-weight: bold;");
 
     const CONFIG = {
-        delayMs: 1200,              // Delay between requests (ms) to avoid server rate-limiting
+        delayMs: 1200,              // Delay between GET requests (ms) to avoid server rate-limiting
         maxDepth: 3,                // Crawl depth limit
         baseUrl: location.origin    // Target origin
     };
+
+    // Explicit Blacklist for any state-modifying or session-ending URLs
+    const MUTATION_BLACKLIST = [
+        'submit', 'update', 'delete', 'remove', 'save', 'insert',
+        'create', 'clear', 'logout', 'logOut', 'cancel', 'process', 'modify'
+    ];
 
     const siteData = {
         timestamp: new Date().toISOString(),
@@ -41,10 +46,10 @@
         position: fixed; top: 15px; right: 15px; z-index: 2147483647;
         background: #0f172a; color: #f8fafc; border: 2px solid #3b82f6;
         padding: 14px; border-radius: 8px; font-family: monospace; font-size: 13px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 280px; max-width: 380px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 290px; max-width: 400px;
     `;
     hud.innerHTML = `
-        <div style="font-weight:bold; color:#60a5fa; margin-bottom:6px; font-size:14px;">ECCS Site Crawler</div>
+        <div style="font-weight:bold; color:#60a5fa; margin-bottom:6px; font-size:14px;">ECCS Safe Crawler (Read-Only)</div>
         <div>Status: <span id="eccs-hud-status" style="color:#facc15;">Initializing...</span></div>
         <div>Captured Pages: <span id="eccs-hud-count" style="color:#4ade80;">0</span></div>
         <div>Queue Remaining: <span id="eccs-hud-queue">0</span></div>
@@ -62,6 +67,12 @@
         if (countEl) countEl.textContent = Object.keys(siteData.pages).length;
         if (queueEl) queueEl.textContent = queue.length;
         if (currentEl) currentEl.textContent = currentUrl ? currentUrl.replace(CONFIG.baseUrl, '') : '-';
+    }
+
+    // --- Check if URL is Safe for GET Fetching ---
+    function isSafeUrl(urlStr) {
+        const lower = urlStr.toLowerCase();
+        return !MUTATION_BLACKLIST.some(keyword => lower.includes(keyword.toLowerCase()));
     }
 
     // --- Normalize & Add URL to Queue ---
@@ -87,8 +98,13 @@
             return;
         }
 
-        // Exclude logout or destructive actions
-        if (absoluteUrl.includes('logOut.do') || absoluteUrl.includes('cancel.do')) {
+        // Ensure URL is non-mutating / read-only
+        if (!isSafeUrl(absoluteUrl)) {
+            siteData.actions.push({
+                type: 'Blacklisted_Mutation_Endpoint',
+                url: absoluteUrl,
+                contextUrl: location.href
+            });
             return;
         }
 
@@ -123,25 +139,54 @@
         }
     }
 
-    // --- Parse Page DOM for Metadata & Next Links ---
+    // --- Static Form Field Validation Analysis ---
+    function isFieldCompulsory(inputEl, formEl) {
+        // 1. Native HTML required attribute
+        if (inputEl.required || inputEl.getAttribute('required') !== null) {
+            return true;
+        }
+
+        // 2. Check label in parent or preceding TD for mandatory indicators (* or red color)
+        const parentTd = inputEl.closest('td');
+        if (parentTd) {
+            const prevTd = parentTd.previousElementSibling;
+            const targetTds = [parentTd, prevTd].filter(Boolean);
+
+            for (const td of targetTds) {
+                if (td.querySelector('font[color="red"], span.captionInRed, .mandatory') || td.textContent.includes('*')) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // --- Parse Page DOM for Metadata, Forms, and Safe Links ---
     function extractPageInfo(htmlText, pageUrl) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, 'text/html');
 
         const title = doc.title ? doc.title.trim() : '';
         
-        // 1. Extract Forms & Inputs
+        // 1. Extract Forms & Input Validation Specs
         const forms = Array.from(doc.querySelectorAll('form')).map(f => {
             const inputs = Array.from(f.querySelectorAll('input, select, textarea')).map(i => ({
                 name: i.name || i.id || '',
                 type: i.type || i.tagName.toLowerCase(),
                 value: i.value || '',
-                options: i.tagName.toLowerCase() === 'select' ? Array.from(i.options).map(o => o.value) : undefined
+                isCompulsory: isFieldCompulsory(i, f),
+                options: i.tagName.toLowerCase() === 'select' ? Array.from(i.options).map(o => ({
+                    text: o.text.trim(),
+                    value: o.value
+                })) : undefined
             }));
+
             return {
                 name: f.name || '',
                 action: f.getAttribute('action') || '',
                 method: (f.getAttribute('method') || 'GET').toUpperCase(),
+                isMutationForm: !isSafeUrl(f.getAttribute('action') || ''),
                 inputs
             };
         });
@@ -156,15 +201,12 @@
         }));
 
         // 3. Discover Links on Page
-        const links = doc.querySelectorAll('a[href]');
-        links.forEach(a => {
-            const href = a.getAttribute('href');
-            enqueue(href);
+        doc.querySelectorAll('a[href]').forEach(a => {
+            enqueue(a.getAttribute('href'));
         });
 
         // 4. Discover Onclick Handlers
-        const clickables = doc.querySelectorAll('[onclick]');
-        clickables.forEach(el => {
+        doc.querySelectorAll('[onclick]').forEach(el => {
             const onclick = el.getAttribute('onclick');
             if (onclick) parseJavaScriptAction(onclick);
         });
@@ -179,35 +221,32 @@
 
     // --- Step 1: Scan Navbar & Current Page ---
     updateHUD('Scanning Navbar');
-    const navbarLinks = document.querySelectorAll('.navbar-nav a[href], .dropdown-menu a[href]');
-    navbarLinks.forEach(a => {
+    document.querySelectorAll('.navbar-nav a[href], .dropdown-menu a[href]').forEach(a => {
         const text = a.innerText.trim();
         const href = a.getAttribute('href');
         siteData.menuTree.push({ text, href });
         enqueue(href, 1);
     });
 
-    // Also parse current page DOM
-    const currentPageInfo = extractPageInfo(document.documentElement.outerHTML, location.href);
-    siteData.pages[location.href] = currentPageInfo;
+    siteData.pages[location.href] = extractPageInfo(document.documentElement.outerHTML, location.href);
 
-    // --- Step 2: Crawl Queue ---
+    // --- Step 2: Crawl Safe Queue ---
     while (queue.length > 0) {
         const item = queue.shift();
         updateHUD('Fetching Page...', item.url);
 
         try {
-            const res = await fetch(item.url, { credentials: 'same-origin' });
+            // Safe GET request only
+            const res = await fetch(item.url, { method: 'GET', credentials: 'same-origin' });
             if (res.ok) {
                 const text = await res.text();
-                const pageMeta = extractPageInfo(text, item.url);
-                siteData.pages[item.url] = pageMeta;
-                console.log(`%c[Captured] (${Object.keys(siteData.pages).length}) ${item.url}`, "color: #10b981;");
+                siteData.pages[item.url] = extractPageInfo(text, item.url);
+                console.log(`%c[Captured View] (${Object.keys(siteData.pages).length}) ${item.url}`, "color: #10b981;");
             } else {
-                console.warn(`[HTTP ${res.status}] Failed to fetch ${item.url}`);
+                console.warn(`[HTTP ${res.status}] ${item.url}`);
             }
         } catch (err) {
-            console.error(`[Error] Fetch failed for ${item.url}:`, err);
+            console.error(`[Error] Safe GET failed for ${item.url}:`, err);
         }
 
         // Rate-limiting delay
@@ -229,6 +268,6 @@
     document.body.removeChild(downloadAnchor);
     URL.revokeObjectURL(blobUrl);
 
-    console.log("%c[ECCS Crawler] Crawl Complete! Exported JSON package.", "color: #3b82f6; font-size: 16px; font-weight: bold;");
-    alert(`ECCS Crawl Completed successfully!\n\nCaptured Pages: ${Object.keys(siteData.pages).length}\nDiscovered Actions: ${siteData.actions.length}\n\nDownloaded file: ECCS_Site_Dump_${new Date().toISOString().slice(0,10)}.json`);
+    console.log("%c[ECCS Safe Crawler] Read-only Crawl Complete! Exported JSON package.", "color: #3b82f6; font-size: 16px; font-weight: bold;");
+    alert(`ECCS Safe Crawl Completed!\n\nCaptured Pages: ${Object.keys(siteData.pages).length}\nParsed Actions/Endpoints: ${siteData.actions.length}\n\nDownloaded file: ECCS_Site_Dump_${new Date().toISOString().slice(0,10)}.json`);
 })();

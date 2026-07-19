@@ -4,7 +4,7 @@
 
 const ex = {
     uname: "14937314",
-    pwd: "Code1ink@5",
+    pwd: "Codelink@5",
     ooc: `Opened and examined the pkg. As per examination order / instructions
 Contents: as per invoice
 Verified description, marks, number and quantity as per import documents`,
