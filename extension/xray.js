@@ -151,9 +151,9 @@ function automateXray() {
     }
 }
 
-// Listen for Ctrl + Shift + A shortcut to toggle auto-clearance
+// Listen for Ctrl + Shift + D shortcut to toggle auto-clearance
 document.addEventListener("keydown", e => {
-    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "a") {
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "d") {
         e.preventDefault();
         
         const isEnabled = localStorage.autoXrayEnabled === "true";
