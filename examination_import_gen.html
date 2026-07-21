@@ -1,0 +1,638 @@
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Express Clearance System</title>
+    <link href="../../css/eici.css" rel="stylesheet" type="text/css">
+    <script src="../../js/date-picker.js" language="javascript"></script>
+    <script src="../../js/acllibrary.js" language="javascript"></script>
+	<script src="../../js/importsValidation.js" language="javascript"></script>
+	
+	<link href="../../css2/bootstrap-4.0.0.css" rel="stylesheet">
+<link href="../../css2/style.css" rel="stylesheet">
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) --> 
+<script src="../../js2/jquery-3.5.1.min.js"></script>
+<script src="../../js2/bootstrap-4-navbar.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="../../js2/popper.min.js"></script> 
+<script src="../../js2/bootstrap-4.0.0.js"></script>
+	
+  </head>
+
+  <body>
+
+
+<script language="JavaScript">
+
+
+function checkKeyCode(evt)
+{
+
+var evt = (evt) ? evt : ((event) ? event : null);
+var node = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null);
+if(event.keyCode==116)
+{
+evt.keyCode=0;
+alert('Not Allowed')
+return false
+}
+}
+document.onkeydown=checkKeyCode;
+
+window.history.forward(-1);
+function click() {
+if (event.button==2) {
+alert('Not Allowed');
+}
+}
+document.onmousedown=click
+ 
+</script> 
+
+     
+     <div class="main-container">
+	<!--Headera Start-->
+		<header>
+		<div class="container-fluid main-header col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">
+       <div class="row">
+         <div class="col-3 col-sm-3 col-md-3 col-lg-3 col-xl-3"><img src="../../Images2/logoECCS.png" width="90" height="90" class="img-fluid eccs-logo" alt=""></div>
+                                            <div class="col-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 align-center">
+                                            <h1>Express Cargo Clearance System</h1>
+                                            </div>
+         <div class="col-3 col-sm-3 col-md-3 col-lg-3 col-xl-3"> <img src="../../Images2/eici_logo.jpg" class="img-fluid eic-logo" alt=""> </div>
+       </div>
+     </div>
+
+		<nav class="navbar navbar-expand-lg navbar-light bg-dark">
+
+	  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon"></span>
+	  </button>
+
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto sm sm-blue" id="main-menu-sz" data-smartmenus-id="17845645159026284">
+			<li class="nav-item dropdown active">
+<a class="nav-link" href="switch.do?prefix=/jsp/acl&amp;page=/cancel.do" role="button" aria-haspopup="true" aria-expanded="false">
+HOME
+</a>
+</li><li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle has-submenu" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-controls="sm-17845645159026284-1">
+IMPORT
+<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id="sm-17845645159026284-1" role="group" aria-hidden="true" aria-expanded="false">
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-2" aria-haspopup="true" aria-controls="sm-17845645159026284-3" aria-expanded="false">View CBE<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-3" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-2" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listCBEXIDetailsInsp.do">XI(X-Ray Scan)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listInspExamCBEXIDetails.do">XI(Examination)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listHawbDetailsInspNonDocs.do">XII, XIII, XIV(X-Ray Scan)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listSuspiciousHawbetails.do">XII,XIII,XIV(Examination)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/ListCBEXI.do">XI(View)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listCBEXII.do?val=viewP">XII(View)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listCBEXIII.do?val=viewP">XIII(View)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/searchRBOE.do?val=viewP">XIV(View)</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listECM.do">Print  ECM</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/ecmstatussearch.do">ECM STATUS</a></li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-4" aria-haspopup="true" aria-controls="sm-17845645159026284-5" aria-expanded="false">CCR Check<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-5" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-4" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/imp/getCCRCBEXII.do">CCR Upload</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle has-submenu" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-controls="sm-17845645159026284-6">
+EXPORT
+<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id="sm-17845645159026284-6" role="group" aria-hidden="true" aria-expanded="false">
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-7" aria-haspopup="true" aria-controls="sm-17845645159026284-8" aria-expanded="false">View<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-8" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-7" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/export/listCSB4.do">CSB-IV (X-Ray Scan) (for Inspector X Ray)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/listCSB3.do">CSB-III (X-Ray Scan) (for Inspector X-Ray)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/listExamCSB4.do">CSB-III / IV (Examination) (for Inspector Exam)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/listExamCSB5.do">CSB-V (Examination) (for Inspector Exam)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/loadSearchCEM.do">View CEM</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/listCSB5.do">CSB-V (X-Ray Scan)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/listSez.do">SEZ (X-Ray Scan)</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-9" aria-haspopup="true" aria-controls="sm-17845645159026284-10" aria-expanded="false">View CSB<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-10" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-9" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/export/searchCSB.do?id=csb3">CSB-III</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/searchCSB.do?id=csb4">CSB-IV</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/loadCSBVSearchPage.do">CSB-V</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+RE-EXPORT
+</a>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+DISPOSAL
+</a>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+REFUND
+</a>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle has-submenu" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-controls="sm-17845645159026284-11">
+REPORTS
+<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id="sm-17845645159026284-11" role="group" aria-hidden="true" aria-expanded="false">
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-12" aria-haspopup="true" aria-controls="sm-17845645159026284-13" aria-expanded="false">Duty Reports<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-13" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-12" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getRevenueEarBasedOnCTSH.do">Revenue Earned Based On CTSH</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-14" aria-haspopup="true" aria-controls="sm-17845645159026284-15" aria-expanded="false">Import Reports<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-15" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-14" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getECMDetailsStatus.do">ECM Detail Print</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getShipmentRepStatus.do">Shipment Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getBOEReport.do">Bill Of Entry</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getSearchScreenOOCReport.do?rep=OOC">Out Of Charge</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getEcmPendencyReport.do">ECM Pendency Report</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getEcmhawbwiseDetailsReport.do">ECM HAWB wise details</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getECMClosureStatus.do">ECM Closure Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getBEAssessmentPendingSearchScreen.do">BE's Pending for Assessment</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getBEDutyPaymentPendingSearchScreen.do">BE's Pending for Duty Payment</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getSuspiciousShipment.do">Suspicious Shipment Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getQueryRaisedOfficerWiseSearchScreen.do">Total Query Raised Officer Wise</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-16" aria-haspopup="true" aria-controls="sm-17845645159026284-17" aria-expanded="false">Export Reports<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-17" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-16" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getSearchScreenShippingBillStatus.do">Shipping Bill Status</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-18" aria-haspopup="true" aria-controls="sm-17845645159026284-19" aria-expanded="false">Detention/Seized/Adjudication Reports<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-19" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-18" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getDetainShipmentRepStatus.do">Detained Shipment Status</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-20" aria-haspopup="true" aria-controls="sm-17845645159026284-21" aria-expanded="false">Other Reports<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-21" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-20" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getWorkAllRepStatus.do">Work Allocation Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getListofCBERepStatus.do">CBE's Not Given OOC</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getQueryPendencyRepStatus.do">Query Pendency</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getCBEPendencyReport.do">CBE Pendency Report</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-22" aria-haspopup="true" aria-controls="sm-17845645159026284-23" aria-expanded="false">Top 100 <span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-23" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-22" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getSearchScreenTopTenImprtrs.do">Importers (Value with Duty)</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-24" aria-haspopup="true" aria-controls="sm-17845645159026284-25" aria-expanded="false">Reports For Customs<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-25" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-24" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getMonthlyOOCReport.do">Monthly OOC Report</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getDutyReports.do">Monthly Duty Report</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getImportReportSearchScreen.do">Monthly IMPORT Report</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+E-PAYMENT
+</a>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle has-submenu" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-controls="sm-17845645159026284-26">
+DASHBOARD
+<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id="sm-17845645159026284-26" role="group" aria-hidden="true" aria-expanded="false">
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-27" aria-haspopup="true" aria-controls="sm-17845645159026284-28" aria-expanded="false">Duty DashBoard<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-28" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-27" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getChapterwiseSearchScreen.do">Chapter wise (Quantity,Duty a value)</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-29" aria-haspopup="true" aria-controls="sm-17845645159026284-30" aria-expanded="false">Import Dashboard<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-30" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-29" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getBEAssessmentPendingSearchScreen.do">BE's Pending for Assessment</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getBEDutyPaymentPendingSearchScreen.do">BE's Pending for Duty Payment</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getBOEDashboard.do">Bill Of Entry Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getEcmhawbwiseDetails.do">ECM HAWB Wise Details</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getSearchScreenOOC.do">Out Of Charge</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getShipmentStatus.do">Shipment Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getQueryRaisedOfficerWiseSearchScreen.do">Total Query Raised Officer Wise</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getSuspiciousshipment.do">Suspicious Shipment Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/listImportSegregation.do">Import Segregation Report</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/listImportDocExcessLandReport.do">Import Excess Land Report (DOC TYPE)</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-31" aria-haspopup="true" aria-controls="sm-17845645159026284-32" aria-expanded="false">Export Dashboard<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-32" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-31" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getSearchScreenShippingBillStatus.do">Shipping Bill Status</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-33" aria-haspopup="true" aria-controls="sm-17845645159026284-34" aria-expanded="false">Detention/Seized/Adjudication Reports<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-34" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-33" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getDetainShipmentStatus.do">Detained Shipment Status</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17845645159026284-35" aria-haspopup="true" aria-controls="sm-17845645159026284-36" aria-expanded="false">Other Dashboard<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17845645159026284-36" role="group" aria-hidden="true" aria-labelledby="sm-17845645159026284-35" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getListofCBEStatus.do">CBE's Not Given OOC</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listCBEXII.do?val=track">Track Shipment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle has-submenu" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-controls="sm-17845645159026284-37">
+GENERAL
+<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id="sm-17845645159026284-37" role="group" aria-hidden="true" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/acl/captureChangePassword.do">Change Password</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dutycalculator/selectBOE.do">Duty Calculator</a></li>
+</ul></li>
+		</ul>
+	  </div>
+	</nav>
+	<div class="container header-bottom">
+		  <div class="row">
+			<div class="col-sm">ECCS Dashboard</div>
+			<div class="col-sm">Logged In :  DATTURIPURENDRA</div>
+			<div class="col-sm"><a href="switch.do?prefix=/jsp/common&amp;page=/logOut.do">Logout</a></div>
+		  </div>
+	</div>
+	</header>
+	<!--Headera End-->	
+	
+	<!--Body Start-->
+		<section>
+			<div class="container-fluid">
+			
+	   <form name="ShipmentClearanceForm" method="post" action="/eccs/jsp/imp/listCBEXIDetailsSuper.do">
+          
+       
+<input type="hidden" name="rboeRefNumber" value="">
+ <input type="hidden" name="loginFlag" value="INSPECTOR">
+<input type="hidden" name="selectedCbe3No" value="">
+<input type="hidden" name="selectedHawb" value="">
+                   <input type="hidden" name="selectedCbe" value="">
+                   <input type="hidden" name="selectedHawbID" value=""> 
+                     <input type="hidden" name="selectedGrpCatId" value="">
+                   <input type="hidden" name="selectedGrpId" value="">  
+                   <input type="hidden" name="searchHawb" value="">     
+
+                    
+
+
+
+     
+            <!-- begining of inner table -->
+            <table border="0" cellspacing="0" cellpadding="0" width="750" align="center">
+            
+               
+               
+               
+                                                                   <script language="JavaScript" src="../../js/rolegroup_32128_11111111.js"></script>
+                            
+             
+             <input type="hidden" name="selectedIndex" value=""> 
+            <input type="hidden" name="selectedCourierName" value=""> 
+            <input type="hidden" name="cbeXIRefNumber" value="">
+            <input type="hidden" name="selectedadrs1" value="">
+             
+                  <!-- start of workarea -->      
+                    </table><table width="750" border="0" cellspacing="0" cellpadding="0" align="center">
+                     
+                                  
+                                  
+                      
+                        <tbody><tr>
+                          <td height="25" colspan="4" class="pageHeader" align="center">SUSPICIOUS HAWB DETAILS </td></tr>
+                          <tr>
+                          <td height="25" colspan="4" class="pageHeader" align="left"><input type="text" name="searchHAWB" value="" id="searchwb"> 
+                          <input type="button" value="Search" onclick="javascript:searchSuspicioushawb('searchSuspicioushawb.do');"></td></tr>
+                          
+                  </tbody></table>
+                 
+                   
+                 
+                    
+                      
+                      
+                        <table width="750" border="0" cellspacing="0" cellpadding="0" align="center">
+                         <tbody><tr>    
+                                  <td height="30" width="42" align="center">S.No.</td>
+                                  <td height="30" width="101" align="center">Courier</td>
+                                  <td width="150" align="center">HAWB Number </td>
+                                  <td height="30" width="181" align="center">CBE Number</td>
+                                   <td width="144" height="30" align="center"> Status </td>
+                                   <td height="30" width="132" align="center">Report </td>
+                         </tr>
+                                                                                                                
+                         
+                                                    
+                          
+
+		
+		<input type="hidden" name="searchResultObjects[0].courierName" value="MML LOGISTICS">
+		<input type="hidden" name="searchResultObjects[0].hawbNo" value="MML112521632">
+		<input type="hidden" name="searchResultObjects[0].hawbId" value="82494719">
+		<input type="hidden" name="searchResultObjects[0].cbe3No" value="CBEXIII_MAA_2026-2027_1507_18926">
+		<input type="hidden" name="searchResultObjects[0].status" value="SECOND CHECK REQUESTED">
+		 <input type="hidden" name="searchResultObjects[0].groupCategoryId" value="1">
+		<input type="hidden" name="searchResultObjects[0].groupId" value="300829">
+		<input type="hidden" name="searchResultObjects[0].cretdDt" value="">
+		
+		
+		
+		<input type="hidden" name="searchResultObjects[0].remarks" value="">
+		  
+		   <input type="hidden" name="searchResultObjects[0].adrs1" value="NO 5/13 FIRST FLOOR RANGANATHAPURAM STREET, CHETPET">
+                                                 
+                                                 <input type="hidden" name="searchResultObjects[0].adrs2" value="">
+                                                 
+                                                 <input type="hidden" name="searchResultObjects[0].city" value="CHENNAI">
+                                                
+                                                 <input type="hidden" name="searchResultObjects[0].zipcode" value="600031">
+                                                
+                                                 <input type="hidden" name="searchResultObjects[0].state" value="TAMIL NADU">
+		
+		
+		<input type="hidden" name="searchResultObjects[0].airline" value="CATHAY PACIFIC AIRWAYS">
+		
+		<input type="hidden" name="searchResultObjects[0].flightNo" value="CX 2033">
+		
+		
+		<input type="hidden" name="searchResultObjects[0].cretdBy" value="">
+		
+        <input type="hidden" name="searchResultObjects[0].cretdDt" value="">
+		
+                                                      <tr>     
+                                                                <td height="25" width="42" align="center">1</td>
+                                                                <td height="25" width="101" align="center">
+																
+                                                                      MML LOGISTICS&nbsp;</td>
+                                                                <td width="150" align="center"> 
+																   
+																                            
+																	 
+																				 MML112521632 
+																		                              
+                                                             &nbsp;
+															    </td><td height="25" width="181" align="center">
+																	<a href="javascript:onClick=getHawbDetails('nonDocGetHawbDetails.do','MML112521632','CBEXIII_MAA_2026-2027_1507_18926','82494719')">CBEXIII_MAA_2026-2027_1507_18926</a>  
+                                                                       &nbsp;
+                                                                   </td><td height="25" align="center">
+                                                                    
+                                                                             
+                                                                   
+                                                                                 SECOND CHECK REQUESTED  
+                                                                              
+                                                                             &nbsp;
+                                                                    
+                                                                </td><td height="25" width="132" align="center">
+                                                                       
+                                                                     
+                                                                     
+                                                                   <a href="javascript:onClick=selectSearchForActionNew('../imp/viewSuspiciousHawbExaminationReport11.do','CBEXIII_MAA_2026-2027_1507_18926')">Create Exam Report</a> 
+                                                                
+                                                                
+                                                                 
+                                                                              
+                                                                                      
+                                                                               </td> 
+                                                               
+                                                                             </tr>
+
+                                                    
+                          
+
+		
+		<input type="hidden" name="searchResultObjects[1].courierName" value="MML LOGISTICS">
+		<input type="hidden" name="searchResultObjects[1].hawbNo" value="MML112165890">
+		<input type="hidden" name="searchResultObjects[1].hawbId" value="82582278">
+		<input type="hidden" name="searchResultObjects[1].cbe3No" value="CBEXIII_MAA_2026-2027_1807_15537">
+		<input type="hidden" name="searchResultObjects[1].status" value="SECOND CHECK REQUESTED">
+		 <input type="hidden" name="searchResultObjects[1].groupCategoryId" value="1">
+		<input type="hidden" name="searchResultObjects[1].groupId" value="300829">
+		<input type="hidden" name="searchResultObjects[1].cretdDt" value="">
+		
+		
+		
+		<input type="hidden" name="searchResultObjects[1].remarks" value="">
+		  
+		   <input type="hidden" name="searchResultObjects[1].adrs1" value="NO 5/13 FIRST FLOOR RANGANATHAPURAM STREET, CHETPET">
+                                                 
+                                                 <input type="hidden" name="searchResultObjects[1].adrs2" value="">
+                                                 
+                                                 <input type="hidden" name="searchResultObjects[1].city" value="CHENNAI">
+                                                
+                                                 <input type="hidden" name="searchResultObjects[1].zipcode" value="600031">
+                                                
+                                                 <input type="hidden" name="searchResultObjects[1].state" value="TAMIL NADU">
+		
+		
+		<input type="hidden" name="searchResultObjects[1].airline" value="CATHAY PACIFIC AIRWAYS">
+		
+		<input type="hidden" name="searchResultObjects[1].flightNo" value="CX 0651">
+		
+		
+		<input type="hidden" name="searchResultObjects[1].cretdBy" value="">
+		
+        <input type="hidden" name="searchResultObjects[1].cretdDt" value="">
+		
+                                                      <tr>     
+                                                                <td height="25" width="42" align="center">2</td>
+                                                                <td height="25" width="101" align="center">
+																
+                                                                      MML LOGISTICS&nbsp;</td>
+                                                                <td width="150" align="center"> 
+																   
+																                            
+																	 
+																				 MML112165890 
+																		                              
+                                                             &nbsp;
+															    </td><td height="25" width="181" align="center">
+																	<a href="javascript:onClick=getHawbDetails('nonDocGetHawbDetails.do','MML112165890','CBEXIII_MAA_2026-2027_1807_15537','82582278')">CBEXIII_MAA_2026-2027_1807_15537</a>  
+                                                                       &nbsp;
+                                                                   </td><td height="25" align="center">
+                                                                    
+                                                                             
+                                                                   
+                                                                                 SECOND CHECK REQUESTED  
+                                                                              
+                                                                             &nbsp;
+                                                                    
+                                                                </td><td height="25" width="132" align="center">
+                                                                       
+                                                                     
+                                                                     
+                                                                   <a href="javascript:onClick=selectSearchForActionNew('../imp/viewSuspiciousHawbExaminationReport11.do','CBEXIII_MAA_2026-2027_1807_15537')">Create Exam Report</a> 
+                                                                
+                                                                
+                                                                 
+                                                                              
+                                                                                      
+                                                                               </td> 
+                                                               
+                                                                             </tr>
+
+                                                    
+                          
+
+		
+		<input type="hidden" name="searchResultObjects[2].courierName" value="U B XPRESS SOUTH PRIVATE LIMITED">
+		<input type="hidden" name="searchResultObjects[2].hawbNo" value="HKIN321029321">
+		<input type="hidden" name="searchResultObjects[2].hawbId" value="82617741">
+		<input type="hidden" name="searchResultObjects[2].cbe3No" value="CBEXIII_MAA_2026-2027_2007_12461">
+		<input type="hidden" name="searchResultObjects[2].status" value="MARKED FOR EXAMINATION">
+		 <input type="hidden" name="searchResultObjects[2].groupCategoryId" value="1">
+		<input type="hidden" name="searchResultObjects[2].groupId" value="300735">
+		<input type="hidden" name="searchResultObjects[2].cretdDt" value="">
+		
+		
+		
+		<input type="hidden" name="searchResultObjects[2].remarks" value="">
+		  
+		   <input type="hidden" name="searchResultObjects[2].adrs1" value="29 N A ANNA SALAI SAIDAPET">
+                                                 
+                                                 <input type="hidden" name="searchResultObjects[2].adrs2" value="">
+                                                 
+                                                 <input type="hidden" name="searchResultObjects[2].city" value="CHENNAI">
+                                                
+                                                 <input type="hidden" name="searchResultObjects[2].zipcode" value="600015">
+                                                
+                                                 <input type="hidden" name="searchResultObjects[2].state" value="TAMILNADU">
+		
+		
+		<input type="hidden" name="searchResultObjects[2].airline" value="CATHAY PACIFIC AIRWAYS">
+		
+		<input type="hidden" name="searchResultObjects[2].flightNo" value="CX 0651">
+		
+		
+		<input type="hidden" name="searchResultObjects[2].cretdBy" value="">
+		
+        <input type="hidden" name="searchResultObjects[2].cretdDt" value="">
+		
+                                                      <tr>     
+                                                                <td height="25" width="42" align="center">3</td>
+                                                                <td height="25" width="101" align="center">
+																
+                                                                      U B XPRESS SOUTH PRI<br>VATE LIMITED&nbsp;</td>
+                                                                <td width="150" align="center"> 
+																   
+																                            
+																	 
+																				 HKIN321029321 
+																		                              
+                                                             &nbsp;
+															    </td><td height="25" width="181" align="center">
+																	<a href="javascript:onClick=getHawbDetails('nonDocGetHawbDetails.do','HKIN321029321','CBEXIII_MAA_2026-2027_2007_12461','82617741')">CBEXIII_MAA_2026-2027_2007_12461</a>  
+                                                                       &nbsp;
+                                                                   </td><td height="25" align="center">
+                                                                    
+                                                                             
+                                                                   
+                                                                                 MARKED FOR EXAMINATION  
+                                                                              
+                                                                             &nbsp;
+                                                                    
+                                                                </td><td height="25" width="132" align="center">
+                                                                       
+                                                                     
+                                                                     
+                                                                   <a href="javascript:onClick=selectSearchForActionNew('../imp/viewSuspiciousHawbExaminationReport11.do','CBEXIII_MAA_2026-2027_2007_12461')">Create Exam Report</a> 
+                                                                
+                                                                
+                                                                 
+                                                                              
+                                                                                      
+                                                                               </td> 
+                                                               
+                                                                             </tr>
+
+
+                         
+                      
+                        </tbody></table>  
+                       
+                      
+                      
+                    
+                    
+                           
+                  
+                  <table width="750" border="0" cellspacing="0" cellpadding="0" align="center">	
+                     
+                     
+                         
+                                            
+                         <tbody><tr><td height="23" class="sectionHeader" align="center" width="750">
+                         <a href="javascript:onClick=submitForm('/eccs/jsp/acl/cancel.do')"><img src="../../images/close.jpg" border="0" alt="cancel"></a>	
+                            
+                         </td>
+                         </tr>
+                         
+                     
+                     
+                    
+                    
+                    
+                  </tbody></table>
+                 
+       
+  
+            
+          
+     </form>		
+			
+			
+			
+			
+			
+    
+			</div>  
+		</section>
+	<!--Body End-->
+	
+	<!--Footer Start-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<footer>
+<!-- 
+  Name        :footerNew.jsp 
+  Description :File to be included for footer
+-->
+
+
+<div class="ft-bottom">
+  <div class="container-fluid">
+     <div class="row">
+     <div class="col-sm">
+      <h6>Important Links: <a href="http://www.cbic.gov.in/" title="CBIC" target="_blank">Visit CBIC site</a> | <a href="http://dgft.gov.in/" title="DGFT" target="_blank">Visit DGFT site</a></h6>
+      
+      <span>Copyright  Information 2026-2027 | All Rights Reserved.
+     </span>
+    </div>
+    </div>
+   </div>
+  </div>
+</footer>
+		
+	<!--Footer End-->
+</div>
+     <form name="cbeform">
+  
+ </form></body></html>

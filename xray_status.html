@@ -1,0 +1,67 @@
+<body onload="setFocustoFirst();">
+	
+	<table border="1" cellspacing="0" cellpadding="0" width="100%" align="center">
+  
+		<tbody><tr><td class="separator"></td></tr>      
+       	<tr><td width="100%" valign="top">
+        <!-- start of workarea --> 
+		<audio id="sound" src="../../audio/IrritatingBeeper.mp3"></audio>
+		<form name="searchHAWBStatusForm" method="post" action="/eccs/jsp/common/updateHAWBStatus.do"> 
+			<input type="hidden" name="hawbNoToSubmit" value="">
+			<input type="hidden" name="selecteduploadedDocID" value="">
+			<font face="arial" color="red" size="7">  The HAWB No. 7794535696   1 out of 3 is X-RAY cleared.</font>
+			<font face="arial" color="blue" size="7"> </font>
+			<script>
+				var beep = 'null';
+				if('true' == beep){
+					var sound = document.getElementById("sound");
+					sound.play();
+				}
+			</script>
+			<table width="100%" border="0" cellspacing="0" align="center" cellpadding="0">
+				<tbody><tr>
+					<td class="pageHeader" height="23" colspan="2" align="right">HAWB Details </td>
+		    	</tr>
+				<tr><td class="separator" colspan="2"></td></tr> 
+				<tr>
+					<td height="23" width="300" class="dataBlock">Logged in: DATTURIPURENDRA</td>
+					<td class="dataBlock" width="100" height="23" align="right"><a class="hyperLink" href="switch.do?prefix=/jsp/common&amp;page=/logOut.do">Sign Out</a></td>
+				</tr>
+			</tbody></table>
+			<table width="100%" border="0" cellspacing="0" align="center" cellpadding="0">					
+	  			<tbody><tr>
+				    <td class="leftTopFormLabel" height="23" align="right">HAWB Number :&nbsp;</td>
+				    <td class="lastFormValue" height="23" align="left">
+				    <input type="text" name="hawbNo" maxlength="40" value="" onchange="javascript:submitBarCodeStatusRepPage('getHAWBStatus.do')">&nbsp;</td>
+	  			</tr>
+	  			
+				
+				<!-- <tr>
+					<td class="dataBlock" width="100" height="23" align="center" colspan="2">
+						<a class="hyperLink" href="getHAWBStatus.do?stat=suspicious">Mark Suspicious</a>
+					</td>
+				</tr> -->
+				<tr>
+					<td class="dataBlock" width="100" height="23" align="center" colspan="2">
+						
+						<a class="hyperLink" href="getHAWBStatus.do?stat=suspicious">Mark Suspicious</a>
+					</td>
+				</tr>
+  				<tr><td class="separator" colspan="2"><br></td></tr>
+			</tbody></table>
+		</form>
+<script type="text/javascript" language="JavaScript">
+  <!--
+  var focusControl = document.forms["searchHAWBStatusForm"].elements["hawbNo"];
+
+  if (focusControl.type != "hidden" && !focusControl.disabled) {
+     focusControl.focus();
+  }
+  // -->
+</script>
+
+		</td></tr>
+	</tbody></table>
+
+
+</body>
