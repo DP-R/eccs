@@ -70,13 +70,6 @@ function automateXray() {
             }
         }
         
-        // Delay logic:
-        // - First package of any HAWB (single or multi-package): 7000ms (7 seconds)
-        // - Subsequent packages of a multi-package HAWB: 100ms (instantaneous)
-        const delay = (numPackages > 1 && isSubsequent) ? 100 : 7000;
-        
-        console.log(`ECCS Automation: HAWB ${scannedHawb} (${numPackages} packages). isSubsequent=${isSubsequent}. Clicking clear in ${delay}ms...`);
-        
         // Track that we are about to clear the package
         if (scannedHawb) {
             sessionStorage.currentHawb = scannedHawb;
@@ -84,16 +77,24 @@ function automateXray() {
             sessionStorage.currentProgress = currentProg + 1;
         }
         
-        setTimeout(() => {
-            // Re-check state right before execution in case the user toggled it off during the 7s delay
-            if (localStorage.autoXrayEnabled === "false") {
-                done = 0;
-                return;
-            }
+        if (numPackages > 1 && isSubsequent) {
+            console.log(`ECCS Automation: HAWB ${scannedHawb} (${numPackages} packages). Clicking clear instantaneously...`);
             if (clearButton && typeof clearButton.click === 'function') {
                 clearButton.click();
             }
-        }, delay);
+        } else {
+            console.log(`ECCS Automation: HAWB ${scannedHawb} (${numPackages} packages). Clicking clear in 7000ms...`);
+            setTimeout(() => {
+                // Re-check state right before execution in case the user toggled it off during the 7s delay
+                if (localStorage.autoXrayEnabled === "false") {
+                    done = 0;
+                    return;
+                }
+                if (clearButton && typeof clearButton.click === 'function') {
+                    clearButton.click();
+                }
+            }, 7000);
+        }
         return;
     }
 
@@ -123,28 +124,19 @@ function automateXray() {
                     // Paste the HAWB number
                     input.value = hawbNo;
                     
-                    setTimeout(() => {
-                        // Re-check state right before submit in case user toggled it off
-                        if (localStorage.autoXrayEnabled === "false") {
-                            input.dataset.automated = '';
-                            done = 0;
-                            return;
-                        }
-
-                        // 1. Trigger change event to fire inline onchange handler
-                        input.dispatchEvent(new Event('change', { bubbles: true }));
-                        
-                        // 2. Trigger Enter keypress to submit the form
-                        ['keydown', 'keypress', 'keyup'].forEach(type => {
-                            input.dispatchEvent(new KeyboardEvent(type, {
-                                key: 'Enter',
-                                code: 'Enter',
-                                keyCode: 13,
-                                which: 13,
-                                bubbles: true
-                            }));
-                        });
-                    }, 100);
+                    // 1. Trigger change event to fire inline onchange handler
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    
+                    // 2. Trigger Enter keypress to submit the form
+                    ['keydown', 'keypress', 'keyup'].forEach(type => {
+                        input.dispatchEvent(new KeyboardEvent(type, {
+                            key: 'Enter',
+                            code: 'Enter',
+                            keyCode: 13,
+                            which: 13,
+                            bubbles: true
+                        }));
+                    });
                 }
             }
         }
