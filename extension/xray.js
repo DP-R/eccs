@@ -160,8 +160,8 @@ document.addEventListener("keydown", e => {
     }
 });
 
-// Run on window load
-window.addEventListener("load", automateXray);
+// Run immediately when script executes
+automateXray();
 
 // Check periodically to catch elements loaded after initial render
 setInterval(automateXray, 1000);
