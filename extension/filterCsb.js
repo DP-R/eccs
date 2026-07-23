@@ -12,7 +12,7 @@
 
         if (!targetTable || targetTable.querySelector('.eccs-filter-row')) return;
 
-        console.log("[ECCS Extension] Initializing advanced filters and description column on CSB view...");
+        console.log("[ECCS Extension] Initializing advanced filters and multiple details columns on CSB view...");
 
         const rows = Array.from(targetTable.querySelectorAll('tr'));
         const headerRow = rows.find(row => row.textContent.includes('CSB Number') && row.textContent.includes('Courier Name'));
@@ -65,22 +65,30 @@
         `;
         document.head.appendChild(style);
 
-        // --- 1. Increment Colspan of Header/Footer rows to fit new column ---
+        // --- 1. Increment Colspan of Header/Footer rows to fit 4 new columns ---
         Array.from(targetTable.querySelectorAll('td[colspan]')).forEach(td => {
             const currentCols = parseInt(td.getAttribute('colspan'), 10);
             if (currentCols >= 5) {
-                td.setAttribute('colspan', currentCols + 1);
+                td.setAttribute('colspan', currentCols + 4);
             }
         });
 
-        // --- 2. Append new "Description of Goods" header cell at the end ---
-        const th = document.createElement('td');
-        th.width = "150";
-        th.height = "25";
-        th.align = "center";
-        th.style = "font-weight: bold;";
-        th.textContent = "Description of Goods";
-        headerRow.appendChild(th);
+        // --- 2. Append new header cells at the end (to the right) ---
+        const headers = [
+            "Description of Goods",
+            "Airlines",
+            "Airport of Destination",
+            "Weight (in Kg.)"
+        ];
+        headers.forEach(title => {
+            const th = document.createElement('td');
+            th.width = "120";
+            th.height = "25";
+            th.align = "center";
+            th.style = "font-weight: bold;";
+            th.textContent = title;
+            headerRow.appendChild(th);
+        });
 
         // --- 3. Override Select All / Clear All globally in page context ---
         window.selectAll = function() {
@@ -99,7 +107,7 @@
             });
         };
 
-        // --- 4. Create Filter Row aligned with appended column structure ---
+        // --- 4. Create Filter Row aligned with new appended column structure ---
         const filterRow = document.createElement('tr');
         filterRow.className = 'eccs-filter-row';
 
@@ -117,6 +125,9 @@
             descInput.value = '';
             courierInput.value = '';
             statusInput.value = '';
+            airlinesInput.value = '';
+            destInput.value = '';
+            weightInput.value = '';
             applyFilters();
         });
         td0.appendChild(resetBtn);
@@ -162,7 +173,7 @@
         td5.appendChild(statusInput);
         filterRow.appendChild(td5);
 
-        // Column 5: Unique HAWB Counter (placed under original Scan Remarks column)
+        // Column 5: Unique HAWB Counter
         const td6 = document.createElement('td');
         td6.align = 'center';
         const counterSpan = document.createElement('span');
@@ -171,14 +182,44 @@
         filterRow.appendChild(td6);
 
         // Column 6: Description of Goods Filter
-        const td3 = document.createElement('td');
-        td3.align = 'center';
+        const tdDesc = document.createElement('td');
+        tdDesc.align = 'center';
         const descInput = document.createElement('input');
         descInput.type = 'text';
         descInput.placeholder = 'Filter Goods...';
         descInput.className = 'eccs-filter-input';
-        td3.appendChild(descInput);
-        filterRow.appendChild(td3);
+        tdDesc.appendChild(descInput);
+        filterRow.appendChild(tdDesc);
+
+        // Column 7: Airlines Filter
+        const tdAirlines = document.createElement('td');
+        tdAirlines.align = 'center';
+        const airlinesInput = document.createElement('input');
+        airlinesInput.type = 'text';
+        airlinesInput.placeholder = 'Filter Airlines...';
+        airlinesInput.className = 'eccs-filter-input';
+        tdAirlines.appendChild(airlinesInput);
+        filterRow.appendChild(tdAirlines);
+
+        // Column 8: Airport of Destination Filter
+        const tdDest = document.createElement('td');
+        tdDest.align = 'center';
+        const destInput = document.createElement('input');
+        destInput.type = 'text';
+        destInput.placeholder = 'Filter Dest...';
+        destInput.className = 'eccs-filter-input';
+        tdDest.appendChild(destInput);
+        filterRow.appendChild(tdDest);
+
+        // Column 9: Weight Filter
+        const tdWeight = document.createElement('td');
+        tdWeight.align = 'center';
+        const weightInput = document.createElement('input');
+        weightInput.type = 'text';
+        weightInput.placeholder = 'Filter Weight...';
+        weightInput.className = 'eccs-filter-input';
+        tdWeight.appendChild(weightInput);
+        filterRow.appendChild(tdWeight);
 
         // Inject Filter Row right after Header Row
         headerRow.parentNode.insertBefore(filterRow, headerRow.nextSibling);
@@ -205,6 +246,9 @@
             const descQuery = descInput.value.toLowerCase().trim();
             const courierQuery = courierInput.value.toLowerCase().trim();
             const statusQuery = statusInput.value.toLowerCase().trim();
+            const airlinesQuery = airlinesInput.value.toLowerCase().trim();
+            const destQuery = destInput.value.toLowerCase().trim();
+            const weightQuery = weightInput.value.toLowerCase().trim();
 
             dataRows.forEach(row => {
                 const cells = Array.from(row.querySelectorAll('td'));
@@ -214,15 +258,22 @@
                 const hawbText = cells[2] ? cells[2].textContent.toLowerCase() : '';
                 const courierText = cells[3] ? cells[3].textContent.toLowerCase() : '';
                 const statusText = cells[4] ? cells[4].textContent.toLowerCase() : '';
+                
                 const descText = cells[6] ? cells[6].textContent.toLowerCase() : '';
+                const airlinesText = cells[7] ? cells[7].textContent.toLowerCase() : '';
+                const destText = cells[8] ? cells[8].textContent.toLowerCase() : '';
+                const weightText = cells[9] ? cells[9].textContent.toLowerCase() : '';
 
                 const matchesCsb = !csbQuery || csbText.includes(csbQuery);
                 const matchesHawb = !hawbQuery || hawbText.includes(hawbQuery);
                 const matchesDesc = !descQuery || descText.includes(descQuery);
                 const matchesCourier = !courierQuery || courierText.includes(courierQuery);
                 const matchesStatus = !statusQuery || statusText.includes(statusQuery);
+                const matchesAirlines = !airlinesQuery || airlinesText.includes(airlinesQuery);
+                const matchesDest = !destQuery || destText.includes(destQuery);
+                const matchesWeight = !weightQuery || weightText.includes(weightQuery);
 
-                if (matchesCsb && matchesHawb && matchesDesc && matchesCourier && matchesStatus) {
+                if (matchesCsb && matchesHawb && matchesDesc && matchesCourier && matchesStatus && matchesAirlines && matchesDest && matchesWeight) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
@@ -246,23 +297,22 @@
         }
 
         // Attach listeners
-        [csbInput, hawbInput, descInput, courierInput, statusInput].forEach(input => {
+        [csbInput, hawbInput, descInput, courierInput, statusInput, airlinesInput, destInput, weightInput].forEach(input => {
             input.addEventListener('input', applyFilters);
         });
 
         // Set initial counter
         applyFilters();
 
-        // --- 6. Helper: Extract description from injected detail view HTML ---
+        // --- 6. Helpers: Extract values from injected detail view HTML ---
         function extractDescription(container) {
-            // Try regex matching on raw text first. This is extremely robust against mangled DOM/table parsing.
             const rawText = container.textContent.replace(/\s+/g, ' ').trim();
             const match = rawText.match(/(?:Description of Goods|Goods Description)\s*[:\-]?\s*([\s\S]*?)(?=\s*(?:Name of (?:the )?Consignor|Address of|Name of (?:the )?Consignee|GST Invoice|MHBS Number|MPS Details|Attached|$))/i);
             if (match && match[1].trim() !== "") {
                 return match[1].replace(/&nbsp;/i, '').trim();
             }
 
-            // Fallback to table cell iteration if regex yields nothing
+            // Sibling fallback
             const tds = Array.from(container.querySelectorAll('td'));
             for (let i = 0; i < tds.length; i++) {
                 const txt = tds[i].textContent.replace(/\s+/g, ' ').trim();
@@ -277,12 +327,39 @@
             return "";
         }
 
+        function extractAirlines(container) {
+            const rawText = container.textContent.replace(/\s+/g, ' ').trim();
+            const match = rawText.match(/(?:International Airlines|Airlines)\s*[:\-]?\s*([\s\S]*?)(?=\s*(?:International Flight|Flight Number|Domestic Airlines|Airport of Departure|$))/i);
+            if (match && match[1].trim() !== "") {
+                return match[1].replace(/&nbsp;/i, '').trim();
+            }
+            return "";
+        }
+
+        function extractDest(container) {
+            const rawText = container.textContent.replace(/\s+/g, ' ').trim();
+            const match = rawText.match(/Airport of Destination\s*[:\-]?\s*([\s\S]*?)(?=\s*(?:Date of Departure|Expected Date|Manifest Weight|Actual Weight|$))/i);
+            if (match && match[1].trim() !== "") {
+                return match[1].replace(/&nbsp;/i, '').trim();
+            }
+            return "";
+        }
+
+        function extractWeight(container) {
+            const rawText = container.textContent.replace(/\s+/g, ' ').trim();
+            const match = rawText.match(/(?:Weight\s*\(in\s*Kg\s*\.?\)|Manifest Weight|Actual Weight)\s*[:\-]?\s*([\s\S]*?)(?=\s*(?:Value|Invoice Value|FOB Value|Date of|$))/i);
+            if (match && match[1].trim() !== "") {
+                return match[1].replace(/&nbsp;/i, '').trim();
+            }
+            return "";
+        }
+
         // Helper: Trigger background AJAX details fetch
-        function fetchDescription(index, csbNo, actionUrl) {
+        function fetchDetails(index, csbNo, actionUrl) {
             return new Promise((resolve) => {
                 const mydiv = document.getElementById('mydiv' + index);
                 if (!mydiv) {
-                    resolve("");
+                    resolve({ desc: "", airlines: "", dest: "", weight: "" });
                     return;
                 }
 
@@ -291,8 +368,11 @@
                     if (text !== "") {
                         observer.disconnect();
                         const desc = extractDescription(mydiv);
+                        const airlines = extractAirlines(mydiv);
+                        const dest = extractDest(mydiv);
+                        const weight = extractWeight(mydiv);
                         mydiv.innerHTML = ""; // Clean layout container
-                        resolve(desc);
+                        resolve({ desc, airlines, dest, weight });
                     }
                 });
 
@@ -302,30 +382,38 @@
                     window.viewCSBDetails(actionUrl, csbNo, index);
                 } catch (e) {
                     observer.disconnect();
-                    resolve("");
+                    resolve({ desc: "", airlines: "", dest: "", weight: "" });
                 }
 
                 // Timeout safety guard
                 setTimeout(() => {
                     observer.disconnect();
-                    resolve("");
+                    resolve({ desc: "", airlines: "", dest: "", weight: "" });
                 }, 5000);
             });
         }
 
-        // --- 7. Load descriptions for all rows in parallel (efficient asynchronous fetching) ---
-        function loadAllDescriptions() {
+        // --- 7. Load details for all rows in parallel (efficient asynchronous fetching) ---
+        function loadAllDetails() {
             dataRows.forEach(async (row) => {
                 const link = row.querySelector('a[onmouseover]');
                 
-                // Append description cell at the end of the row immediately
-                const td = document.createElement('td');
-                td.height = "25";
-                td.width = "150";
-                td.align = "center";
-                td.className = "eccs-desc-cell";
-                td.textContent = "Loading...";
-                row.appendChild(td);
+                // Append 4 new columns to the right of each row immediately (loading state)
+                const descTd = document.createElement('td');
+                descTd.height = "25"; descTd.width = "120"; descTd.align = "center"; descTd.className = "eccs-desc-cell"; descTd.textContent = "Loading...";
+                row.appendChild(descTd);
+
+                const airTd = document.createElement('td');
+                airTd.height = "25"; airTd.width = "120"; airTd.align = "center"; airTd.className = "eccs-desc-cell"; airTd.textContent = "Loading...";
+                row.appendChild(airTd);
+
+                const destTd = document.createElement('td');
+                destTd.height = "25"; destTd.width = "120"; destTd.align = "center"; destTd.className = "eccs-desc-cell"; destTd.textContent = "Loading...";
+                row.appendChild(destTd);
+
+                const weightTd = document.createElement('td');
+                weightTd.height = "25"; weightTd.width = "120"; weightTd.align = "center"; weightTd.className = "eccs-desc-cell"; weightTd.textContent = "Loading...";
+                row.appendChild(weightTd);
 
                 if (link) {
                     const onmouseover = link.getAttribute('onmouseover');
@@ -335,13 +423,22 @@
                         const csbNo = matches[1].replace(/'/g, '');
                         const index = matches[2].replace(/'/g, '');
                         
-                        const desc = await fetchDescription(index, csbNo, actionUrl);
-                        td.textContent = desc || "N/A";
+                        const details = await fetchDetails(index, csbNo, actionUrl);
+                        descTd.textContent = details.desc || "N/A";
+                        airTd.textContent = details.airlines || "N/A";
+                        destTd.textContent = details.dest || "N/A";
+                        weightTd.textContent = details.weight || "N/A";
                     } else {
-                        td.textContent = "N/A";
+                        descTd.textContent = "N/A";
+                        airTd.textContent = "N/A";
+                        destTd.textContent = "N/A";
+                        weightTd.textContent = "N/A";
                     }
                 } else {
-                    td.textContent = "N/A";
+                    descTd.textContent = "N/A";
+                    airTd.textContent = "N/A";
+                    destTd.textContent = "N/A";
+                    weightTd.textContent = "N/A";
                 }
                 
                 // Debounce layout updates to batch filter updates efficiently
@@ -349,8 +446,8 @@
             });
         }
 
-        // Load all descriptions on start
-        loadAllDescriptions();
+        // Load all details on start
+        loadAllDetails();
     }
 
     // Trigger initialization
