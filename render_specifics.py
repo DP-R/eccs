@@ -12,7 +12,7 @@ def main():
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--window-size=1200,1000")
+    options.add_argument("--window-size=1280,1000")
 
     driver = webdriver.Chrome(options=options)
     
@@ -20,6 +20,37 @@ def main():
         # Load local HTML file
         print(f"Loading local HTML: {html_path}")
         driver.get(f"file://{html_path}")
+        
+        # Inject Mock fetch for same-origin viewCCRIntructions
+        mock_fetch = """
+        window.fetch = function(url) {
+            return Promise.resolve({
+                ok: true,
+                status: 200,
+                text: () => Promise.resolve(`
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parameter / CTSH</th>
+                                <th>Compulsory Compliance Instructions (CCR)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>CTSH: 61034258</strong></td>
+                                <td>Textile Import Regulation: Must verify Pre-Shipment Inspection Certificate (PSIC) from an accredited agency.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Origin: CN</strong></td>
+                                <td>Check anti-dumping duty applicability for polyester items.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `)
+            });
+        };
+        """
+        driver.execute_script(mock_fetch)
         
         # Read the beautification script content
         with open(js_path, "r", encoding="utf-8") as f:
@@ -29,9 +60,9 @@ def main():
         print("Injecting beautifyDetails.js...")
         driver.execute_script(js_code)
         
-        # Wait a brief moment for dynamic modifications to complete
+        # Wait a brief moment for dynamic modifications and mock fetch to resolve
         import time
-        time.sleep(1)
+        time.sleep(2)
         
         # Capture screenshot
         print(f"Saving screenshot to: {output_screenshot_path}")

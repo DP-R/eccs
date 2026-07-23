@@ -80,7 +80,7 @@
         return;
     }
 
-    // --- 2. Extract Declared Items Table for CTSH Links ---
+    // --- 2. Extract Declared Items Table ---
     const itemsTable = Array.from(document.querySelectorAll('table')).find(table => {
         return table.textContent.includes('CTSH') && table.textContent.includes('ITEM Description');
     });
@@ -95,6 +95,13 @@
                 if (cells.length >= 8) {
                     items.push({
                         sNo: cleanText(cells[0].textContent),
+                        ctsh: cleanText(cells[1].textContent),
+                        nature: cleanText(cells[2].textContent),
+                        description: cleanText(cells[3].textContent),
+                        origin: cleanText(cells[4].textContent),
+                        qty: cleanText(cells[5].textContent),
+                        uqc: cleanText(cells[6].textContent),
+                        assessableVal: cleanText(cells[7].textContent),
                         detailsHtml: cells[8] ? cells[8].innerHTML : ""
                     });
                 }
@@ -102,12 +109,25 @@
         }
     }
 
-    // Build Item details/CTSH links
-    let itemDetailsHtml = "N/A";
+    // Build Item details table rows
+    let itemsRowsHtml = "";
     if (items.length > 0) {
-        itemDetailsHtml = items.map(item => {
-            return `[SNo ${item.sNo}: ${item.detailsHtml}]`;
-        }).join(" &nbsp;&nbsp; ");
+        items.forEach(item => {
+            itemsRowsHtml += `
+                <tr>
+                    <td align="center">${item.sNo}</td>
+                    <td align="center"><strong>${item.ctsh}</strong></td>
+                    <td align="center">${item.nature}</td>
+                    <td>${item.description}</td>
+                    <td align="center">${item.origin}</td>
+                    <td align="center">${item.qty} ${item.uqc}</td>
+                    <td align="right" style="font-weight: bold; color: #854d0e; background-color: #fef08a;">₹ ${item.assessableVal}</td>
+                    <td align="center">${item.detailsHtml}</td>
+                </tr>
+            `;
+        });
+    } else {
+        itemsRowsHtml = `<tr><td colspan="8" style="text-align: center;">No declared items found.</td></tr>`;
     }
 
     // Look for any other general supporting documents
@@ -119,7 +139,7 @@
         }
     }
 
-    // --- 3. Build & Prepend Pattern-Detection Table at the top of the body ---
+    // --- 3. Build & Prepend Summary Dashboard at the top of the body ---
     const summaryContainer = document.createElement('div');
     summaryContainer.id = 'eccs-summary-root';
     summaryContainer.style = "margin: 15px auto; width: 95%; max-width: 1200px; box-sizing: border-box;";
@@ -130,7 +150,7 @@
         .cbe-pattern-table {
             width: 100% !important;
             border-collapse: collapse !important;
-            margin-bottom: 20px !important;
+            margin-bottom: 15px !important;
             font-family: system-ui, -apple-system, sans-serif !important;
             font-size: 11px !important;
             background-color: #f8fafc !important;
@@ -172,6 +192,62 @@
             border-radius: 4px !important;
             border: 1px solid #fde047 !important;
             display: inline-block !important;
+        }
+        .summary-details-section {
+            display: flex !important;
+            gap: 15px !important;
+            margin-top: 15px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        @media (max-width: 768px) {
+            .summary-details-section {
+                flex-direction: column !important;
+            }
+        }
+        .details-box {
+            flex: 1 !important;
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+            overflow: hidden !important;
+        }
+        .details-title {
+            background-color: #f1f5f9 !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            margin: 0 !important;
+            padding: 8px 12px !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            color: #1e293b !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+        }
+        .details-content {
+            padding: 10px !important;
+            font-size: 11px !important;
+            overflow-x: auto !important;
+            max-height: 250px !important;
+            overflow-y: auto !important;
+        }
+        .item-summary-table, .ccr-detail-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 11px !important;
+        }
+        .item-summary-table th, .ccr-detail-table th {
+            background-color: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            padding: 6px 8px !important;
+            font-weight: bold !important;
+            color: #475569 !important;
+            text-align: center !important;
+        }
+        .item-summary-table td, .ccr-detail-table td {
+            border: 1px solid #e2e8f0 !important;
+            padding: 6px 8px !important;
+            color: #334155 !important;
         }
         #eccs-summary-root a {
             color: #2563eb !important;
@@ -225,7 +301,7 @@
     const rmsHtml = getValueHtml("RMS Instruction");
     const ccrHtml = getValueHtml("CCR Instruction");
 
-    // Build Table Layout
+    // Build Layout
     summaryContainer.innerHTML = `
         <table class="cbe-pattern-table">
             <thead>
@@ -317,12 +393,48 @@
                         <strong>Invoice Link:</strong> ${invoiceHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
                         <strong>RMS Instructions:</strong> ${rmsHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
                         <strong>CCR Instructions:</strong> ${ccrHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
-                        <strong>Supporting Docs:</strong> ${supportingDocsHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
-                        <strong>Item Details (CTSH):</strong> ${itemDetailsHtml}
+                        <strong>Supporting Docs:</strong> ${supportingDocsHtml}
                     </td>
                 </tr>
             </tbody>
         </table>
+
+        <!-- Item Details and CCR Details Side-By-Side Dashboard -->
+        <div class="summary-details-section">
+            <!-- Left: Item Details -->
+            <div class="details-box">
+                <h3 class="details-title">Declared Item Details (CTSH Table)</h3>
+                <div class="details-content">
+                    <table class="item-summary-table">
+                        <thead>
+                            <tr>
+                                <th>SNo</th>
+                                <th>CTSH</th>
+                                <th>Nature</th>
+                                <th>Item Description</th>
+                                <th>Origin</th>
+                                <th>Qty (UQC)</th>
+                                <th>Assessable Value</th>
+                                <th>Details Link</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsRowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Right: CCR Details (Dynamically Fetched in Background) -->
+            <div class="details-box">
+                <h3 class="details-title">CCR (Compulsory Compliance Requirements) Instructions</h3>
+                <div id="ccr-details-content" class="details-content">
+                    <div style="text-align: center; padding: 20px; color: #64748b;">
+                        Loading CCR Details in background...
+                    </div>
+                </div>
+            </div>
+        </div>
     `;
 
     // Ensure the original main layout is visible
@@ -337,4 +449,74 @@
 
     // Prepend the summary table at the very top of the page body
     document.body.insertBefore(summaryContainer, document.body.firstChild);
+
+    // --- 4. Fetch and Display CCR Details in the Background ---
+    function fetchCCRDetails(url) {
+        return fetch(url)
+            .then(res => {
+                if (!res.ok) throw new Error("Status " + res.status);
+                return res.text();
+            })
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Find target table containing ccr instructions
+                const ccrTable = Array.from(doc.querySelectorAll('table')).find(table => {
+                    const txt = table.textContent.toLowerCase();
+                    return txt.includes("instruction") || txt.includes("ccr") || txt.includes("parameter");
+                });
+
+                if (ccrTable) {
+                    ccrTable.removeAttribute('style');
+                    ccrTable.removeAttribute('width');
+                    ccrTable.removeAttribute('border');
+                    ccrTable.removeAttribute('cellspacing');
+                    ccrTable.removeAttribute('cellpadding');
+                    ccrTable.className = 'ccr-detail-table';
+                    
+                    // Format all internal table elements cleanly
+                    ccrTable.querySelectorAll('td, th').forEach(cell => {
+                        cell.removeAttribute('style');
+                        cell.removeAttribute('width');
+                        cell.removeAttribute('height');
+                        cell.removeAttribute('bgcolor');
+                    });
+                    
+                    return ccrTable.outerHTML;
+                }
+
+                // Fallback to text content if no table is found
+                return doc.body ? doc.body.innerHTML : "No CCR instructions details found.";
+            })
+            .catch(err => {
+                return `<div style="color: #ef4444; padding: 10px; font-weight: bold;">Failed to load CCR details dynamically: ${err.message}</div>`;
+            });
+    }
+
+    const ccrLink = document.querySelector('a[href*="viewCCRIntructions"]');
+    if (ccrLink) {
+        let url = ccrLink.getAttribute('href');
+        if (url.startsWith("javascript:")) {
+            const matches = url.match(/'([^']+)'/g);
+            if (matches && matches.length >= 3) {
+                const action = matches[0].replace(/'/g, '');
+                const refNo = matches[1].replace(/'/g, '');
+                const hawbId = matches[2].replace(/'/g, '');
+                url = `${action}?refNo=${refNo}&hawbId=${hawbId}`;
+            }
+        }
+        
+        fetchCCRDetails(url).then(ccrContent => {
+            const container = document.getElementById('ccr-details-content');
+            if (container) {
+                container.innerHTML = ccrContent;
+            }
+        });
+    } else {
+        const container = document.getElementById('ccr-details-content');
+        if (container) {
+            container.innerHTML = `<div style="text-align: center; padding: 20px; color: #64748b;">No CCR instructions required for this HAWB.</div>`;
+        }
+    }
 })();
