@@ -248,13 +248,22 @@
 
         // --- 6. Helper: Extract description from injected detail view HTML ---
         function extractDescription(container) {
+            // Try regex matching on raw text first. This is extremely robust against mangled DOM/table parsing.
+            const rawText = container.textContent.replace(/\s+/g, ' ').trim();
+            const match = rawText.match(/(?:Description of Goods|Goods Description)\s*[:\-]?\s*([\s\S]*?)(?=\s*(?:Name of (?:the )?Consignor|Address of|Name of (?:the )?Consignee|GST Invoice|MHBS Number|MPS Details|Attached|$))/i);
+            if (match && match[1].trim() !== "") {
+                return match[1].replace(/&nbsp;/i, '').trim();
+            }
+
+            // Fallback to table cell iteration if regex yields nothing
             const tds = Array.from(container.querySelectorAll('td'));
             for (let i = 0; i < tds.length; i++) {
                 const txt = tds[i].textContent.replace(/\s+/g, ' ').trim();
-                if (txt.includes('Description of Goods') || txt.includes('Description') || txt.includes('Goods Description')) {
+                const cleanTxt = txt.replace(/:$/, '').trim();
+                if (cleanTxt === 'Description of Goods' || cleanTxt === 'Goods Description') {
                     const nextTd = tds[i].nextElementSibling;
                     if (nextTd) {
-                        return nextTd.textContent.replace(/\s+/g, ' ').trim();
+                        return nextTd.textContent.replace(/\s+/g, ' ').replace(/&nbsp;/i, '').trim();
                     }
                 }
             }
