@@ -305,53 +305,61 @@
         applyFilters();
 
         // --- 6. Helpers: Extract values from injected detail view HTML ---
-        function extractDescription(container) {
-            const rawText = container.textContent.replace(/\s+/g, ' ').trim();
-            const match = rawText.match(/(?:Description of Goods|Goods Description)\s*[:\-]?\s*([\s\S]*?)(?=\s*(?:Name of (?:the )?Consignor|Address of|Name of (?:the )?Consignee|GST Invoice|MHBS Number|MPS Details|Attached|$))/i);
-            if (match && match[1].trim() !== "") {
-                return match[1].replace(/&nbsp;/i, '').trim();
-            }
-
-            // Sibling fallback
+        function extractFieldFromDOM(container, labelNames) {
             const tds = Array.from(container.querySelectorAll('td'));
             for (let i = 0; i < tds.length; i++) {
-                const txt = tds[i].textContent.replace(/\s+/g, ' ').trim();
-                const cleanTxt = txt.replace(/:$/, '').trim();
-                if (cleanTxt === 'Description of Goods' || cleanTxt === 'Goods Description') {
+                const txt = tds[i].textContent.replace(/\s+/g, ' ').trim().replace(/:$/, '').trim().toLowerCase();
+                if (labelNames.some(name => txt.includes(name.toLowerCase()))) {
                     const nextTd = tds[i].nextElementSibling;
-                    if (nextTd) {
-                        return nextTd.textContent.replace(/\s+/g, ' ').replace(/&nbsp;/i, '').trim();
+                    if (nextTd && nextTd.tagName.toLowerCase() === 'td') {
+                        return nextTd.textContent.replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
+                    }
+                    if (tds[i+1]) {
+                        return tds[i+1].textContent.replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
                     }
                 }
             }
             return "";
         }
 
+        function getValueFromText(text, labelName) {
+            const escapedLabel = labelName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const regex = new RegExp(escapedLabel + '\\s*[:\\-]?\\s*([\\s\\S]*?)(?=\\s*(?:[A-Z][a-zA-Z0-9\\s()\\.\\/]+:|$))', 'i');
+            const match = text.match(regex);
+            if (match) {
+                return match[1].replace(/&nbsp;/gi, '').trim();
+            }
+            return "";
+        }
+
+        function extractDescription(container) {
+            let val = extractFieldFromDOM(container, ['Description of Goods', 'Goods Description']);
+            if (val) return val;
+            const rawText = container.textContent.replace(/\s+/g, ' ').trim();
+            return getValueFromText(rawText, 'Description of Goods');
+        }
+
         function extractAirlines(container) {
+            let val = extractFieldFromDOM(container, ['International Airlines', 'Airlines']);
+            if (val) return val;
             const rawText = container.textContent.replace(/\s+/g, ' ').trim();
-            const match = rawText.match(/(?:International Airlines|Airlines)\s*[:\-]?\s*([\s\S]*?)(?=\s*(?:International Flight|Flight Number|Domestic Airlines|Airport of Departure|$))/i);
-            if (match && match[1].trim() !== "") {
-                return match[1].replace(/&nbsp;/i, '').trim();
-            }
-            return "";
+            return getValueFromText(rawText, 'International Airlines');
         }
 
+        // Helper to extract Airport of Destination
         function extractDest(container) {
+            let val = extractFieldFromDOM(container, ['Airport of Destination', 'Destination']);
+            if (val) return val;
             const rawText = container.textContent.replace(/\s+/g, ' ').trim();
-            const match = rawText.match(/Airport of Destination\s*[:\-]?\s*([\s\S]*?)(?=\s*(?:Date of Departure|Expected Date|Manifest Weight|Actual Weight|$))/i);
-            if (match && match[1].trim() !== "") {
-                return match[1].replace(/&nbsp;/i, '').trim();
-            }
-            return "";
+            return getValueFromText(rawText, 'Airport of Destination');
         }
 
+        // Helper to extract Weight (in Kg.)
         function extractWeight(container) {
+            let val = extractFieldFromDOM(container, ['Weight (in Kg.)', 'Weight']);
+            if (val) return val;
             const rawText = container.textContent.replace(/\s+/g, ' ').trim();
-            const match = rawText.match(/(?:Weight\s*\(in\s*Kg\s*\.?\)|Manifest Weight|Actual Weight)\s*[:\-]?\s*([\s\S]*?)(?=\s*(?:Value|Invoice Value|FOB Value|Date of|$))/i);
-            if (match && match[1].trim() !== "") {
-                return match[1].replace(/&nbsp;/i, '').trim();
-            }
-            return "";
+            return getValueFromText(rawText, 'Weight (in Kg.)');
         }
 
         // Helper: Trigger background AJAX details fetch
