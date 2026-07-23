@@ -395,17 +395,18 @@
             }
         }
 
-        /* Styling links inside document values */
-        .field-value a, .modern-table td a {
+        /* Styling all links inside the dashboard for maximum legibility */
+        #eccs-dashboard-root a {
             color: #38bdf8 !important;
-            text-decoration: none !important;
-            font-weight: bold !important;
-            border-bottom: 1px dashed #38bdf8 !important;
+            text-decoration: underline !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+            background: transparent !important;
         }
 
-        .field-value a:hover, .modern-table td a:hover {
+        #eccs-dashboard-root a:hover {
             color: #60a5fa !important;
-            border-bottom-style: solid !important;
+            text-decoration: underline !important;
         }
 
         /* Footer & Buttons */
