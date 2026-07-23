@@ -12,7 +12,6 @@ def main():
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--window-size=1280,800")
 
     driver = webdriver.Chrome(options=options)
     
@@ -63,8 +62,15 @@ def main():
         import time
         time.sleep(2)
         
+        # Resize window to capture the entire scrolled webpage
+        width = driver.execute_script("return Math.max(document.body.scrollWidth, document.documentElement.scrollWidth, document.body.offsetWidth, document.documentElement.offsetWidth, document.body.clientWidth, document.documentElement.clientWidth);")
+        height = driver.execute_script("return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, document.body.offsetHeight, document.documentElement.offsetHeight, document.body.clientHeight, document.documentElement.clientHeight);")
+        print(f"Resizing window to: width={width}, height={height}")
+        driver.set_window_size(width, height)
+        time.sleep(0.5)
+
         # Capture screenshot
-        print(f"Saving screenshot to: {output_screenshot_path}")
+        print(f"Saving full-page screenshot to: {output_screenshot_path}")
         driver.save_screenshot(output_screenshot_path)
         print("Rendering complete!")
         
