@@ -73,14 +73,14 @@
             }
         });
 
-        // --- 2. Insert new "Description of Goods" header cell ---
+        // --- 2. Append new "Description of Goods" header cell at the end ---
         const th = document.createElement('td');
         th.width = "150";
         th.height = "25";
         th.align = "center";
         th.style = "font-weight: bold;";
         th.textContent = "Description of Goods";
-        headerRow.insertBefore(th, headerRow.cells[3]);
+        headerRow.appendChild(th);
 
         // --- 3. Override Select All / Clear All globally in page context ---
         window.selectAll = function() {
@@ -99,7 +99,7 @@
             });
         };
 
-        // --- 4. Create Filter Row ---
+        // --- 4. Create Filter Row aligned with appended column structure ---
         const filterRow = document.createElement('tr');
         filterRow.className = 'eccs-filter-row';
 
@@ -142,17 +142,7 @@
         td2.appendChild(hawbInput);
         filterRow.appendChild(td2);
 
-        // Column 3: Description of Goods Filter
-        const td3 = document.createElement('td');
-        td3.align = 'center';
-        const descInput = document.createElement('input');
-        descInput.type = 'text';
-        descInput.placeholder = 'Filter Goods...';
-        descInput.className = 'eccs-filter-input';
-        td3.appendChild(descInput);
-        filterRow.appendChild(td3);
-
-        // Column 4: Courier Filter
+        // Column 3: Courier Filter
         const td4 = document.createElement('td');
         td4.align = 'center';
         const courierInput = document.createElement('input');
@@ -162,7 +152,7 @@
         td4.appendChild(courierInput);
         filterRow.appendChild(td4);
 
-        // Column 5: Status Filter
+        // Column 4: Status Filter
         const td5 = document.createElement('td');
         td5.align = 'center';
         const statusInput = document.createElement('input');
@@ -172,13 +162,23 @@
         td5.appendChild(statusInput);
         filterRow.appendChild(td5);
 
-        // Column 6: Unique HAWB Counter
+        // Column 5: Unique HAWB Counter (placed under original Scan Remarks column)
         const td6 = document.createElement('td');
         td6.align = 'center';
         const counterSpan = document.createElement('span');
         counterSpan.className = 'eccs-filter-counter';
         td6.appendChild(counterSpan);
         filterRow.appendChild(td6);
+
+        // Column 6: Description of Goods Filter
+        const td3 = document.createElement('td');
+        td3.align = 'center';
+        const descInput = document.createElement('input');
+        descInput.type = 'text';
+        descInput.placeholder = 'Filter Goods...';
+        descInput.className = 'eccs-filter-input';
+        td3.appendChild(descInput);
+        filterRow.appendChild(td3);
 
         // Inject Filter Row right after Header Row
         headerRow.parentNode.insertBefore(filterRow, headerRow.nextSibling);
@@ -198,7 +198,7 @@
             return uniqueHawbs.size;
         }
 
-        // Apply filtering logic
+        // Apply filtering logic using direct index alignment
         function applyFilters() {
             const csbQuery = csbInput.value.toLowerCase().trim();
             const hawbQuery = hawbInput.value.toLowerCase().trim();
@@ -210,11 +210,11 @@
                 const cells = Array.from(row.querySelectorAll('td'));
                 if (cells.length < 6) return;
 
-                const csbText = cells[1].textContent.toLowerCase();
-                const hawbText = cells[2].textContent.toLowerCase();
-                const descText = cells[3].textContent.toLowerCase();
-                const courierText = cells[4].textContent.toLowerCase();
-                const statusText = cells[5].textContent.toLowerCase();
+                const csbText = cells[1] ? cells[1].textContent.toLowerCase() : '';
+                const hawbText = cells[2] ? cells[2].textContent.toLowerCase() : '';
+                const courierText = cells[3] ? cells[3].textContent.toLowerCase() : '';
+                const statusText = cells[4] ? cells[4].textContent.toLowerCase() : '';
+                const descText = cells[6] ? cells[6].textContent.toLowerCase() : '';
 
                 const matchesCsb = !csbQuery || csbText.includes(csbQuery);
                 const matchesHawb = !hawbQuery || hawbText.includes(hawbQuery);
@@ -319,14 +319,14 @@
                         const csbNo = matches[1].replace(/'/g, '');
                         const index = matches[2].replace(/'/g, '');
                         
-                        // Insert description cell
+                        // Append description cell at the end of the row
                         const td = document.createElement('td');
                         td.height = "25";
                         td.width = "150";
                         td.align = "center";
                         td.className = "eccs-desc-cell";
                         td.textContent = "Loading...";
-                        row.insertBefore(td, row.cells[3]);
+                        row.appendChild(td);
 
                         // Wait for description fetch
                         const desc = await fetchDescription(index, csbNo, actionUrl);
@@ -339,7 +339,7 @@
                     td.align = "center";
                     td.className = "eccs-desc-cell";
                     td.textContent = "N/A";
-                    row.insertBefore(td, row.cells[3]);
+                    row.appendChild(td);
                 }
                 
                 // 50ms sequential spacing
