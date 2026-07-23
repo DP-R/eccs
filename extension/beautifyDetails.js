@@ -132,14 +132,14 @@
             border-collapse: collapse !important;
             margin-bottom: 20px !important;
             font-family: system-ui, -apple-system, sans-serif !important;
-            font-size: 12px !important;
+            font-size: 11px !important;
             background-color: #f8fafc !important;
             border: 2px solid #2563eb !important;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06) !important;
         }
         .cbe-pattern-table td {
             border: 1px solid #cbd5e1 !important;
-            padding: 8px 10px !important;
+            padding: 6px 8px !important;
             color: #0f172a !important;
             vertical-align: middle !important;
         }
@@ -157,11 +157,11 @@
             background-color: #f1f5f9 !important;
             font-weight: 700 !important;
             color: #475569 !important;
-            width: 15% !important;
+            width: 14% !important;
             text-align: right !important;
         }
         .pattern-value {
-            width: 35% !important;
+            width: 36% !important;
             text-align: left !important;
         }
         .pattern-highlight {
@@ -184,25 +184,41 @@
     `;
     document.head.appendChild(style);
 
-    // Extract values
+    // Extract all values
     const airlines = getValueText("Airlines Name");
     const flight = getValueText("Flight Number");
     const portShipment = getValueText("Port of Shipment");
-    const portArrival = getValueText("Port of Arrival") || getValueText("First Port of Arrival");
+    const portArrival = getValueText("Port of Arrival");
+    const firstPort = getValueText("First Port of Arrival");
+    const dateArrival = getValueText("Date of Arrival");
+    const timeArrival = getValueText("Time of Arrival");
+    const countryExport = getValueText("Country of Exportation");
+    
     const grossWt = getValueText("Gross Weight (KGs)");
     const netWt = getValueText("Net Weight (KGs)");
     const pkgs = getValueText("No. of Packages") || getValueText("No. of Packages :");
-    const assessableVal = getValueText("Assessable Value(Rs.)") || getValueText("Assessable Value (Rs.)");
-    const duty = getValueText("Duty (Rs.)");
-    const challanNo = getValueText("TR-6 Challan Number");
-    const challanDate = getValueText("TR-6 Challan Date");
-    const fine = getValueText("Fine (Rs.)");
-    const penalty = getValueText("Penalty (Rs.)");
-    const interest = getValueText("Interest Amount (Rs.)");
+    const ucn = getValueText("Unique Consignment No.");
+    const iecCode = getValueText("IEC Code");
+    const iecBranch = getValueText("IEC Branch Code");
+
+    const courierReg = getValueText("Courier Registration Number");
+    const courierName = getValueText("Courier Name");
+    const courierAddr = getValueText("Address of Courier");
+    const caseOfCrn = getValueText("Case of CRN");
+
     const consignorName = getValueText("Name Of Consignor");
     const consignorAddr = getValueText("Address Of Consignor");
     const consigneeName = getValueText("Name Of Consignee");
     const consigneeAddr = getValueText("Address Of Consignee");
+
+    const invoiceVal = getValueText("Invoice Value (Rs.)") || getValueText("Invoice Value");
+    const assessableVal = getValueText("Assessable Value(Rs.)") || getValueText("Assessable Value (Rs.)");
+    const duty = getValueText("Duty (Rs.)");
+    const interest = getValueText("Interest Amount (Rs.)");
+    const fine = getValueText("Fine (Rs.)");
+    const penalty = getValueText("Penalty (Rs.)");
+    const challanNo = getValueText("TR-6 Challan Number");
+    const challanDate = getValueText("TR-6 Challan Date");
 
     // Extract raw HTML elements/links
     const invoiceHtml = getValueHtml("Invoice Image");
@@ -214,53 +230,89 @@
         <table class="cbe-pattern-table">
             <thead>
                 <tr>
-                    <td class="pattern-header" colspan="4">CBE STATUS SUMMARY (Combined Fields for Quick Review)</td>
+                    <td class="pattern-header" colspan="4">CBE STATUS SUMMARY (All Fields Grouped for Pattern Review)</td>
                 </tr>
             </thead>
             <tbody>
+                <!-- 1. Identification & Identifiers -->
                 <tr>
-                    <td class="pattern-label">Shipment & Route:</td>
+                    <td class="pattern-label">Identifiers & IEC:</td>
                     <td class="pattern-value">
                         <strong>HAWB:</strong> ${hawbNo} | 
                         <strong>CBE:</strong> ${cbeNo} (${cbeType})<br>
-                        <strong>Airlines:</strong> ${airlines} (${flight}) | 
-                        <strong>Route:</strong> ${portShipment} ➔ ${portArrival}
+                        <strong>UCN:</strong> ${ucn} | 
+                        <strong>IEC:</strong> ${iecCode} (Branch: ${iecBranch})
                     </td>
                     <td class="pattern-label">Weight & Pkgs:</td>
                     <td class="pattern-value">
-                        <strong>Gross Weight:</strong> ${grossWt} KGs<br>
-                        <strong>Net Weight:</strong> ${netWt} KGs | 
+                        <strong>Gross:</strong> ${grossWt} KGs | 
+                        <strong>Net:</strong> ${netWt} KGs<br>
                         <strong>Packages:</strong> ${pkgs}
                     </td>
                 </tr>
+
+                <!-- 2. Logistics & Flight Routing -->
                 <tr>
-                    <td class="pattern-label">Finance & Duty:</td>
+                    <td class="pattern-label">Flight & Routing:</td>
                     <td class="pattern-value">
-                        <strong>Assessable Value:</strong> <span class="pattern-highlight">₹ ${assessableVal}</span><br>
-                        <strong>Duty:</strong> ₹ ${duty} | 
-                        <strong>Challan:</strong> ${challanNo} (${challanDate})
+                        <strong>Airlines:</strong> ${airlines} (${flight}) | 
+                        <strong>Export:</strong> ${countryExport}<br>
+                        <strong>Ports:</strong> ${portShipment} ➔ ${portArrival} (First Port: ${firstPort})
                     </td>
-                    <td class="pattern-label">Fines & Interest:</td>
+                    <td class="pattern-label">Arrival Timestamp:</td>
                     <td class="pattern-value">
-                        <strong>Fine:</strong> ₹ ${fine} | 
-                        <strong>Penalty:</strong> ₹ ${penalty}<br>
-                        <strong>Interest:</strong> ₹ ${interest}
+                        <strong>Date:</strong> ${dateArrival} | 
+                        <strong>Time:</strong> ${timeArrival}
                     </td>
                 </tr>
+
+                <!-- 3. Courier Credentials -->
+                <tr>
+                    <td class="pattern-label">Courier Info:</td>
+                    <td class="pattern-value">
+                        <strong>Name:</strong> ${courierName} (Reg: ${courierReg})<br>
+                        <strong>CRN Case:</strong> ${caseOfCrn}
+                    </td>
+                    <td class="pattern-label">Courier Address:</td>
+                    <td class="pattern-value">
+                        <span style="font-size: 10px; color: #475569;">${courierAddr}</span>
+                    </td>
+                </tr>
+
+                <!-- 4. Financials & Customs Clearance -->
+                <tr>
+                    <td class="pattern-label">Financials & Duty:</td>
+                    <td class="pattern-value">
+                        <strong>Invoice Value:</strong> ₹ ${invoiceVal} | 
+                        <strong>Duty:</strong> ₹ ${duty}<br>
+                        <strong>Assessable Value:</strong> <span class="pattern-highlight">₹ ${assessableVal}</span>
+                    </td>
+                    <td class="pattern-label">Fines & Challan:</td>
+                    <td class="pattern-value">
+                        <strong>Fine:</strong> ₹ ${fine} | 
+                        <strong>Penalty:</strong> ₹ ${penalty} | 
+                        <strong>Interest:</strong> ₹ ${interest}<br>
+                        <strong>Challan:</strong> ${challanNo} (${challanDate})
+                    </td>
+                </tr>
+
+                <!-- 5. Consignor & Consignee -->
                 <tr>
                     <td class="pattern-label">Consignor (Sender):</td>
                     <td class="pattern-value">
                         <strong>${consignorName}</strong><br>
-                        <span style="font-size: 11px; color: #475569;">${consignorAddr}</span>
+                        <span style="font-size: 10px; color: #475569;">${consignorAddr}</span>
                     </td>
                     <td class="pattern-label">Consignee (Receiver):</td>
                     <td class="pattern-value">
                         <strong>${consigneeName}</strong><br>
-                        <span style="font-size: 11px; color: #475569;">${consigneeAddr}</span>
+                        <span style="font-size: 10px; color: #475569;">${consigneeAddr}</span>
                     </td>
                 </tr>
+
+                <!-- 6. Interactive Documents & Actions -->
                 <tr>
-                    <td class="pattern-label">Docs & Instructions:</td>
+                    <td class="pattern-label">Docs & Actions:</td>
                     <td class="pattern-value" colspan="3">
                         <strong>Invoice Link:</strong> ${invoiceHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
                         <strong>RMS Instructions:</strong> ${rmsHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
