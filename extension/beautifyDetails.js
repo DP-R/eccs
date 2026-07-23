@@ -54,6 +54,11 @@
         return el ? cleanText(el.textContent) : "N/A";
     }
 
+    function getValueHtml(label) {
+        const el = getElementByLabel(label);
+        return el ? el.innerHTML : "N/A";
+    }
+
     // Try finding any CBE identifier
     let cbeNo = "N/A";
     let cbeType = "CBE Details";
@@ -75,7 +80,46 @@
         return;
     }
 
-    // --- 2. Build & Prepend Pattern-Detection Table at the top of the body ---
+    // --- 2. Extract Declared Items Table for CTSH Links ---
+    const itemsTable = Array.from(document.querySelectorAll('table')).find(table => {
+        return table.textContent.includes('CTSH') && table.textContent.includes('ITEM Description');
+    });
+
+    const items = [];
+    if (itemsTable) {
+        const rows = Array.from(itemsTable.querySelectorAll('tr'));
+        const headerIndex = rows.findIndex(row => row.textContent.includes('CTSH'));
+        if (headerIndex !== -1) {
+            for (let i = headerIndex + 1; i < rows.length; i++) {
+                const cells = Array.from(rows[i].querySelectorAll('td'));
+                if (cells.length >= 8) {
+                    items.push({
+                        sNo: cleanText(cells[0].textContent),
+                        detailsHtml: cells[8] ? cells[8].innerHTML : ""
+                    });
+                }
+            }
+        }
+    }
+
+    // Build Item details/CTSH links
+    let itemDetailsHtml = "N/A";
+    if (items.length > 0) {
+        itemDetailsHtml = items.map(item => {
+            return `[SNo ${item.sNo}: ${item.detailsHtml}]`;
+        }).join(" &nbsp;&nbsp; ");
+    }
+
+    // Look for any other general supporting documents
+    let supportingDocsHtml = "N/A";
+    for (const key of Object.keys(labelMap)) {
+        if (key.includes("supporting") || key.includes("document") || key.includes("upload")) {
+            supportingDocsHtml = labelMap[key].innerHTML;
+            break;
+        }
+    }
+
+    // --- 3. Build & Prepend Pattern-Detection Table at the top of the body ---
     const summaryContainer = document.createElement('div');
     summaryContainer.id = 'eccs-summary-root';
     summaryContainer.style = "margin: 15px auto; width: 95%; max-width: 1200px; box-sizing: border-box;";
@@ -129,6 +173,14 @@
             border: 1px solid #fde047 !important;
             display: inline-block !important;
         }
+        #eccs-summary-root a {
+            color: #2563eb !important;
+            text-decoration: underline !important;
+            font-weight: 700 !important;
+        }
+        #eccs-summary-root a:hover {
+            color: #1d4ed8 !important;
+        }
     `;
     document.head.appendChild(style);
 
@@ -151,6 +203,11 @@
     const consignorAddr = getValueText("Address Of Consignor");
     const consigneeName = getValueText("Name Of Consignee");
     const consigneeAddr = getValueText("Address Of Consignee");
+
+    // Extract raw HTML elements/links
+    const invoiceHtml = getValueHtml("Invoice Image");
+    const rmsHtml = getValueHtml("RMS Instruction");
+    const ccrHtml = getValueHtml("CCR Instruction");
 
     // Build Table Layout
     summaryContainer.innerHTML = `
@@ -200,6 +257,16 @@
                     <td class="pattern-value">
                         <strong>${consigneeName}</strong><br>
                         <span style="font-size: 11px; color: #475569;">${consigneeAddr}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="pattern-label">Docs & Instructions:</td>
+                    <td class="pattern-value" colspan="3">
+                        <strong>Invoice Link:</strong> ${invoiceHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
+                        <strong>RMS Instructions:</strong> ${rmsHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
+                        <strong>CCR Instructions:</strong> ${ccrHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
+                        <strong>Supporting Docs:</strong> ${supportingDocsHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
+                        <strong>Item Details (CTSH):</strong> ${itemDetailsHtml}
                     </td>
                 </tr>
             </tbody>
