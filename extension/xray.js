@@ -104,7 +104,7 @@ function automateXray() {
         // Strip extra spaces and linebreaks
         const text = redFont.textContent.replace(/\s+/g, ' ').trim();
         // Match: "The HAWB No. <hawbNo> <current> out of <total>"
-        const match = text.match(/The HAWB No\.\s*(\d+)\s*(\d+)\s*out\s*of\s*(\d+)/i);
+        const match = text.match(/The HAWB No\.\s*([A-Za-z0-9]+)\s*(\d+)\s*out\s*of\s*(\d+)/i);
         
         if (match) {
             const hawbNo = match[1].trim();
