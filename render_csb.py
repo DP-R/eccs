@@ -20,32 +20,60 @@ def main():
         print(f"Loading local HTML: {html_path}")
         driver.get(f"file://{html_path}")
         
-        # Inject Mock viewCSBDetails first
+        # Inject realistic ECCS data instead of generic mocks
         mock_js = """
         window.viewCSBDetails = function(actionUrl, csbNo, index) {
             const div = document.getElementById('mydiv' + index);
-            if (div) {
-                div.innerHTML = `
-                    <table>
-                        <tr>
-                            <td>Description of Goods:</td>
-                            <td>MOCK GOODS ITEM ` + index + `</td>
-                        </tr>
-                        <tr>
-                            <td>International Airlines:</td>
-                            <td>MOCK AIRLINE ` + index + `</td>
-                        </tr>
-                        <tr>
-                            <td>Airport of Destination:</td>
-                            <td>DXB</td>
-                        </tr>
-                        <tr>
-                            <td>Weight (in Kg.):</td>
-                            <td>3.` + index + `</td>
-                        </tr>
-                    </table>
-                `;
+            if (!div) return;
+            
+            // Generate realistic values based on index
+            let desc = "SAMPLE PU SYNTHETIC SAMPLES";
+            let airlines = "CATHAY PACIFIC AIRWAYS";
+            let dest = "HKG";
+            let weight = "0.7";
+            
+            if (index == "1") {
+                desc = "POLYESTER FABRIC SAMPLES";
+                airlines = "EMIRATES AIRLINES";
+                dest = "DXB";
+                weight = "1.2";
+            } else if (index == "2") {
+                desc = "SILK SCARVES";
+                airlines = "SINGAPORE AIRLINES";
+                dest = "SIN";
+                weight = "0.5";
+            } else if (index == "3") {
+                desc = "LEATHER WALLETS";
+                airlines = "LUFTHANSA";
+                dest = "FRA";
+                weight = "2.1";
+            } else if (index == "4") {
+                desc = "COTTON T-SHIRTS SAMPLES";
+                airlines = "BRITISH AIRWAYS";
+                dest = "LHR";
+                weight = "1.8";
             }
+            
+            div.innerHTML = `
+                <table>
+                    <tr>
+                        <td>Description of Goods:</td>
+                        <td>` + desc + `</td>
+                    </tr>
+                    <tr>
+                        <td>International Airlines:</td>
+                        <td>` + airlines + `</td>
+                    </tr>
+                    <tr>
+                        <td>Airport of Destination:</td>
+                        <td>` + dest + `</td>
+                    </tr>
+                    <tr>
+                        <td>Weight (in Kg.):</td>
+                        <td>` + weight + `</td>
+                    </tr>
+                </table>
+            `;
         };
         """
         driver.execute_script(mock_js)
