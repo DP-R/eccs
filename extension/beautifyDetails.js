@@ -14,6 +14,11 @@
         window.location.pathname.includes("examuination_cbe_specifics")
     );
 
+    // Do NOT run on X-Ray clearance/barcode scanning pages
+    if (document.querySelector('form[name="searchHAWBStatusForm"]')) {
+        return;
+    }
+
     if (!isDetailsPage) return;
 
     // --- 1. Map all labels and values programmatically ---
