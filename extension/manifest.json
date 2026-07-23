@@ -7,11 +7,19 @@
       "matches": ["<all_urls>"],
       "js": ["openTab.js"],
       "run_at": "document_start",
-      "all_frames": true
+      "all_frames": true,
+      "world": "MAIN"
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["lock.js", "expand.js", "resize.js", "xray.js", "beautifyDetails.js", "filterCsb.js"],
+      "js": ["filterCsb.js"],
+      "run_at": "document_end",
+      "all_frames": true,
+      "world": "MAIN"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["lock.js", "expand.js", "resize.js", "xray.js", "beautifyDetails.js"],
       "run_at": "document_end",
       "all_frames": true
     }
