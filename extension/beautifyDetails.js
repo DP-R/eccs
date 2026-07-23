@@ -109,7 +109,7 @@
         }
     }
 
-    // Build Item details table rows
+    // Build Item details table rows (unmodified raw data)
     let itemsRowsHtml = "";
     if (items.length > 0) {
         items.forEach(item => {
@@ -231,12 +231,12 @@
             max-height: 250px !important;
             overflow-y: auto !important;
         }
-        .item-summary-table, .ccr-detail-table {
+        .item-summary-table, .ccr-detail-table, .rms-detail-table {
             width: 100% !important;
             border-collapse: collapse !important;
             font-size: 11px !important;
         }
-        .item-summary-table th, .ccr-detail-table th {
+        .item-summary-table th, .ccr-detail-table th, .rms-detail-table th {
             background-color: #f8fafc !important;
             border: 1px solid #e2e8f0 !important;
             padding: 6px 8px !important;
@@ -244,7 +244,7 @@
             color: #475569 !important;
             text-align: center !important;
         }
-        .item-summary-table td, .ccr-detail-table td {
+        .item-summary-table td, .ccr-detail-table td, .rms-detail-table td {
             border: 1px solid #e2e8f0 !important;
             padding: 6px 8px !important;
             color: #334155 !important;
@@ -391,15 +391,13 @@
                     <td class="pattern-label">Docs & Actions:</td>
                     <td class="pattern-value" colspan="3">
                         <strong>Invoice Link:</strong> ${invoiceHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
-                        <strong>RMS Instructions:</strong> ${rmsHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
-                        <strong>CCR Instructions:</strong> ${ccrHtml} &nbsp;&nbsp;|&nbsp;&nbsp;
                         <strong>Supporting Docs:</strong> ${supportingDocsHtml}
                     </td>
                 </tr>
             </tbody>
         </table>
 
-        <!-- Item Details and CCR Details Side-By-Side Dashboard -->
+        <!-- Item Details and Instructions side-by-side section -->
         <div class="summary-details-section">
             <!-- Left: Item Details -->
             <div class="details-box">
@@ -425,12 +423,22 @@
                 </div>
             </div>
             
-            <!-- Right: CCR Details (Dynamically Fetched in Background) -->
+            <!-- Right: Instructions Box (CCR & RMS) -->
             <div class="details-box">
-                <h3 class="details-title">CCR (Compulsory Compliance Requirements) Instructions</h3>
-                <div id="ccr-details-content" class="details-content">
-                    <div style="text-align: center; padding: 20px; color: #64748b;">
-                        Loading CCR Details in background...
+                <h3 class="details-title">Customs Instructions (CCR & RMS)</h3>
+                <div class="details-content" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <strong style="color: #475569; font-size: 10px; text-transform: uppercase; display: block; margin-bottom: 4px;">CCR Instructions (Compulsory Compliance):</strong>
+                        <div id="ccr-details-content">
+                            <div style="color: #64748b;">Loading CCR details...</div>
+                        </div>
+                    </div>
+                    <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 4px 0;">
+                    <div>
+                        <strong style="color: #475569; font-size: 10px; text-transform: uppercase; display: block; margin-bottom: 4px;">RMS Instructions (Risk Management System):</strong>
+                        <div id="rms-details-content">
+                            <div style="color: #64748b;">Loading RMS details...</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -450,50 +458,38 @@
     // Prepend the summary table at the very top of the page body
     document.body.insertBefore(summaryContainer, document.body.firstChild);
 
-    // --- 4. Fetch and Display CCR Details in the Background ---
-    function fetchCCRDetails(url) {
-        return fetch(url)
-            .then(res => {
-                if (!res.ok) throw new Error("Status " + res.status);
-                return res.text();
-            })
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                
-                // Find target table containing ccr instructions
-                const ccrTable = Array.from(doc.querySelectorAll('table')).find(table => {
-                    const txt = table.textContent.toLowerCase();
-                    return txt.includes("instruction") || txt.includes("ccr") || txt.includes("parameter");
-                });
+    // --- 4. Helper to Clean and Extract Instruction Tables ---
+    function cleanInstructionHTML(html, targetKeyword) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        const targetTable = Array.from(doc.querySelectorAll('table')).find(table => {
+            const txt = table.textContent.toLowerCase();
+            return txt.includes(targetKeyword) || txt.includes("instruction") || txt.includes("details");
+        });
 
-                if (ccrTable) {
-                    ccrTable.removeAttribute('style');
-                    ccrTable.removeAttribute('width');
-                    ccrTable.removeAttribute('border');
-                    ccrTable.removeAttribute('cellspacing');
-                    ccrTable.removeAttribute('cellpadding');
-                    ccrTable.className = 'ccr-detail-table';
-                    
-                    // Format all internal table elements cleanly
-                    ccrTable.querySelectorAll('td, th').forEach(cell => {
-                        cell.removeAttribute('style');
-                        cell.removeAttribute('width');
-                        cell.removeAttribute('height');
-                        cell.removeAttribute('bgcolor');
-                    });
-                    
-                    return ccrTable.outerHTML;
-                }
-
-                // Fallback to text content if no table is found
-                return doc.body ? doc.body.innerHTML : "No CCR instructions details found.";
-            })
-            .catch(err => {
-                return `<div style="color: #ef4444; padding: 10px; font-weight: bold;">Failed to load CCR details dynamically: ${err.message}</div>`;
+        if (targetTable) {
+            targetTable.removeAttribute('style');
+            targetTable.removeAttribute('width');
+            targetTable.removeAttribute('border');
+            targetTable.removeAttribute('cellspacing');
+            targetTable.removeAttribute('cellpadding');
+            targetTable.className = targetKeyword === 'ccr' ? 'ccr-detail-table' : 'rms-detail-table';
+            
+            targetTable.querySelectorAll('td, th').forEach(cell => {
+                cell.removeAttribute('style');
+                cell.removeAttribute('width');
+                cell.removeAttribute('height');
+                cell.removeAttribute('bgcolor');
             });
+            
+            return targetTable.outerHTML;
+        }
+
+        return doc.body ? doc.body.innerHTML : `No ${targetKeyword.toUpperCase()} details found.`;
     }
 
+    // --- 5. Fetch and Display CCR Details in the Background ---
     const ccrLink = document.querySelector('a[href*="viewCCRIntructions"]');
     if (ccrLink) {
         let url = ccrLink.getAttribute('href');
@@ -507,16 +503,61 @@
             }
         }
         
-        fetchCCRDetails(url).then(ccrContent => {
-            const container = document.getElementById('ccr-details-content');
-            if (container) {
-                container.innerHTML = ccrContent;
-            }
-        });
+        fetch(url)
+            .then(res => {
+                if (!res.ok) throw new Error("Status " + res.status);
+                return res.text();
+            })
+            .then(html => {
+                const content = cleanInstructionHTML(html, 'ccr');
+                const container = document.getElementById('ccr-details-content');
+                if (container) container.innerHTML = content;
+            })
+            .catch(err => {
+                const container = document.getElementById('ccr-details-content');
+                if (container) container.innerHTML = `<div style="color: #ef4444; font-weight: bold;">Failed to load CCR details: ${err.message}</div>`;
+            });
     } else {
         const container = document.getElementById('ccr-details-content');
         if (container) {
-            container.innerHTML = `<div style="text-align: center; padding: 20px; color: #64748b;">No CCR instructions required for this HAWB.</div>`;
+            container.innerHTML = `<div style="color: #64748b;">No CCR instructions required for this HAWB.</div>`;
+        }
+    }
+
+    // --- 6. Fetch and Display RMS Instructions in the Background ---
+    const rmsLink = document.querySelector('a[href*="viewRMSIntructions"]') || document.querySelector('a[href*="viewRMS"]');
+    if (rmsLink) {
+        let url = rmsLink.getAttribute('href');
+        if (url.startsWith("javascript:")) {
+            const matches = url.match(/'([^']+)'/g);
+            if (matches && matches.length >= 3) {
+                const action = matches[0].replace(/'/g, '');
+                const refNo = matches[1].replace(/'/g, '');
+                const hawbId = matches[2].replace(/'/g, '');
+                url = `${action}?refNo=${refNo}&hawbId=${hawbId}`;
+            }
+        }
+        
+        fetch(url)
+            .then(res => {
+                if (!res.ok) throw new Error("Status " + res.status);
+                return res.text();
+            })
+            .then(html => {
+                const content = cleanInstructionHTML(html, 'rms');
+                const container = document.getElementById('rms-details-content');
+                if (container) container.innerHTML = content;
+            })
+            .catch(err => {
+                const container = document.getElementById('rms-details-content');
+                if (container) container.innerHTML = `<div style="color: #ef4444; font-weight: bold;">Failed to load RMS details: ${err.message}</div>`;
+            });
+    } else {
+        const container = document.getElementById('rms-details-content');
+        if (container) {
+            // Get raw text from the ECCS page
+            const rawRms = getValueHtml("RMS Instruction") || getValueHtml("RMS Instructions") || "N/A";
+            container.innerHTML = rawRms;
         }
     }
 })();
