@@ -238,6 +238,13 @@
             counterSpan.textContent = `[${getUniqueHawbCount()}/${totalUnique} HAWBs]`;
         }
 
+        // Debounce applyFilters to reduce CPU usage and layout thrashing
+        let filterTimeout;
+        function debouncedApplyFilters() {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(applyFilters, 20);
+        }
+
         // Attach listeners
         [csbInput, hawbInput, descInput, courierInput, statusInput].forEach(input => {
             input.addEventListener('input', applyFilters);
@@ -306,11 +313,20 @@
             });
         }
 
-        // --- 7. Sequentially load descriptions for all visible rows ---
-        async function loadAllDescriptions() {
-            for (let i = 0; i < dataRows.length; i++) {
-                const row = dataRows[i];
+        // --- 7. Load descriptions for all rows in parallel (efficient asynchronous fetching) ---
+        function loadAllDescriptions() {
+            dataRows.forEach(async (row) => {
                 const link = row.querySelector('a[onmouseover]');
+                
+                // Append description cell at the end of the row immediately
+                const td = document.createElement('td');
+                td.height = "25";
+                td.width = "150";
+                td.align = "center";
+                td.className = "eccs-desc-cell";
+                td.textContent = "Loading...";
+                row.appendChild(td);
+
                 if (link) {
                     const onmouseover = link.getAttribute('onmouseover');
                     const matches = onmouseover.match(/'([^']+)'/g);
@@ -319,34 +335,18 @@
                         const csbNo = matches[1].replace(/'/g, '');
                         const index = matches[2].replace(/'/g, '');
                         
-                        // Append description cell at the end of the row
-                        const td = document.createElement('td');
-                        td.height = "25";
-                        td.width = "150";
-                        td.align = "center";
-                        td.className = "eccs-desc-cell";
-                        td.textContent = "Loading...";
-                        row.appendChild(td);
-
-                        // Wait for description fetch
                         const desc = await fetchDescription(index, csbNo, actionUrl);
                         td.textContent = desc || "N/A";
+                    } else {
+                        td.textContent = "N/A";
                     }
                 } else {
-                    const td = document.createElement('td');
-                    td.height = "25";
-                    td.width = "150";
-                    td.align = "center";
-                    td.className = "eccs-desc-cell";
                     td.textContent = "N/A";
-                    row.appendChild(td);
                 }
                 
-                // 50ms sequential spacing
-                await new Promise(r => setTimeout(r, 50));
-            }
-            // Re-filter after descriptions are loaded
-            applyFilters();
+                // Debounce layout updates to batch filter updates efficiently
+                debouncedApplyFilters();
+            });
         }
 
         // Load all descriptions on start
