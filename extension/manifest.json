@@ -11,7 +11,7 @@
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["lock.js", "expand.js", "resize.js", "xray.js", "beautifyDetails.js"],
+      "js": ["lock.js", "expand.js", "resize.js", "xray.js", "beautifyDetails.js", "filterCsb.js"],
       "run_at": "document_end",
       "all_frames": true
     }
