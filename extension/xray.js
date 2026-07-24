@@ -44,7 +44,7 @@
                       `letter-spacing:0.04em;box-shadow:0 2px 5px rgba(0,0,0,0.1);` +
                       `transition:opacity 0.3s;border:1.5px solid ${textColor};`;
                       
-        toast.textContent = message;
+        toast.textContent = "ECCS";
         toast.style.opacity = '1';
         
         if (window.toastTimeout) clearTimeout(window.toastTimeout);
