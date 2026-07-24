@@ -16,7 +16,7 @@
             const isEnabled = localStorage.autoXrayEnabled === "true";
             localStorage.autoXrayEnabled = isEnabled ? "false" : "true";
             
-            showToast(`Auto X-Ray: ${isEnabled ? 'DISABLED' : 'ENABLED'}`);
+            showToast(isEnabled ? 'OFF' : 'ON');
             
             // If re-enabled, immediately run clearance check
             if (!isEnabled) {
@@ -35,13 +35,13 @@
             document.documentElement.appendChild(toast);
         }
         
-        const isActionOn = message.includes('ENABLED');
+        const isActionOn = message === 'ON';
         const textColor = isActionOn ? '#16a34a' : '#dc2626'; // Green vs Red
         
         toast.style = `position:fixed;bottom:15px;right:15px;background:#ffffff;` +
                       `color:${textColor};padding:5px 10px;border-radius:4px;z-index:2147483647;` +
-                      `font-family:system-ui,sans-serif;font-size:11px;font-weight:700;` +
-                      `letter-spacing:0.02em;box-shadow:0 2px 5px rgba(0,0,0,0.1);` +
+                      `font-family:system-ui,sans-serif;font-size:12px;font-weight:800;` +
+                      `letter-spacing:0.04em;box-shadow:0 2px 5px rgba(0,0,0,0.1);` +
                       `transition:opacity 0.3s;border:1.5px solid ${textColor};`;
                       
         toast.textContent = message;
