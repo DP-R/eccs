@@ -4,9 +4,9 @@
 
 let done = 0;
 
-// Initialize toggle state (default to true if not set)
-if (localStorage.autoXrayEnabled === undefined) {
-    localStorage.autoXrayEnabled = "true";
+// Initialize toggle state in sessionStorage (defaults to false so closing the browser resets it)
+if (sessionStorage.autoXrayEnabled === undefined) {
+    sessionStorage.autoXrayEnabled = "false";
 }
 
 function showToast(message) {
@@ -47,7 +47,7 @@ function getNoOfPackages() {
 
 function automateXray() {
     // Stop immediately if the toggle is disabled
-    if (localStorage.autoXrayEnabled === "false") {
+    if (sessionStorage.autoXrayEnabled === "false") {
         return;
     }
 
@@ -148,8 +148,8 @@ document.addEventListener("keydown", e => {
     if (e.ctrlKey && e.shiftKey && e.code === "Space") {
         e.preventDefault();
         
-        const isEnabled = localStorage.autoXrayEnabled === "true";
-        localStorage.autoXrayEnabled = isEnabled ? "false" : "true";
+        const isEnabled = sessionStorage.autoXrayEnabled === "true";
+        sessionStorage.autoXrayEnabled = isEnabled ? "false" : "true";
         
         showToast(`Auto X-Ray: ${isEnabled ? 'DISABLED' : 'ENABLED'}`);
         
