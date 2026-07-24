@@ -32,9 +32,18 @@
         if (!toast) {
             toast = document.createElement('div');
             toast.id = 'eccs-toast-alert';
-            toast.style = "position:fixed;bottom:15px;right:15px;background:#334155;color:#f8fafc;padding:5px 10px;border-radius:4px;z-index:2147483647;font-family:system-ui,sans-serif;font-size:11px;font-weight:600;letter-spacing:0.02em;box-shadow:0 2px 5px rgba(0,0,0,0.15);transition:opacity 0.3s;border:1px solid #475569;";
             document.documentElement.appendChild(toast);
         }
+        
+        const isActionOn = message.includes('ENABLED');
+        const textColor = isActionOn ? '#16a34a' : '#dc2626'; // Green vs Red
+        
+        toast.style = `position:fixed;bottom:15px;right:15px;background:#ffffff;` +
+                      `color:${textColor};padding:5px 10px;border-radius:4px;z-index:2147483647;` +
+                      `font-family:system-ui,sans-serif;font-size:11px;font-weight:700;` +
+                      `letter-spacing:0.02em;box-shadow:0 2px 5px rgba(0,0,0,0.1);` +
+                      `transition:opacity 0.3s;border:1.5px solid ${textColor};`;
+                      
         toast.textContent = message;
         toast.style.opacity = '1';
         

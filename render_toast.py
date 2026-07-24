@@ -41,16 +41,24 @@ def main():
         with open(xray_js_path, "r", encoding="utf-8") as f:
             driver.execute_script(f.read())
             
-        # Trigger the toast alert
-        print("Triggering toast alert...")
+        # Trigger the toast alert (ENABLED)
+        print("Triggering ENABLED toast alert...")
         driver.execute_script("window.showToast('Auto X-Ray: ENABLED');")
-        
-        # Wait a moment for transition
         time.sleep(1.0)
         
         # Capture standard viewport screenshot
-        print(f"Saving viewport screenshot to: {output_screenshot_path}")
+        print(f"Saving ENABLED viewport screenshot to: {output_screenshot_path}")
         driver.save_screenshot(output_screenshot_path)
+
+        # Trigger the toast alert (DISABLED)
+        print("Triggering DISABLED toast alert...")
+        driver.execute_script("window.showToast('Auto X-Ray: DISABLED');")
+        time.sleep(1.0)
+
+        # Capture disabled viewport screenshot
+        disabled_path = output_screenshot_path.replace("toast_preview.png", "toast_disabled_preview.png")
+        print(f"Saving DISABLED viewport screenshot to: {disabled_path}")
+        driver.save_screenshot(disabled_path)
         print("Rendering complete!")
         
     finally:
