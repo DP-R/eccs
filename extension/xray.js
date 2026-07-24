@@ -32,7 +32,7 @@
         if (!toast) {
             toast = document.createElement('div');
             toast.id = 'eccs-toast-alert';
-            toast.style = "position:fixed;top:20px;right:20px;background:#1e293b;color:#f8fafc;padding:10px 20px;border-radius:6px;z-index:2147483647;font-family:sans-serif;font-size:14px;font-weight:bold;box-shadow:0 4px 12px rgba(0,0,0,0.25);transition:opacity 0.3s;border:1px solid #475569;";
+            toast.style = "position:fixed;bottom:15px;right:15px;background:#334155;color:#f8fafc;padding:5px 10px;border-radius:4px;z-index:2147483647;font-family:system-ui,sans-serif;font-size:11px;font-weight:600;letter-spacing:0.02em;box-shadow:0 2px 5px rgba(0,0,0,0.15);transition:opacity 0.3s;border:1px solid #475569;";
             document.documentElement.appendChild(toast);
         }
         toast.textContent = message;
@@ -43,6 +43,7 @@
             toast.style.opacity = '0';
         }, 2000);
     }
+    window.showToast = showToast;
 
     function getScannedHawb() {
         const tds = Array.from(document.querySelectorAll('td'));

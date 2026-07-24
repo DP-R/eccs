@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.options import Options
 def main():
     html_path = "/home/dpr/Downloads/eccs/csb4_preview.html"
     js_path = "/home/dpr/Downloads/eccs/extension/filterCsb.js"
+    xray_js_path = "/home/dpr/Downloads/eccs/extension/xray.js"
     output_screenshot_path = "/home/dpr/.gemini/antigravity-cli/brain/50112b58-c76f-43b5-a51c-8d52531b88d7/csb_preview.png"
 
     # Setup headless Chrome options
@@ -86,10 +87,20 @@ def main():
         # Inject the script into the page context
         print("Injecting filterCsb.js...")
         driver.execute_script(js_code)
+
+        # Inject xray.js to display the toast alert
+        print("Injecting xray.js...")
+        with open(xray_js_path, "r", encoding="utf-8") as f:
+            xray_code = f.read()
+        driver.execute_script(xray_code)
+
+        # Trigger the toast alert
+        print("Triggering toast alert...")
+        driver.execute_script("window.showToast('Auto X-Ray: ENABLED');")
         
-        # Wait a brief moment for parallel dynamic loads to complete
+        # Wait a brief moment for parallel dynamic loads and toast transition to complete
         import time
-        time.sleep(2)
+        time.sleep(2.5)
         
         # Resize window to capture the entire scrolled webpage
         width = driver.execute_script("return Math.max(document.body.scrollWidth, document.documentElement.scrollWidth, document.body.offsetWidth, document.documentElement.offsetWidth, document.body.clientWidth, document.documentElement.clientWidth);")
