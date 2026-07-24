@@ -3,20 +3,6 @@
 // ==========================================
 
 (function() {
-    // Listen for master toggle keypress (Ctrl + Shift + Space) in the MAIN world
-    document.addEventListener("keydown", e => {
-        if (e.ctrlKey && e.shiftKey && e.code === "Space") {
-            e.preventDefault();
-            const wasActive = sessionStorage.eccsExtensionActive === "true";
-            sessionStorage.eccsExtensionActive = wasActive ? "false" : "true";
-            window.location.reload();
-        }
-    });
-
-    if (sessionStorage.eccsExtensionActive !== "true") {
-        return;
-    }
-
     function initFilters() {
         // Find table with CSB headers
         const targetTable = Array.from(document.querySelectorAll('table')).find(table => {

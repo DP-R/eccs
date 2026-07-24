@@ -3,10 +3,6 @@
 // ======================
 
 (function() {
-    if (sessionStorage.eccsExtensionActive !== "true") {
-        return;
-    }
-
     const ex = {
         uname: "14937314",
         pwd: "Codelink@5",

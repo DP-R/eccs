@@ -3,10 +3,6 @@
 // ======================
 
 (function() {
-    if (sessionStorage.eccsExtensionActive !== "true") {
-        return;
-    }
-
     let lock;
     let keepAliveInterval;
 

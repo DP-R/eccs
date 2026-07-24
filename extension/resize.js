@@ -3,10 +3,6 @@
 // ======================
 
 (function() {
-    if (sessionStorage.eccsExtensionActive !== "true") {
-        return;
-    }
-
     function resizeTA() {
         let t = document.querySelector('textarea[name="InspRemarks"]');
         if (!t) return;

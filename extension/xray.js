@@ -3,31 +3,27 @@
 // ==========================================
 
 (function() {
-    // Initialize Master Toggle state in sessionStorage (defaults to "false" on fresh launch)
-    if (sessionStorage.eccsExtensionActive === undefined) {
-        sessionStorage.eccsExtensionActive = "false";
+    // Initialize toggle state for auto-clearance in localStorage (defaults to true)
+    if (localStorage.autoXrayEnabled === undefined) {
+        localStorage.autoXrayEnabled = "true";
     }
 
-    // Toggle shortcut: Ctrl + Shift + Space toggles the entire ECCS Utility Pack
+    // Toggle shortcut: Ctrl + Shift + Space toggles auto-clearance specifically
     document.addEventListener("keydown", e => {
         if (e.ctrlKey && e.shiftKey && e.code === "Space") {
             e.preventDefault();
             
-            const wasActive = sessionStorage.eccsExtensionActive === "true";
-            sessionStorage.eccsExtensionActive = wasActive ? "false" : "true";
+            const isEnabled = localStorage.autoXrayEnabled === "true";
+            localStorage.autoXrayEnabled = isEnabled ? "false" : "true";
             
-            showToast(`ECCS Utility Pack: ${wasActive ? 'DISABLED' : 'ENABLED'}`);
+            showToast(`Auto X-Ray: ${isEnabled ? 'DISABLED' : 'ENABLED'}`);
             
-            // Reload page so modifications take effect or disappear completely
-            setTimeout(() => {
-                window.location.reload();
-            }, 1200);
+            // If re-enabled, immediately run clearance check
+            if (!isEnabled) {
+                automateXray();
+            }
         }
     });
-
-    if (sessionStorage.eccsExtensionActive !== "true") {
-        return;
-    }
 
     let done = 0;
 
@@ -68,6 +64,9 @@
     }
 
     function automateXray() {
+        if (localStorage.autoXrayEnabled === "false") {
+            return;
+        }
         if (done) return;
 
         // --- PAGE 2: Auto-click "X-Ray Clear" button ---
