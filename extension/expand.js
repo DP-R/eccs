@@ -2,41 +2,46 @@
 // Text Autocomplete / Expansion
 // ======================
 
-const ex = {
-    uname: "14937314",
-    pwd: "Codelink@5",
-    ooc: `Opened and examined the pkg. As per examination order / instructions
+(function() {
+    if (sessionStorage.eccsExtensionActive !== "true") {
+        return;
+    }
+
+    const ex = {
+        uname: "14937314",
+        pwd: "Codelink@5",
+        ooc: `Opened and examined the pkg. As per examination order / instructions
 Contents: as per invoice
 Verified description, marks, number and quantity as per import documents`,
-    lv: `Opened and examined the pkg. As per examination order / instructions
+        lv: `Opened and examined the pkg. As per examination order / instructions
 Contents: |
 Declared value for the given quantity seems low, may be forwarded for assessment
 Verified description, marks, number and quantity as per import documents`,
-    hq: `Opened and examined the pkg. As per examination order / instructions
+        hq: `Opened and examined the pkg. As per examination order / instructions
 Contents: |
 Declared quantity seems higher than what has been declared.
 Verified description, marks, number and quantity as per import documents`
-};
+    };
 
-document.addEventListener("input", e => {
-    let t = e.target;
+    document.addEventListener("input", e => {
+        let t = e.target;
 
-    if (t.tagName != "INPUT" && t.tagName != "TEXTAREA") {
-        return;
-    }
+        if (t.tagName != "INPUT" && t.tagName != "TEXTAREA") {
+            return;
+        }
 
-    let s = ex[t.value.trim()];
-    if (!s) {
-        return;
-    }
-
-    e.preventDefault();
-
-    let p = s.indexOf("|");
-    t.value = s.replace("|", "");
-    t.focus();
-
-    if (p != -1) {
-        t.setSelectionRange(p, p);
-    }
-});
+        let s = ex[t.value.trim()];
+        if (s) {
+            let start = t.selectionStart;
+            t.value = s;
+            
+            // If template has cursor target symbol |
+            let cursorIndex = s.indexOf('|');
+            if (cursorIndex !== -1) {
+                t.value = s.replace('|', '');
+                t.setSelectionRange(cursorIndex, cursorIndex);
+                t.focus();
+            }
+        }
+    });
+})();

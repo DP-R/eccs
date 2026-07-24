@@ -22,6 +22,7 @@ def main():
         
         # Inject realistic ECCS data instead of generic mocks
         mock_js = """
+        sessionStorage.eccsExtensionActive = "true";
         window.viewCSBDetails = function(actionUrl, csbNo, index) {
             const div = document.getElementById('mydiv' + index);
             if (!div) return;

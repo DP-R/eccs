@@ -23,6 +23,7 @@ def main():
         
         # Inject Mock fetch for same-origin viewCCRIntructions
         mock_fetch = """
+        sessionStorage.eccsExtensionActive = "true";
         window.fetch = function(url) {
             return Promise.resolve({
                 ok: true,

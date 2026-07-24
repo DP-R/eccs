@@ -3,6 +3,10 @@
 // =========================================================
 
 (function() {
+    if (sessionStorage.eccsExtensionActive !== "true") {
+        return;
+    }
+
     // Only target CBE specifics and details pages
     const isDetailsPage = document.body && (
         document.body.textContent.includes("Courier Bill of Entry") || 

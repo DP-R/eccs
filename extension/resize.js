@@ -2,20 +2,26 @@
 // Textarea Auto-resizing
 // ======================
 
-function resizeTA() {
-    let t = document.querySelector('textarea[name="InspRemarks"]');
-    if (!t) return;
+(function() {
+    if (sessionStorage.eccsExtensionActive !== "true") {
+        return;
+    }
 
-    t.rows = 8;
-    t.cols = 100;
+    function resizeTA() {
+        let t = document.querySelector('textarea[name="InspRemarks"]');
+        if (!t) return;
 
-    t.style.width = "900px";
-    t.style.height = "480px";
-}
+        t.rows = 8;
+        t.cols = 100;
 
-window.addEventListener("load", resizeTA);
+        t.style.width = "900px";
+        t.style.height = "480px";
+    }
 
-new MutationObserver(resizeTA).observe(document.documentElement, {
-    childList: true,
-    subtree: true
-});
+    window.addEventListener("load", resizeTA);
+
+    new MutationObserver(resizeTA).observe(document.documentElement, {
+        childList: true,
+        subtree: true
+    });
+})();
