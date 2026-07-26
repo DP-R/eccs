@@ -6,17 +6,16 @@
     const ex = {
         uname: "14937314",
         pwd: "Codelink@5",
-        ooc: `Opened and examined the pkg. As per examination order / instructions
-Contents: as per invoice
-Verified description, marks, number and quantity as per import documents`,
-        lv: `Opened and examined the pkg. As per examination order / instructions
+        ooc: `Opened and examined the package. As per examination order / instructions
+Contents: verified as declared under import documents
+`,
+        lv: `Opened and examined the package. As per examination order / instructions
 Contents: |
-Declared value for the given quantity seems low, may be forwarded for assessment
-Verified description, marks, number and quantity as per import documents`,
+As per the import documents, declared value for the examined quantity seems low, may be forwarded for assessment
+`,
         hq: `Opened and examined the pkg. As per examination order / instructions
 Contents: |
-Declared quantity seems higher than what has been declared.
-Verified description, marks, number and quantity as per import documents`
+As per the import documents,examined quantity seems higher than what has been declared.`
     };
 
     document.addEventListener("input", e => {

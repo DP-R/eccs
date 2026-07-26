@@ -1,0 +1,2364 @@
+<html><head>
+
+<title>Export Clearance System</title>
+<link href="..\..\css\eici.css" rel="stylesheet" type="text/css">
+<script language="javascript" src="..\..\js\date-picker.js"></script>
+<script language="javascript" src="..\..\js\exportlibrary.js"></script>
+
+<link href="../../css2/bootstrap-4.0.0.css" rel="stylesheet">
+<link href="../../css2/style.css" rel="stylesheet">
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) --> 
+<script src="../../js2/jquery-3.5.1.min.js"></script>
+<script src="../../js2/bootstrap-4-navbar.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="../../js2/popper.min.js"></script> 
+<script src="../../js2/bootstrap-4.0.0.js"></script>
+
+</head>
+<body>
+
+
+<script language="JavaScript">
+
+
+function checkKeyCode(evt)
+{
+
+var evt = (evt) ? evt : ((event) ? event : null);
+var node = (evt.target) ? evt.target : ((evt.srcElement) ? evt.srcElement : null);
+if(event.keyCode==116)
+{
+evt.keyCode=0;
+alert('Not Allowed')
+return false
+}
+}
+document.onkeydown=checkKeyCode;
+
+window.history.forward(-1);
+function click() {
+if (event.button==2) {
+alert('Not Allowed');
+}
+}
+document.onmousedown=click
+ 
+</script> 
+
+
+<div class="main-container">
+	<!--Headera Start-->
+		<header>
+		<div class="container-fluid main-header col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">
+       <div class="row">
+         <div class="col-3 col-sm-3 col-md-3 col-lg-3 col-xl-3"><img src="../../Images2/logoECCS.png" width="90" height="90" class="img-fluid eccs-logo" alt=""></div>
+                                            <div class="col-6 col-sm-6 col-md-6 col-lg-6 col-xl-6 align-center">
+                                            <h1>Express Cargo Clearance System</h1>
+                                            </div>
+         <div class="col-3 col-sm-3 col-md-3 col-lg-3 col-xl-3"> <img src="../../Images2/eici_logo.jpg" class="img-fluid eic-logo" alt=""> </div>
+       </div>
+     </div>
+
+		<nav class="navbar navbar-expand-lg navbar-light bg-dark">
+
+	  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+		<span class="navbar-toggler-icon"></span>
+	  </button>
+
+	  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+		<ul class="navbar-nav mr-auto sm sm-blue" id="main-menu-sz" data-smartmenus-id="17842236323745251">
+			<li class="nav-item dropdown active">
+<a class="nav-link" href="switch.do?prefix=/jsp/acl&amp;page=/cancel.do" role="button" aria-haspopup="true" aria-expanded="false">
+HOME
+</a>
+</li><li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle has-submenu" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-controls="sm-17842236323745251-1">
+IMPORT
+<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id="sm-17842236323745251-1" role="group" aria-hidden="true" aria-expanded="false">
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-2" aria-haspopup="true" aria-controls="sm-17842236323745251-3" aria-expanded="false">View CBE<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-3" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-2" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listCBEXIDetailsInsp.do">XI(X-Ray Scan)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listInspExamCBEXIDetails.do">XI(Examination)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listHawbDetailsInspNonDocs.do">XII, XIII, XIV(X-Ray Scan)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listSuspiciousHawbetails.do">XII,XIII,XIV(Examination)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/ListCBEXI.do">XI(View)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listCBEXII.do?val=viewP">XII(View)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listCBEXIII.do?val=viewP">XIII(View)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/searchRBOE.do?val=viewP">XIV(View)</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listECM.do">Print  ECM</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/ecmstatussearch.do">ECM STATUS</a></li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-4" aria-haspopup="true" aria-controls="sm-17842236323745251-5" aria-expanded="false">CCR Check<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-5" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-4" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/imp/getCCRCBEXII.do">CCR Upload</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle has-submenu" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-controls="sm-17842236323745251-6">
+EXPORT
+<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id="sm-17842236323745251-6" role="group" aria-hidden="true" aria-expanded="false">
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-7" aria-haspopup="true" aria-controls="sm-17842236323745251-8" aria-expanded="false">View<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-8" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-7" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/export/listCSB4.do">CSB-IV (X-Ray Scan) (for Inspector X Ray)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/listCSB3.do">CSB-III (X-Ray Scan) (for Inspector X-Ray)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/listExamCSB4.do">CSB-III / IV (Examination) (for Inspector Exam)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/listExamCSB5.do">CSB-V (Examination) (for Inspector Exam)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/loadSearchCEM.do">View CEM</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/listCSB5.do">CSB-V (X-Ray Scan)</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/listSez.do">SEZ (X-Ray Scan)</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-9" aria-haspopup="true" aria-controls="sm-17842236323745251-10" aria-expanded="false">View CSB<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-10" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-9" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/export/searchCSB.do?id=csb3">CSB-III</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/searchCSB.do?id=csb4">CSB-IV</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/export/loadCSBVSearchPage.do">CSB-V</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+RE-EXPORT
+</a>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+DISPOSAL
+</a>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+REFUND
+</a>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle has-submenu" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-controls="sm-17842236323745251-11">
+REPORTS
+<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id="sm-17842236323745251-11" role="group" aria-hidden="true" aria-expanded="false">
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-12" aria-haspopup="true" aria-controls="sm-17842236323745251-13" aria-expanded="false">Duty Reports<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-13" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-12" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getRevenueEarBasedOnCTSH.do">Revenue Earned Based On CTSH</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-14" aria-haspopup="true" aria-controls="sm-17842236323745251-15" aria-expanded="false">Import Reports<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-15" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-14" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getECMDetailsStatus.do">ECM Detail Print</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getShipmentRepStatus.do">Shipment Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getBOEReport.do">Bill Of Entry</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getSearchScreenOOCReport.do?rep=OOC">Out Of Charge</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getEcmPendencyReport.do">ECM Pendency Report</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getEcmhawbwiseDetailsReport.do">ECM HAWB wise details</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getECMClosureStatus.do">ECM Closure Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getBEAssessmentPendingSearchScreen.do">BE's Pending for Assessment</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getBEDutyPaymentPendingSearchScreen.do">BE's Pending for Duty Payment</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getSuspiciousShipment.do">Suspicious Shipment Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getQueryRaisedOfficerWiseSearchScreen.do">Total Query Raised Officer Wise</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-16" aria-haspopup="true" aria-controls="sm-17842236323745251-17" aria-expanded="false">Export Reports<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-17" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-16" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getSearchScreenShippingBillStatus.do">Shipping Bill Status</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-18" aria-haspopup="true" aria-controls="sm-17842236323745251-19" aria-expanded="false">Detention/Seized/Adjudication Reports<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-19" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-18" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getDetainShipmentRepStatus.do">Detained Shipment Status</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-20" aria-haspopup="true" aria-controls="sm-17842236323745251-21" aria-expanded="false">Other Reports<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-21" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-20" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getWorkAllRepStatus.do">Work Allocation Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getListofCBERepStatus.do">CBE's Not Given OOC</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getQueryPendencyRepStatus.do">Query Pendency</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getCBEPendencyReport.do">CBE Pendency Report</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-22" aria-haspopup="true" aria-controls="sm-17842236323745251-23" aria-expanded="false">Top 100 <span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-23" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-22" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getSearchScreenTopTenImprtrs.do">Importers (Value with Duty)</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-24" aria-haspopup="true" aria-controls="sm-17842236323745251-25" aria-expanded="false">Reports For Customs<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-25" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-24" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/report/getMonthlyOOCReport.do">Monthly OOC Report</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getDutyReports.do">Monthly Duty Report</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/report/getImportReportSearchScreen.do">Monthly IMPORT Report</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+E-PAYMENT
+</a>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle has-submenu" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-controls="sm-17842236323745251-26">
+DASHBOARD
+<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id="sm-17842236323745251-26" role="group" aria-hidden="true" aria-expanded="false">
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-27" aria-haspopup="true" aria-controls="sm-17842236323745251-28" aria-expanded="false">Duty DashBoard<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-28" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-27" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getChapterwiseSearchScreen.do">Chapter wise (Quantity,Duty a value)</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-29" aria-haspopup="true" aria-controls="sm-17842236323745251-30" aria-expanded="false">Import Dashboard<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-30" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-29" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getBEAssessmentPendingSearchScreen.do">BE's Pending for Assessment</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getBEDutyPaymentPendingSearchScreen.do">BE's Pending for Duty Payment</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getBOEDashboard.do">Bill Of Entry Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getEcmhawbwiseDetails.do">ECM HAWB Wise Details</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getSearchScreenOOC.do">Out Of Charge</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getShipmentStatus.do">Shipment Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getQueryRaisedOfficerWiseSearchScreen.do">Total Query Raised Officer Wise</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getSuspiciousshipment.do">Suspicious Shipment Status</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/listImportSegregation.do">Import Segregation Report</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/listImportDocExcessLandReport.do">Import Excess Land Report (DOC TYPE)</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-31" aria-haspopup="true" aria-controls="sm-17842236323745251-32" aria-expanded="false">Export Dashboard<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-32" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-31" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getSearchScreenShippingBillStatus.do">Shipping Bill Status</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-33" aria-haspopup="true" aria-controls="sm-17842236323745251-34" aria-expanded="false">Detention/Seized/Adjudication Reports<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-34" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-33" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getDetainShipmentStatus.do">Detained Shipment Status</a></li>
+</ul>
+</li>
+<li><a class="dropdown-item dropdown-toggle has-submenu" href="#" id="sm-17842236323745251-35" aria-haspopup="true" aria-controls="sm-17842236323745251-36" aria-expanded="false">Other Dashboard<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" id="sm-17842236323745251-36" role="group" aria-hidden="true" aria-labelledby="sm-17842236323745251-35" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/dashboard/getListofCBEStatus.do">CBE's Not Given OOC</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/imp/listCBEXII.do?val=track">Track Shipment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="nav-item dropdown">
+<a class="nav-link dropdown-toggle has-submenu" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-controls="sm-17842236323745251-37">
+GENERAL
+<span class="sub-arrow"></span></a>
+<ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id="sm-17842236323745251-37" role="group" aria-hidden="true" aria-expanded="false">
+<li><a class="dropdown-item" href="/eccs/jsp/acl/captureChangePassword.do">Change Password</a></li>
+<li><a class="dropdown-item" href="/eccs/jsp/dutycalculator/selectBOE.do">Duty Calculator</a></li>
+</ul></li>
+		</ul>
+	  </div>
+	</nav>
+	<div class="container header-bottom">
+		  <div class="row">
+			<div class="col-sm">ECCS Dashboard</div>
+			<div class="col-sm">Logged In :  DATTURIPURENDRA</div>
+			<div class="col-sm"><a href="switch.do?prefix=/jsp/common&amp;page=/logOut.do">Logout</a></div>
+		  </div>
+	</div>
+	</header>
+	<!--Headera End-->	
+	
+	<!--Body Start-->
+		<section>
+			<div class="container-fluid">
+			
+			
+<form name="listCsbForm" method="post" action="/eccs/jsp/export/listCSB4.do"><div><input type="hidden" name="org.apache.struts.taglib.html.TOKEN" value="ca7b26b6ba9e00822b872506847a1aa9"></div>
+
+<input type="hidden" name="csbNumber" value="">
+<input type="hidden" name="csbID" value="77142041">
+<input type="hidden" name="userID" value="">
+<input type="hidden" name="grpCatID" value="">
+<input type="hidden" name="hiddenCSBVRefId" value="30345998">
+
+			
+<table border="1" cellspacing="0" cellpadding="0" width="770" align="center">
+	
+              <!-- start of workarea -->
+				
+				
+      
+      
+</table><h1>
+			  <span class="generalText">
+			      
+			    </span>
+			</h1><table border="0" cellspacing="0" cellpadding="0" width="750" align="center">
+<tbody><tr><td height="10"></td></tr>
+ <tr>   
+ 	<td width="350" height="20" class="dataBlock">
+        </td>
+
+			
+</tr>
+<tr>
+<td class="pageheader" height="25" width="750" align="center">LIST OF SHIPMENTS FOR EXPORT CLEARANCE </td>            
+</tr>
+<tr>
+ <td height="40" colspan="4" class="pageHeader" align="left">CSBIV No.<span class="captionInRed">(Editable*)</span>  &nbsp;&nbsp;
+
+
+        		 
+<input autocomplete="off" type="text" id="csbNoInput" list="json-datalist" value="CSBIV_MAA_2020-2021_0" style="height: 35px;width: 350px;" onfocus="getPendingCSBNO('CSB4','CSBWEIGHTRECORDED,EXP CSB AMENDED');">
+<datalist id="json-datalist"></datalist>
+
+&nbsp;&nbsp;&nbsp;
+<!-- <INPUT TYPE="button" value="Search" style="height: 35px;width: 80px;" onclick= "javascript:searchCSBNo('listCSB3.do');" /> 
+ -->
+<!-- <a href="javascript:onclick=searchCSBNo('listCSB4.do');"> -->
+<img src="../../images/SearchButton.png" border="0" align="middle" style=" height: 29px; width: 29px; margin-left: -60px;  margin-top: -4px; 
+background-color:#93BBDD;" title="Search" onclick="searchCSBNo('listCSB4.do');">
+<!-- </a> -->
+
+
+											</td>
+
+											
+<input type="hidden" name="inputCSBNo" value="" id="inputCSBNo">
+            
+</tr> 
+</tbody></table>
+
+<table border="0" cellspacing="0" cellpadding="0" width="750" align="center">
+<tbody><tr>
+  <td height="25" colspan="7" align="center" class="sectionHeader">SHIPMENT DETAILS </td>
+</tr>
+<tr>
+	<td width="25" height="25" align="center">Select&nbsp;</td> 
+	<td width="200" height="25" align="center">CSB Number</td> 
+	<td width="100" height="25" align="center">HAWB Number</td>
+	<td width="150" height="25" align="center">Courier Name</td> 
+	<td width="150" height="25" align="center">Status</td> 
+	<td width="125" height="25" align="center">X-Ray Scan Remarks</td> 
+</tr>
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47335">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47335')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47335','0')">CSBIV_MAA_2026-2027_1607_473<br>35</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121445
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47335','77142011','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv0"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47336">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47336')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47336','1')">CSBIV_MAA_2026-2027_1607_473<br>36</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121447
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47336','77142012','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv1"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47337">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47337')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47337','2')">CSBIV_MAA_2026-2027_1607_473<br>37</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121448
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47337','77142013','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv2"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47340">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47340')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47340','3')">CSBIV_MAA_2026-2027_1607_473<br>40</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121449
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47340','77142016','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv3"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47344">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47344')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47344','4')">CSBIV_MAA_2026-2027_1607_473<br>44</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121450
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47344','77142020','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv4"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47346">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47346')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47346','5')">CSBIV_MAA_2026-2027_1607_473<br>46</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121451
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47346','77142022','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv5"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47347">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47347')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47347','6')">CSBIV_MAA_2026-2027_1607_473<br>47</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121452
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47347','77142023','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv6"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47349">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47349')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47349','7')">CSBIV_MAA_2026-2027_1607_473<br>49</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121454
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47349','77142025','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv7"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47350">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47350')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47350','8')">CSBIV_MAA_2026-2027_1607_473<br>50</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121456
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47350','77142026','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv8"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47351">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47351')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47351','9')">CSBIV_MAA_2026-2027_1607_473<br>51</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121458
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47351','77142027','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv9"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47352">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47352')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47352','10')">CSBIV_MAA_2026-2027_1607_473<br>52</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121473
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47352','77142028','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv10"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47353">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47353')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47353','11')">CSBIV_MAA_2026-2027_1607_473<br>53</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121485
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47353','77142029','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv11"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47354">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47354')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47354','12')">CSBIV_MAA_2026-2027_1607_473<br>54</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121488
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47354','77142030','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv12"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47355">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47355')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47355','13')">CSBIV_MAA_2026-2027_1607_473<br>55</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121489
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47355','77142031','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv13"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47356">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47356')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47356','14')">CSBIV_MAA_2026-2027_1607_473<br>56</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121491
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47356','77142032','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv14"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47357">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47357')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47357','15')">CSBIV_MAA_2026-2027_1607_473<br>57</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121492
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47357','77142033','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv15"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47358">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47358')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47358','16')">CSBIV_MAA_2026-2027_1607_473<br>58</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121493
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47358','77142034','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv16"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47359">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47359')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47359','17')">CSBIV_MAA_2026-2027_1607_473<br>59</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121494
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47359','77142035','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv17"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47360">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47360')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47360','18')">CSBIV_MAA_2026-2027_1607_473<br>60</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121495
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47360','77142036','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv18"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47361">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47361')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47361','19')">CSBIV_MAA_2026-2027_1607_473<br>61</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121497
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47361','77142037','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv19"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47362">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47362')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47362','20')">CSBIV_MAA_2026-2027_1607_473<br>62</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121498
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47362','77142038','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv20"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47363">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47363')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47363','21')">CSBIV_MAA_2026-2027_1607_473<br>63</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121500
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47363','77142039','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv21"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47364">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47364')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47364','22')">CSBIV_MAA_2026-2027_1607_473<br>64</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121501
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47364','77142040','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv22"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47366">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47366')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47366','23')">CSBIV_MAA_2026-2027_1607_473<br>66</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121505
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47366','77142042','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv23"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47367">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47367')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47367','24')">CSBIV_MAA_2026-2027_1607_473<br>67</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121512
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47367','77142043','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv24"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47368">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47368')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47368','25')">CSBIV_MAA_2026-2027_1607_473<br>68</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121513
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47368','77142044','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv25"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47369">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47369')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47369','26')">CSBIV_MAA_2026-2027_1607_473<br>69</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121515
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47369','77142045','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv26"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47370">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47370')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47370','27')">CSBIV_MAA_2026-2027_1607_473<br>70</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121516
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47370','77142046','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv27"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47371">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47371')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47371','28')">CSBIV_MAA_2026-2027_1607_473<br>71</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121517
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47371','77142047','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv28"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47372">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47372')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47372','29')">CSBIV_MAA_2026-2027_1607_473<br>72</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121518
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47372','77142048','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv29"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47373">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47373')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47373','30')">CSBIV_MAA_2026-2027_1607_473<br>73</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121519
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47373','77142049','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv30"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47374">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47374')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47374','31')">CSBIV_MAA_2026-2027_1607_473<br>74</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121520
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47374','77142050','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv31"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47375">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47375')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47375','32')">CSBIV_MAA_2026-2027_1607_473<br>75</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121527
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47375','77142051','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv32"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47376">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47376')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47376','33')">CSBIV_MAA_2026-2027_1607_473<br>76</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121534
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47376','77142052','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv33"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47377">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47377')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47377','34')">CSBIV_MAA_2026-2027_1607_473<br>77</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121542
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47377','77142053','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv34"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47378">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47378')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47378','35')">CSBIV_MAA_2026-2027_1607_473<br>78</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121544
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47378','77142054','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv35"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47379">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47379')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47379','36')">CSBIV_MAA_2026-2027_1607_473<br>79</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121545
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47379','77142055','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv36"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_47380">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_47380')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_47380','37')">CSBIV_MAA_2026-2027_1607_473<br>80</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	110797121536
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	SHUBASREE LOGISTICS PVT LTD
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_47380','77142056','1','300819')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv37"></td></tr>
+     
+         
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	          
+         
+         
+         
+    <tr>
+    	<td height="25" width="25" align="center">
+    	<input type="checkbox" name="selectedIndex" value="CSBIV_MAA_2026-2027_1607_49227">
+    	</td>
+    	
+    	<td height="25" width="200" align="center">
+    
+		  <a href="javascript:onClick=viewArrivedCSB('viewArrivedCSB1.do','CSBIV_MAA_2026-2027_1607_49227')" onmouseover="javascript:viewCSBDetails('viewCSBIVDetails.do','CSBIV_MAA_2026-2027_1607_49227','38')">CSBIV_MAA_2026-2027_1607_492<br>27</a>
+	    	
+	  
+	  &nbsp; 
+    </td>
+    
+		<td height="25" width="100" align="center">
+    	
+    	1142805064
+    	&nbsp;</td>
+    	
+    	<td height="25" width="150" align="center">
+    	
+    	DHL EXPRESS INDIA PRIVATE LI<br>MITED
+    	&nbsp;</td>
+    	    	
+    	<td height="25" width="150" align="center">
+    	
+    	CSBWEIGHTRECORDED
+    	&nbsp;</td>
+
+    	<td height="25" width="125" align="center">
+    	<a href="javascript:onClick=CreateExamReport('createExamReportCSB4.do?ini=Y','CSBIV_MAA_2026-2027_1607_49227','77143910','1','300717')">Add Remarks</a>
+    	&nbsp;</td>
+    	
+    </tr>
+     
+     <tr><td colspan="6" id="mydiv38"></td></tr>
+     
+         
+	
+	
+	
+	<input type="hidden" name="csbNum" value="CSBIV_MAA_2026-2027_1607_47365">
+<tr>
+  <td class="sectionHeader" height="25" align="center" colspan="6">
+  <input type="checkbox" name="checkAll" id="check" style="visibility:hidden">
+  	<a href="javascript:onclick=selectAll()">Select all</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<a href="javascript:onclick=clearAll()">Clear all</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</td>
+</tr>
+<tr>
+  <td class="sectionHeader" height="25" align="center" colspan="6">
+  <a href="javascript:onclick=submitCheckBoxForm('submitXRayRemarks.do')"><img src="../../images/submit.jpg" border="0"></a>
+  <a href="javascript:onclick=submitForm('/eccs/jsp/acl/cancel.do')"><img src="../../images/close.jpg" border="0"></a>
+  &nbsp;</td>
+</tr>
+
+
+
+</tbody></table>
+					
+				<!-- end of footer -->
+			
+			
+</form>			
+			
+			
+			
+			
+    
+			</div>  
+		</section>
+	<!--Body End-->
+	
+	<!--Footer Start-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<footer>
+<!-- 
+  Name        :footerNew.jsp 
+  Description :File to be included for footer
+-->
+
+
+<div class="ft-bottom">
+  <div class="container-fluid">
+     <div class="row">
+     <div class="col-sm">
+      <h6>Important Links: <a href="http://www.cbic.gov.in/" title="CBIC" target="_blank">Visit CBIC site</a> | <a href="http://dgft.gov.in/" title="DGFT" target="_blank">Visit DGFT site</a></h6>
+      
+      <span>Copyright  Information 2026-2027 | All Rights Reserved.
+     </span>
+    </div>
+    </div>
+   </div>
+  </div>
+</footer>
+		
+	<!--Footer End-->
+</div>
+
+
+				</body></html>
