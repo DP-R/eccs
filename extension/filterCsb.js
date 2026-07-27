@@ -311,10 +311,10 @@
             return uniqueHawbs.size;
         }
 
-        // Apply filtering logic using dynamic column alignment
+        // Apply filtering logic with whitespace normalization and child mydiv hiding
         function applyFilters() {
-            const csbQuery = csbInput.value.toLowerCase().trim();
-            const hawbQuery = hawbInput.value.toLowerCase().trim();
+            const csbQuery = csbInput.value.toLowerCase().replace(/\s+/g, '');
+            const hawbQuery = hawbInput.value.toLowerCase().replace(/\s+/g, '');
             const courierQuery = courierInput.value.toLowerCase().trim();
             const statusQuery = statusInput.value.toLowerCase().trim();
             
@@ -325,12 +325,12 @@
 
             dataRows.forEach(row => {
                 const cells = Array.from(row.querySelectorAll('td'));
-                if (cells.length < 5) return;
+                if (cells.length < 3) return;
 
-                const csbText = cells[csbColIdx] ? cells[csbColIdx].textContent.toLowerCase() : '';
-                const hawbText = cells[hawbColIdx] ? cells[hawbColIdx].textContent.toLowerCase() : '';
-                const courierText = cells[courierColIdx] ? cells[courierColIdx].textContent.toLowerCase() : '';
-                const statusText = cells[statusColIdx] ? cells[statusColIdx].textContent.toLowerCase() : '';
+                const csbText = cells[csbColIdx] ? cells[csbColIdx].textContent.toLowerCase().replace(/\s+/g, '') : '';
+                const hawbText = cells[hawbColIdx] ? cells[hawbColIdx].textContent.toLowerCase().replace(/\s+/g, '') : '';
+                const courierText = cells[courierColIdx] ? cells[courierColIdx].textContent.toLowerCase().replace(/\s+/g, ' ') : '';
+                const statusText = cells[statusColIdx] ? cells[statusColIdx].textContent.toLowerCase().replace(/\s+/g, ' ') : '';
                 
                 const descText = (descColIdx !== -1 && cells[descColIdx]) ? cells[descColIdx].textContent.toLowerCase() : '';
                 const airlinesText = (airColIdx !== -1 && cells[airColIdx]) ? cells[airColIdx].textContent.toLowerCase() : '';
@@ -347,10 +347,17 @@
                 const matchesDest = !destQuery || destText.includes(destQuery);
                 const matchesWeight = !weightQuery || weightText.includes(weightQuery);
 
-                if (matchesCsb && matchesHawb && matchesCourier && matchesStatus && matchesDesc && matchesAirlines && matchesDest && matchesWeight) {
+                const matchesAll = matchesCsb && matchesHawb && matchesCourier && matchesStatus && matchesDesc && matchesAirlines && matchesDest && matchesWeight;
+
+                const nextRow = row.nextElementSibling;
+                const isMyDivRow = nextRow && (nextRow.querySelector('[id^="mydiv"]') || (nextRow.id && nextRow.id.startsWith('mydiv')));
+
+                if (matchesAll) {
                     row.style.display = '';
+                    if (isMyDivRow) nextRow.style.display = '';
                 } else {
                     row.style.display = 'none';
+                    if (isMyDivRow) nextRow.style.display = 'none';
                 }
             });
 
@@ -452,23 +459,31 @@
             return extractFieldFromDOM(container, ['Manifest Weight', 'Weight (in Kg.)', 'Gross Weight', 'Declared Weight', 'Weight']);
         }
 
-        // Silent Background Fetching (No DOM mutation / No hover box taking up space)
+        // Silent Background Fetching with comprehensive parameter mappings
         async function fetchBackgroundDetails(actionUrl, idOrCsbNo, index) {
             if (!actionUrl || !idOrCsbNo) return { desc: "", airlines: "", dest: "", weight: "" };
 
-            // Construct target URL relative to current location
             const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
             const targetUrl = actionUrl.startsWith('http') || actionUrl.startsWith('/') ? actionUrl : baseUrl + actionUrl;
             
-            // Build query URL matching Struts action expectations
-            const urlWithParams = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}csbNo=${encodeURIComponent(idOrCsbNo)}&index=${encodeURIComponent(index || '0')}`;
+            // Pass all possible parameter key variations so every Struts action receives the distinct row ID
+            const params = new URLSearchParams();
+            params.set('csbNo', idOrCsbNo);
+            params.set('csbNumber', idOrCsbNo);
+            params.set('csbID', idOrCsbNo);
+            params.set('hawbId', idOrCsbNo);
+            params.set('hawbID', idOrCsbNo);
+            params.set('hawbNo', idOrCsbNo);
+            params.set('hawbNumber', idOrCsbNo);
+            params.set('index', String(index || '0'));
+
+            const urlWithParams = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}${params.toString()}`;
 
             try {
                 const response = await fetch(urlWithParams, { credentials: 'same-origin' });
                 if (!response.ok) return { desc: "", airlines: "", dest: "", weight: "" };
                 const htmlText = await response.text();
 
-                // Parse offscreen in memory with DOMParser (never touches visible page DOM)
                 const doc = new DOMParser().parseFromString(htmlText, 'text/html');
                 const desc = extractDescription(doc);
                 const airlines = extractAirlines(doc);
