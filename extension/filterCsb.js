@@ -75,6 +75,13 @@
         `;
         document.head.appendChild(style);
 
+        // Force container and table responsiveness so newly appended columns are fully visible
+        targetTable.style.width = "100%";
+        targetTable.style.maxWidth = "none";
+        if (targetTable.parentElement) {
+            targetTable.parentElement.style.overflowX = "auto";
+        }
+
         // --- 1. Increment Colspan of Header/Footer rows to fit 4 new columns ---
         Array.from(targetTable.querySelectorAll('td[colspan]')).forEach(td => {
             const currentCols = parseInt(td.getAttribute('colspan'), 10);
@@ -88,14 +95,14 @@
             "Description of Goods",
             "Airlines",
             "Airport of Destination",
-            "Weight (in Kg.)"
+            "Manifest Weight"
         ];
         headers.forEach(title => {
             const th = document.createElement('td');
-            th.width = "120";
+            th.width = "130";
             th.height = "25";
             th.align = "center";
-            th.style = "font-weight: bold;";
+            th.style = "font-weight: bold; background-color: #e2e8f0; color: #0f172a; border: 1px solid #cbd5e1; padding: 4px;";
             th.textContent = title;
             headerRow.appendChild(th);
         });
@@ -188,6 +195,7 @@
         td6.align = 'center';
         const counterSpan = document.createElement('span');
         counterSpan.className = 'eccs-filter-counter';
+        counterSpan.style = 'font-size: 11px; font-weight: bold; color: #2563eb;';
         td6.appendChild(counterSpan);
         filterRow.appendChild(td6);
 
@@ -221,7 +229,7 @@
         tdDest.appendChild(destInput);
         filterRow.appendChild(tdDest);
 
-        // Column 9: Weight Filter
+        // Column 9: Manifest Weight Filter
         const tdWeight = document.createElement('td');
         tdWeight.align = 'center';
         const weightInput = document.createElement('input');
@@ -343,33 +351,31 @@
         }
 
         function extractDescription(container) {
-            let val = extractFieldFromDOM(container, ['Description of Goods', 'Goods Description']);
+            let val = extractFieldFromDOM(container, ['Description of Goods', 'Goods Description', 'Description']);
             if (val) return val;
             const rawText = container.textContent.replace(/\s+/g, ' ').trim();
-            return getValueFromText(rawText, 'Description of Goods');
+            return getValueFromText(rawText, 'Description of Goods') || getValueFromText(rawText, 'Description');
         }
 
         function extractAirlines(container) {
-            let val = extractFieldFromDOM(container, ['International Airlines', 'Airlines']);
+            let val = extractFieldFromDOM(container, ['International Airlines', 'Airlines', 'Airline Name', 'Flight']);
             if (val) return val;
             const rawText = container.textContent.replace(/\s+/g, ' ').trim();
-            return getValueFromText(rawText, 'International Airlines');
+            return getValueFromText(rawText, 'International Airlines') || getValueFromText(rawText, 'Airlines');
         }
 
-        // Helper to extract Airport of Destination
         function extractDest(container) {
-            let val = extractFieldFromDOM(container, ['Airport of Destination', 'Destination']);
+            let val = extractFieldFromDOM(container, ['Airport of Destination', 'Destination', 'Port of Destination']);
             if (val) return val;
             const rawText = container.textContent.replace(/\s+/g, ' ').trim();
-            return getValueFromText(rawText, 'Airport of Destination');
+            return getValueFromText(rawText, 'Airport of Destination') || getValueFromText(rawText, 'Destination');
         }
 
-        // Helper to extract Weight (in Kg.)
         function extractWeight(container) {
-            let val = extractFieldFromDOM(container, ['Weight (in Kg.)', 'Weight']);
+            let val = extractFieldFromDOM(container, ['Manifest Weight', 'Weight (in Kg.)', 'Gross Weight', 'Weight', 'Declared Weight']);
             if (val) return val;
             const rawText = container.textContent.replace(/\s+/g, ' ').trim();
-            return getValueFromText(rawText, 'Weight (in Kg.)');
+            return getValueFromText(rawText, 'Manifest Weight') || getValueFromText(rawText, 'Weight (in Kg.)') || getValueFromText(rawText, 'Weight');
         }
 
         // Helper: Trigger background AJAX details fetch
@@ -381,6 +387,15 @@
                     return;
                 }
 
+                if (mydiv.textContent.trim() !== "") {
+                    const desc = extractDescription(mydiv);
+                    const airlines = extractAirlines(mydiv);
+                    const dest = extractDest(mydiv);
+                    const weight = extractWeight(mydiv);
+                    resolve({ desc, airlines, dest, weight });
+                    return;
+                }
+
                 const observer = new MutationObserver(() => {
                     const text = mydiv.textContent.trim();
                     if (text !== "") {
@@ -389,7 +404,6 @@
                         const airlines = extractAirlines(mydiv);
                         const dest = extractDest(mydiv);
                         const weight = extractWeight(mydiv);
-                        mydiv.innerHTML = ""; // Clean layout container
                         resolve({ desc, airlines, dest, weight });
                     }
                 });
@@ -397,7 +411,12 @@
                 observer.observe(mydiv, { childList: true, subtree: true });
 
                 try {
-                    window.viewCSBDetails(actionUrl, csbNo, index);
+                    if (typeof window.viewCSBDetails === 'function') {
+                        window.viewCSBDetails(actionUrl, csbNo, index);
+                    } else {
+                        observer.disconnect();
+                        resolve({ desc: "", airlines: "", dest: "", weight: "" });
+                    }
                 } catch (e) {
                     observer.disconnect();
                     resolve({ desc: "", airlines: "", dest: "", weight: "" });
@@ -406,40 +425,47 @@
                 // Timeout safety guard
                 setTimeout(() => {
                     observer.disconnect();
-                    resolve({ desc: "", airlines: "", dest: "", weight: "" });
-                }, 5000);
+                    const desc = extractDescription(mydiv);
+                    const airlines = extractAirlines(mydiv);
+                    const dest = extractDest(mydiv);
+                    const weight = extractWeight(mydiv);
+                    resolve({ desc, airlines, dest, weight });
+                }, 3000);
             });
         }
 
         // --- 7. Load details for all rows in parallel (efficient asynchronous fetching) ---
         function loadAllDetails() {
-            dataRows.forEach(async (row) => {
-                const link = row.querySelector('a[onmouseover]');
+            dataRows.forEach(async (row, rowIndex) => {
+                const link = Array.from(row.querySelectorAll('a')).find(a => {
+                    const html = a.outerHTML || '';
+                    return html.includes('viewCSB') || html.includes('viewArrivedCSB') || html.includes('viewP') || html.includes('CreateExamReport');
+                });
                 
-                // Append 4 new columns to the right of each row immediately (loading state)
+                // Append 4 new columns to the right of each row immediately
                 const descTd = document.createElement('td');
-                descTd.height = "25"; descTd.width = "120"; descTd.align = "center"; descTd.className = "eccs-desc-cell"; descTd.textContent = "Loading...";
+                descTd.height = "25"; descTd.width = "130"; descTd.align = "center"; descTd.className = "eccs-desc-cell"; descTd.textContent = "...";
                 row.appendChild(descTd);
 
                 const airTd = document.createElement('td');
-                airTd.height = "25"; airTd.width = "120"; airTd.align = "center"; airTd.className = "eccs-desc-cell"; airTd.textContent = "Loading...";
+                airTd.height = "25"; airTd.width = "130"; airTd.align = "center"; airTd.className = "eccs-desc-cell"; airTd.textContent = "...";
                 row.appendChild(airTd);
 
                 const destTd = document.createElement('td');
-                destTd.height = "25"; destTd.width = "120"; destTd.align = "center"; destTd.className = "eccs-desc-cell"; destTd.textContent = "Loading...";
+                destTd.height = "25"; destTd.width = "130"; destTd.align = "center"; destTd.className = "eccs-desc-cell"; destTd.textContent = "...";
                 row.appendChild(destTd);
 
                 const weightTd = document.createElement('td');
-                weightTd.height = "25"; weightTd.width = "120"; weightTd.align = "center"; weightTd.className = "eccs-desc-cell"; weightTd.textContent = "Loading...";
+                weightTd.height = "25"; weightTd.width = "130"; weightTd.align = "center"; weightTd.className = "eccs-desc-cell"; weightTd.textContent = "...";
                 row.appendChild(weightTd);
 
                 if (link) {
-                    const onmouseover = link.getAttribute('onmouseover');
-                    const matches = onmouseover.match(/'([^']+)'/g);
-                    if (matches && matches.length >= 3) {
+                    const targetAttr = link.getAttribute('onmouseover') || link.getAttribute('onclick') || link.getAttribute('href') || '';
+                    const matches = targetAttr.match(/'([^']+)'/g);
+                    if (matches && matches.length >= 2) {
                         const actionUrl = matches[0].replace(/'/g, '');
                         const csbNo = matches[1].replace(/'/g, '');
-                        const index = matches[2].replace(/'/g, '');
+                        const index = matches[2] ? matches[2].replace(/'/g, '') : String(rowIndex);
                         
                         const details = await fetchDetails(index, csbNo, actionUrl);
                         descTd.textContent = details.desc || "N/A";
@@ -459,7 +485,6 @@
                     weightTd.textContent = "N/A";
                 }
                 
-                // Debounce layout updates to batch filter updates efficiently
                 debouncedApplyFilters();
             });
         }
