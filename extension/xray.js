@@ -73,6 +73,20 @@
         return 1;
     }
 
+    function clickClearButton(button, count) {
+        if (!button) return;
+        
+        let clicks = 0;
+        const interval = setInterval(() => {
+            if (clicks < count && document.body.contains(button)) {
+                button.click();
+                clicks++;
+            } else {
+                clearInterval(interval);
+            }
+        }, 300); // Small 300ms time gap between clicks
+    }
+
     function automateXray() {
         if (localStorage.autoXrayEnabled === "false") {
             return;
@@ -84,20 +98,25 @@
         if (clearButton) {
             done = 1;
             
-            // Check if HAWB is single or multi package
             const hawbNo = getScannedHawb();
             const totalPackages = getNoOfPackages();
             
-            if (hawbNo && totalPackages > 1) {
-                // Multi-package: initialize sequence progress track
-                sessionStorage.currentHawb = hawbNo;
-                sessionStorage.currentProgress = 1; // First scan package submitted
+            const isSubsequent = (sessionStorage.currentHawb === hawbNo && sessionStorage.isSubsequent === "true");
+
+            if (!isSubsequent) {
+                // FIRST ONE: Wait 5 seconds (5000ms) before clicking
+                sessionStorage.currentHawb = hawbNo || '';
+                sessionStorage.isSubsequent = "true";
+
+                setTimeout(() => {
+                    clickClearButton(clearButton, totalPackages);
+                }, 5000);
+            } else {
+                // SUBSEQUENT ONES: Click with a very small time gap (300ms)
+                setTimeout(() => {
+                    clickClearButton(clearButton, totalPackages);
+                }, 300);
             }
-            
-            // Add a 7s delay to allow inspector to uncheck/override scan
-            setTimeout(() => {
-                clearButton.click();
-            }, 7000);
             return;
         }
 
@@ -119,20 +138,22 @@
                         done = 1;
                         
                         sessionStorage.currentHawb = hawbNo;
-                        sessionStorage.currentProgress = current;
+                        sessionStorage.isSubsequent = "true";
                         
                         input.value = hawbNo;
                         input.dispatchEvent(new Event('change', { bubbles: true }));
                         
-                        ['keydown', 'keypress', 'keyup'].forEach(type => {
-                            input.dispatchEvent(new KeyboardEvent(type, {
-                                key: 'Enter',
-                                code: 'Enter',
-                                keyCode: 13,
-                                which: 13,
-                                bubbles: true
-                            }));
-                        });
+                        setTimeout(() => {
+                            ['keydown', 'keypress', 'keyup'].forEach(type => {
+                                input.dispatchEvent(new KeyboardEvent(type, {
+                                    key: 'Enter',
+                                    code: 'Enter',
+                                    keyCode: 13,
+                                    which: 13,
+                                    bubbles: true
+                                }));
+                            });
+                        }, 200);
                     }
                 }
             }
