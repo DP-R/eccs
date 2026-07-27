@@ -465,14 +465,14 @@
             return extractFieldFromDOM(container, ['Manifest Weight', 'Weight (in Kg.)', 'Gross Weight', 'Declared Weight', 'Weight']);
         }
 
-        // Silent Background Fetching with comprehensive parameter mappings
+        // Silent Background Fetching using HTTP POST (application/x-www-form-urlencoded) for Struts form binding
         async function fetchBackgroundDetails(actionUrl, idOrCsbNo, index) {
             if (!actionUrl || !idOrCsbNo) return { desc: "", airlines: "", dest: "", weight: "" };
 
             const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
             const targetUrl = actionUrl.startsWith('http') || actionUrl.startsWith('/') ? actionUrl : baseUrl + actionUrl;
             
-            // Pass all possible parameter key variations so every Struts action receives the distinct row ID
+            // Build form body parameters for Struts Action Form binding
             const params = new URLSearchParams();
             params.set('csbNo', idOrCsbNo);
             params.set('csbNumber', idOrCsbNo);
@@ -481,28 +481,44 @@
             params.set('hawbID', idOrCsbNo);
             params.set('hawbNo', idOrCsbNo);
             params.set('hawbNumber', idOrCsbNo);
+            params.set('id', idOrCsbNo);
             params.set('index', String(index || '0'));
+            params.set('selectedIndex', idOrCsbNo);
 
-            const urlWithParams = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}${params.toString()}`;
+            const bodyStr = params.toString();
+            const urlWithParams = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}${bodyStr}`;
 
             try {
-                const response = await fetch(urlWithParams, { credentials: 'same-origin' });
+                // Try HTTP POST with urlencoded form data (Struts Action standard)
+                let response = await fetch(targetUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: bodyStr,
+                    credentials: 'same-origin'
+                });
+
                 if (!response.ok) {
-                    if (window.eccsLog) window.eccsLog.warn("HTTP error during background fetch", { status: response.status, url: urlWithParams });
+                    // Fallback to HTTP GET
+                    response = await fetch(urlWithParams, { credentials: 'same-origin' });
+                }
+
+                if (!response.ok) {
+                    if (window.eccsLog) window.eccsLog.warn("HTTP error during background fetch", { status: response.status, url: targetUrl });
                     return { desc: "", airlines: "", dest: "", weight: "" };
                 }
-                const htmlText = await response.text();
 
+                const htmlText = await response.text();
                 const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+
                 const desc = extractDescription(doc);
                 const airlines = extractAirlines(doc);
                 const dest = extractDest(doc);
                 const weight = extractWeight(doc);
 
-                if (window.eccsLog) window.eccsLog.info("Extracted details for row", { index, csbNo: idOrCsbNo, desc, airlines, dest, weight });
+                if (window.eccsLog) window.eccsLog.info("Extracted details for row", { index, idOrCsbNo, desc, airlines, dest, weight });
                 return { desc, airlines, dest, weight };
             } catch (e) {
-                if (window.eccsLog) window.eccsLog.error("Silent background fetch error", { error: e.message, url: urlWithParams });
+                if (window.eccsLog) window.eccsLog.error("Silent background fetch error", { error: e.message, url: targetUrl });
                 console.error("[ECCS Extension] Silent background fetch error:", e);
                 return { desc: "", airlines: "", dest: "", weight: "" };
             }
