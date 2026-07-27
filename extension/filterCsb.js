@@ -4,10 +4,12 @@
 
 (function() {
     function initFilters() {
-        // Find table with CSB headers
+        // Find table with CSB headers using normalized whitespace and flexible matching
         const targetTable = Array.from(document.querySelectorAll('table')).find(table => {
-            const text = table.textContent;
-            return text.includes('CSB Number') && text.includes('Courier Name');
+            const normText = table.textContent.replace(/\s+/g, ' ');
+            const hasCsb = /CSB|Shipping\s*Bill/i.test(normText);
+            const hasCourierOrHawb = /Courier|HAWB|Status/i.test(normText);
+            return hasCsb && hasCourierOrHawb;
         });
 
         if (!targetTable || targetTable.querySelector('.eccs-filter-row')) return;
@@ -15,12 +17,20 @@
         console.log("[ECCS Extension] Initializing advanced filters and multiple details columns on CSB view...");
 
         const rows = Array.from(targetTable.querySelectorAll('tr'));
-        const headerRow = rows.find(row => row.textContent.includes('CSB Number') && row.textContent.includes('Courier Name'));
+        const headerRow = rows.find(row => {
+            const normText = row.textContent.replace(/\s+/g, ' ');
+            return /CSB|Shipping\s*Bill/i.test(normText) && (/Courier|HAWB|Status|Number/i.test(normText));
+        });
+
         if (!headerRow) return;
 
-        // Gather data rows (rows that contain checkbox targets)
+        // Gather data rows flexibly (rows that contain checkboxes or CSB links)
         const dataRows = rows.filter(row => {
-            return row.querySelector('input[name="selectedIndex"]') || row.querySelector('input[name="indexes"]');
+            if (row === headerRow || row.classList.contains('eccs-filter-row')) return false;
+            const hasInput = row.querySelector('input[type="checkbox"], input[name="selectedIndex"], input[name="indexes"], input[name="csbNum"]');
+            const hasCsbLink = row.querySelector('a[href*="CSB"], a[href*="csb"], a[onmouseover*="viewCSB"], a[href*="view"]');
+            const cellCount = row.querySelectorAll('td').length;
+            return (hasInput || hasCsbLink) && cellCount >= 3;
         });
 
         if (dataRows.length === 0) return;
