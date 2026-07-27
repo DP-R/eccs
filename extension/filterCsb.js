@@ -11,36 +11,49 @@
         // Strictly run on Export Clearance Lists and Import Cargo List Views
         if (!isExport && !isImport) return;
 
-        // Find table with CSB or CBE headers using normalized whitespace and flexible matching
-        const targetTable = Array.from(document.querySelectorAll('table')).find(table => {
+        // Iterate through all tables to find the actual table containing data rows
+        let targetTable = null;
+        let headerRow = null;
+        let dataRows = [];
+
+        const candidateTables = Array.from(document.querySelectorAll('table'));
+
+        for (const table of candidateTables) {
+            if (table.querySelector('.eccs-filter-row')) continue;
+
             const normText = table.textContent.replace(/\s+/g, ' ');
             const hasCsbOrCbe = /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry|HAWB/i.test(normText);
             const hasCourierOrHawb = /Courier|HAWB|Status/i.test(normText);
-            return hasCsbOrCbe && hasCourierOrHawb;
-        });
 
-        if (!targetTable || targetTable.querySelector('.eccs-filter-row')) return;
+            if (!hasCsbOrCbe || !hasCourierOrHawb) continue;
+
+            const rows = Array.from(table.querySelectorAll('tr'));
+            const foundHeader = rows.find(row => {
+                const text = row.textContent.replace(/\s+/g, ' ');
+                return /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry|HAWB/i.test(text) && (/Courier|HAWB|Status|Number/i.test(text));
+            });
+
+            if (!foundHeader) continue;
+
+            const foundDataRows = rows.filter(row => {
+                if (row === foundHeader || row.classList.contains('eccs-filter-row')) return false;
+                const hasInput = row.querySelector('input[type="checkbox"], input[type="radio"], input[name="selectedIndex"], input[name="indexes"], input[name="csbNum"]');
+                const hasDetailLink = row.querySelector('a[onmouseover*="view"], a[href*="view"], a[href*="CSB"], a[href*="csb"], a[href*="ExamReport"]');
+                const cellCount = row.querySelectorAll('td').length;
+                return (hasInput || hasDetailLink || cellCount >= 4) && cellCount >= 3;
+            });
+
+            if (foundDataRows.length > 0) {
+                targetTable = table;
+                headerRow = foundHeader;
+                dataRows = foundDataRows;
+                break; // Found the actual shipment list table!
+            }
+        }
+
+        if (!targetTable || !headerRow || dataRows.length === 0) return;
 
         console.log("[ECCS Extension] Initializing filters on target list view...");
-
-        const rows = Array.from(targetTable.querySelectorAll('tr'));
-        const headerRow = rows.find(row => {
-            const normText = row.textContent.replace(/\s+/g, ' ');
-            return /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry|HAWB/i.test(normText) && (/Courier|HAWB|Status|Number/i.test(normText));
-        });
-
-        if (!headerRow) return;
-
-        // Gather data rows (rows that contain checkboxes or detail links)
-        const dataRows = rows.filter(row => {
-            if (row === headerRow || row.classList.contains('eccs-filter-row')) return false;
-            const hasInput = row.querySelector('input[type="checkbox"], input[name="selectedIndex"], input[name="indexes"], input[name="csbNum"]');
-            const hasDetailLink = row.querySelector('a[onmouseover*="view"], a[href*="view"], a[href*="CSB"], a[href*="csb"]');
-            const cellCount = row.querySelectorAll('td').length;
-            return (hasInput || hasDetailLink) && cellCount >= 3;
-        });
-
-        if (dataRows.length === 0) return;
 
         // Dynamically detect column indices from header row
         const headerTextArr = Array.from(headerRow.querySelectorAll('td, th')).map(c => c.textContent.replace(/\s+/g, ' ').trim());
@@ -477,7 +490,7 @@
             const rowTasks = dataRows.map((row, rowIndex) => {
                 const link = Array.from(row.querySelectorAll('a')).find(a => {
                     const html = a.outerHTML || '';
-                    return html.includes('view') || html.includes('CSB') || html.includes('csb') || html.includes('CreateExamReport');
+                    return html.includes('view') || html.includes('CSB') || html.includes('csb') || html.includes('CreateExamReport') || html.includes('ExamReport');
                 });
                 
                 // Append 4 new columns at the far right of the row
