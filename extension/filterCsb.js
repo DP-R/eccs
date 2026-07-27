@@ -1,30 +1,37 @@
 // ==========================================
-// ECCS Extension: Dynamic CSB View Filters
+// ECCS Extension: Dynamic CSB View Filters & Hover Details
 // ==========================================
 
 (function() {
     function initFilters() {
-        // Find table with CSB headers using normalized whitespace and flexible matching
+        const path = window.location.pathname.toLowerCase();
+        const isExport = path.includes('/export/');
+        const isImport = path.includes('/imp/');
+
+        // Strictly run on Export Clearance Lists and Import Cargo List Views
+        if (!isExport && !isImport) return;
+
+        // Find table with CSB or CBE headers using normalized whitespace and flexible matching
         const targetTable = Array.from(document.querySelectorAll('table')).find(table => {
             const normText = table.textContent.replace(/\s+/g, ' ');
-            const hasCsb = /CSB|Shipping\s*Bill/i.test(normText);
+            const hasCsbOrCbe = /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry/i.test(normText);
             const hasCourierOrHawb = /Courier|HAWB|Status/i.test(normText);
-            return hasCsb && hasCourierOrHawb;
+            return hasCsbOrCbe && hasCourierOrHawb;
         });
 
         if (!targetTable || targetTable.querySelector('.eccs-filter-row')) return;
 
-        console.log("[ECCS Extension] Initializing advanced filters and multiple details columns on CSB view...");
+        console.log("[ECCS Extension] Initializing filters on target list view...");
 
         const rows = Array.from(targetTable.querySelectorAll('tr'));
         const headerRow = rows.find(row => {
             const normText = row.textContent.replace(/\s+/g, ' ');
-            return /CSB|Shipping\s*Bill/i.test(normText) && (/Courier|HAWB|Status|Number/i.test(normText));
+            return /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry/i.test(normText) && (/Courier|HAWB|Status|Number/i.test(normText));
         });
 
         if (!headerRow) return;
 
-        // Gather data rows flexibly (rows that contain checkboxes or CSB links)
+        // Gather data rows (rows that contain checkboxes or detail links)
         const dataRows = rows.filter(row => {
             if (row === headerRow || row.classList.contains('eccs-filter-row')) return false;
             const hasInput = row.querySelector('input[type="checkbox"], input[name="selectedIndex"], input[name="indexes"], input[name="csbNum"]');
@@ -68,7 +75,7 @@
             }
             .eccs-desc-cell {
                 font-family: sans-serif !important;
-                font-size: 12px !important;
+                font-size: 11px !important;
                 color: #475569 !important;
                 font-weight: 500 !important;
             }
@@ -82,32 +89,35 @@
             targetTable.parentElement.style.overflowX = "auto";
         }
 
-        // --- 1. Increment Colspan of Header/Footer rows to fit 4 new columns ---
-        Array.from(targetTable.querySelectorAll('td[colspan]')).forEach(td => {
-            const currentCols = parseInt(td.getAttribute('colspan'), 10);
-            if (currentCols >= 5) {
-                td.setAttribute('colspan', currentCols + 4);
-            }
-        });
+        // --- EXPORT CLEARANCE LISTS ALONE: Append 4 Hover Columns at far right ---
+        if (isExport) {
+            // Increment Colspan of Header/Footer rows to fit 4 new columns
+            Array.from(targetTable.querySelectorAll('td[colspan]')).forEach(td => {
+                const currentCols = parseInt(td.getAttribute('colspan'), 10);
+                if (currentCols >= 5) {
+                    td.setAttribute('colspan', currentCols + 4);
+                }
+            });
 
-        // --- 2. Append new header cells at the end (to the right) ---
-        const headers = [
-            "Description of Goods",
-            "Airlines",
-            "Airport of Destination",
-            "Manifest Weight"
-        ];
-        headers.forEach(title => {
-            const th = document.createElement('td');
-            th.width = "130";
-            th.height = "25";
-            th.align = "center";
-            th.style = "font-weight: bold; background-color: #e2e8f0; color: #0f172a; border: 1px solid #cbd5e1; padding: 4px;";
-            th.textContent = title;
-            headerRow.appendChild(th);
-        });
+            // Append 4 new header cells at the far right
+            const headers = [
+                "Description of Goods",
+                "Airlines",
+                "Airport of Destination",
+                "Manifest Weight"
+            ];
+            headers.forEach(title => {
+                const th = document.createElement('td');
+                th.width = "130";
+                th.height = "25";
+                th.align = "center";
+                th.style = "font-weight: bold; background-color: #e2e8f0; color: #0f172a; border: 1px solid #cbd5e1; padding: 4px;";
+                th.textContent = title;
+                headerRow.appendChild(th);
+            });
+        }
 
-        // --- 3. Override Select All / Clear All globally in page context ---
+        // --- Override Select All / Clear All globally in page context ---
         window.selectAll = function() {
             dataRows.forEach(row => {
                 if (row.style.display !== 'none') {
@@ -124,7 +134,7 @@
             });
         };
 
-        // --- 4. Create Filter Row aligned with new appended column structure ---
+        // --- Create Filter Row aligned with column structure ---
         const filterRow = document.createElement('tr');
         filterRow.className = 'eccs-filter-row';
 
@@ -139,23 +149,23 @@
             e.preventDefault();
             csbInput.value = '';
             hawbInput.value = '';
-            descInput.value = '';
             courierInput.value = '';
             statusInput.value = '';
-            airlinesInput.value = '';
-            destInput.value = '';
-            weightInput.value = '';
+            if (descInput) descInput.value = '';
+            if (airlinesInput) airlinesInput.value = '';
+            if (destInput) destInput.value = '';
+            if (weightInput) weightInput.value = '';
             applyFilters();
         });
         td0.appendChild(resetBtn);
         filterRow.appendChild(td0);
 
-        // Column 1: CSB Filter
+        // Column 1: CSB / CBE Filter
         const td1 = document.createElement('td');
         td1.align = 'center';
         const csbInput = document.createElement('input');
         csbInput.type = 'text';
-        csbInput.placeholder = 'Filter CSB...';
+        csbInput.placeholder = isExport ? 'Filter CSB...' : 'Filter CBE...';
         csbInput.className = 'eccs-filter-input';
         td1.appendChild(csbInput);
         filterRow.appendChild(td1);
@@ -199,50 +209,54 @@
         td6.appendChild(counterSpan);
         filterRow.appendChild(td6);
 
-        // Column 6: Description of Goods Filter
-        const tdDesc = document.createElement('td');
-        tdDesc.align = 'center';
-        const descInput = document.createElement('input');
-        descInput.type = 'text';
-        descInput.placeholder = 'Filter Goods...';
-        descInput.className = 'eccs-filter-input';
-        tdDesc.appendChild(descInput);
-        filterRow.appendChild(tdDesc);
+        let descInput, airlinesInput, destInput, weightInput;
 
-        // Column 7: Airlines Filter
-        const tdAirlines = document.createElement('td');
-        tdAirlines.align = 'center';
-        const airlinesInput = document.createElement('input');
-        airlinesInput.type = 'text';
-        airlinesInput.placeholder = 'Filter Airlines...';
-        airlinesInput.className = 'eccs-filter-input';
-        tdAirlines.appendChild(airlinesInput);
-        filterRow.appendChild(tdAirlines);
+        if (isExport) {
+            // Column 6: Description of Goods Filter
+            const tdDesc = document.createElement('td');
+            tdDesc.align = 'center';
+            descInput = document.createElement('input');
+            descInput.type = 'text';
+            descInput.placeholder = 'Filter Goods...';
+            descInput.className = 'eccs-filter-input';
+            tdDesc.appendChild(descInput);
+            filterRow.appendChild(tdDesc);
 
-        // Column 8: Airport of Destination Filter
-        const tdDest = document.createElement('td');
-        tdDest.align = 'center';
-        const destInput = document.createElement('input');
-        destInput.type = 'text';
-        destInput.placeholder = 'Filter Dest...';
-        destInput.className = 'eccs-filter-input';
-        tdDest.appendChild(destInput);
-        filterRow.appendChild(tdDest);
+            // Column 7: Airlines Filter
+            const tdAirlines = document.createElement('td');
+            tdAirlines.align = 'center';
+            airlinesInput = document.createElement('input');
+            airlinesInput.type = 'text';
+            airlinesInput.placeholder = 'Filter Airlines...';
+            airlinesInput.className = 'eccs-filter-input';
+            tdAirlines.appendChild(airlinesInput);
+            filterRow.appendChild(tdAirlines);
 
-        // Column 9: Manifest Weight Filter
-        const tdWeight = document.createElement('td');
-        tdWeight.align = 'center';
-        const weightInput = document.createElement('input');
-        weightInput.type = 'text';
-        weightInput.placeholder = 'Filter Weight...';
-        weightInput.className = 'eccs-filter-input';
-        tdWeight.appendChild(weightInput);
-        filterRow.appendChild(tdWeight);
+            // Column 8: Airport of Destination Filter
+            const tdDest = document.createElement('td');
+            tdDest.align = 'center';
+            destInput = document.createElement('input');
+            destInput.type = 'text';
+            destInput.placeholder = 'Filter Dest...';
+            destInput.className = 'eccs-filter-input';
+            tdDest.appendChild(destInput);
+            filterRow.appendChild(tdDest);
+
+            // Column 9: Manifest Weight Filter
+            const tdWeight = document.createElement('td');
+            tdWeight.align = 'center';
+            weightInput = document.createElement('input');
+            weightInput.type = 'text';
+            weightInput.placeholder = 'Filter Weight...';
+            weightInput.className = 'eccs-filter-input';
+            tdWeight.appendChild(weightInput);
+            filterRow.appendChild(tdWeight);
+        }
 
         // Inject Filter Row right after Header Row
         headerRow.parentNode.insertBefore(filterRow, headerRow.nextSibling);
 
-        // --- 5. Extract Unique HAWBs Count ---
+        // --- Extract Unique HAWBs Count ---
         function getUniqueHawbCount() {
             const uniqueHawbs = new Set();
             dataRows.forEach(row => {
@@ -261,16 +275,17 @@
         function applyFilters() {
             const csbQuery = csbInput.value.toLowerCase().trim();
             const hawbQuery = hawbInput.value.toLowerCase().trim();
-            const descQuery = descInput.value.toLowerCase().trim();
             const courierQuery = courierInput.value.toLowerCase().trim();
             const statusQuery = statusInput.value.toLowerCase().trim();
-            const airlinesQuery = airlinesInput.value.toLowerCase().trim();
-            const destQuery = destInput.value.toLowerCase().trim();
-            const weightQuery = weightInput.value.toLowerCase().trim();
+            
+            const descQuery = descInput ? descInput.value.toLowerCase().trim() : '';
+            const airlinesQuery = airlinesInput ? airlinesInput.value.toLowerCase().trim() : '';
+            const destQuery = destInput ? destInput.value.toLowerCase().trim() : '';
+            const weightQuery = weightInput ? weightInput.value.toLowerCase().trim() : '';
 
             dataRows.forEach(row => {
                 const cells = Array.from(row.querySelectorAll('td'));
-                if (cells.length < 6) return;
+                if (cells.length < 5) return;
 
                 const csbText = cells[1] ? cells[1].textContent.toLowerCase() : '';
                 const hawbText = cells[2] ? cells[2].textContent.toLowerCase() : '';
@@ -284,14 +299,15 @@
 
                 const matchesCsb = !csbQuery || csbText.includes(csbQuery);
                 const matchesHawb = !hawbQuery || hawbText.includes(hawbQuery);
-                const matchesDesc = !descQuery || descText.includes(descQuery);
                 const matchesCourier = !courierQuery || courierText.includes(courierQuery);
                 const matchesStatus = !statusQuery || statusText.includes(statusQuery);
+                
+                const matchesDesc = !descQuery || descText.includes(descQuery);
                 const matchesAirlines = !airlinesQuery || airlinesText.includes(airlinesQuery);
                 const matchesDest = !destQuery || destText.includes(destQuery);
                 const matchesWeight = !weightQuery || weightText.includes(weightQuery);
 
-                if (matchesCsb && matchesHawb && matchesDesc && matchesCourier && matchesStatus && matchesAirlines && matchesDest && matchesWeight) {
+                if (matchesCsb && matchesHawb && matchesCourier && matchesStatus && matchesDesc && matchesAirlines && matchesDest && matchesWeight) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
@@ -315,14 +331,18 @@
         }
 
         // Attach listeners
-        [csbInput, hawbInput, descInput, courierInput, statusInput, airlinesInput, destInput, weightInput].forEach(input => {
-            input.addEventListener('input', applyFilters);
+        const inputs = [csbInput, hawbInput, courierInput, statusInput];
+        if (isExport) {
+            inputs.push(descInput, airlinesInput, destInput, weightInput);
+        }
+        inputs.forEach(input => {
+            if (input) input.addEventListener('input', applyFilters);
         });
 
         // Set initial counter
         applyFilters();
 
-        // --- 6. Helpers: Extract values from injected detail view HTML ---
+        // --- Helpers: Extract values from injected detail view HTML ---
         function extractFieldFromDOM(container, labelNames) {
             const tds = Array.from(container.querySelectorAll('td'));
             for (let i = 0; i < tds.length; i++) {
@@ -422,7 +442,7 @@
                     resolve({ desc: "", airlines: "", dest: "", weight: "" });
                 }
 
-                // Safety timeout guard (1200ms) to ensure no row gets stuck waiting
+                // Safety timeout guard (1200ms)
                 setTimeout(() => {
                     observer.disconnect();
                     const desc = extractDescription(mydiv);
@@ -434,8 +454,10 @@
             });
         }
 
-        // --- 7. Load details for all rows with 0ms UI delay and staggered background fetching ---
+        // --- Load details for Export Clearance Lists alone ---
         async function loadAllDetails() {
+            if (!isExport) return;
+
             // Step A: Append new columns to the far right of all rows immediately (0ms UI latency)
             const rowTasks = dataRows.map((row, rowIndex) => {
                 const link = Array.from(row.querySelectorAll('a')).find(a => {
@@ -505,7 +527,7 @@
             debouncedApplyFilters();
         }
 
-        // Load all details on start
+        // Load hover details for export lists
         loadAllDetails();
     }
 
