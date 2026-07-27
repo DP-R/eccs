@@ -55,6 +55,7 @@
         if (targetTable.querySelector('.eccs-filter-row')) return;
 
         console.log("[ECCS Extension] Initializing filters on target list view...");
+        if (window.eccsLog) window.eccsLog.info("Filters initializing on list view", { rowsCount: dataRows.length });
 
         // Dynamically detect column indices from header row
         const headerTextArr = Array.from(headerRow.querySelectorAll('td, th')).map(c => (c.textContent || '').replace(/\s+/g, ' ').trim());
@@ -479,10 +480,13 @@
 
             const jsCode = targetAttr.replace(/^javascript:/i, '').trim();
             if (jsCode) {
+                if (window.eccsLog) window.eccsLog.info("Executing native hover for row", { index: task.index, csbNo: task.csbNo, jsCode });
                 try {
                     const fn = new Function(jsCode);
                     fn();
-                } catch (e) {}
+                } catch (e) {
+                    if (window.eccsLog) window.eccsLog.error("Native hover execution error", { index: task.index, error: e.message });
+                }
             }
         }
 
@@ -536,7 +540,7 @@
             }
         }
 
-        // --- Load details for Export Clearance Lists in background without touching visible DOM ---
+        // --- Load details for Export Clearance Lists in background sequentially to avoid form mutation race conditions ---
         async function loadAllDetails() {
             if (!isExport) return;
 
@@ -575,20 +579,24 @@
 
             applyFilters();
 
-            // Step B: Trigger native hover functions for each row index (mydiv is kept display:none)
-            rowTasks.forEach(task => {
-                triggerNativeHover(task);
-            });
-
-            // Pause 150ms to allow native AJAX responses to land in mydiv
-            await new Promise(resolve => setTimeout(resolve, 150));
-
-            // Step C: Read details from native mydiv or fallback to HTTP fetch
+            // Step B: Process rows SEQUENTIALLY to prevent race conditions on shared form fields
             for (const task of rowTasks) {
+                if (window.eccsLog) window.eccsLog.info(`Processing row ${task.rowIndex}`, { index: task.index, csbNo: task.csbNo });
+
+                // 1. Trigger native hover for THIS specific row alone
+                triggerNativeHover(task);
+
+                // 2. Wait 120ms for ECCS native AJAX response to land in mydiv
+                await new Promise(resolve => setTimeout(resolve, 120));
+
+                // 3. Read details from mydiv for THIS row
                 let details = null;
                 const myDiv = document.getElementById('mydiv' + task.index);
                 
                 if (myDiv && myDiv.textContent && myDiv.textContent.trim().length > 10) {
+                    const snippet = myDiv.textContent.trim().substring(0, 150);
+                    if (window.eccsLog) window.eccsLog.info(`mydiv${task.index} populated`, { snippet });
+
                     const desc = extractDescription(myDiv);
                     const airlines = extractAirlines(myDiv);
                     const dest = extractDest(myDiv);
@@ -596,16 +604,22 @@
                     if (desc || airlines || dest || weight) {
                         details = { desc, airlines, dest, weight };
                     }
+                } else {
+                    if (window.eccsLog) window.eccsLog.warn(`mydiv${task.index} was empty after 120ms, using fetch fallback`);
                 }
 
+                // 4. Fallback if mydiv was empty
                 if (!details || (!details.desc && !details.airlines)) {
                     details = await fetchBackgroundDetails(task.actionUrl, task.csbNo, task.index);
                 }
 
+                // 5. Populate cells for THIS row immediately
                 task.descTd.textContent = details.desc || "N/A";
                 task.airTd.textContent = details.airlines || "N/A";
                 task.destTd.textContent = details.dest || "N/A";
                 task.weightTd.textContent = details.weight || "N/A";
+
+                if (window.eccsLog) window.eccsLog.info(`Row ${task.rowIndex} completed`, { desc: details.desc, airlines: details.airlines, dest: details.dest, weight: details.weight });
             }
             
             debouncedApplyFilters();
