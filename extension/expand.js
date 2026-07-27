@@ -36,7 +36,7 @@ As per the import documents,examined quantity seems higher than what has been de
         const lowerVal = rawVal.toLowerCase();
         let s = null;
 
-        if (["cbexi", "cbe", "cbe1", "c1", "cbexi1"].includes(lowerVal)) {
+        if (["cbexi", "cbe", "cbe1", "c1", "cbexi1", "zdoc"].includes(lowerVal)) {
             const ddmm = getTodayDDMM();
             s = `CBEXI_MAA_2026-2027_${ddmm}_|_01`;
         } else if (ex[rawVal]) {

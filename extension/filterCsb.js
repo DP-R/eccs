@@ -359,10 +359,8 @@
 
                 if (matchesAll) {
                     row.style.display = '';
-                    if (isMyDivRow) nextRow.style.display = 'none'; // Keep mydiv row hidden so no space is taken
                 } else {
                     row.style.display = 'none';
-                    if (isMyDivRow) nextRow.style.display = 'none';
                 }
             });
 
@@ -466,18 +464,31 @@
             return extractFieldFromDOM(container, ['Manifest Weight', 'Weight (in Kg.)', 'Gross Weight', 'Declared Weight', 'Weight']);
         }
 
-        // Silent Native Handler Trigger
+        // Silent Native Handler Trigger (Styles target mydiv offscreen without setting display:none so native ECCS JS proceeds)
         function triggerNativeHover(task) {
             if (!task.link) return;
-            const targetAttr = task.link.getAttribute('onmouseover') || task.link.getAttribute('onclick') || '';
-            
-            // Ensure target mydiv element exists and is strictly hidden from view
+
             const myDiv = document.getElementById('mydiv' + task.index);
             if (myDiv) {
-                myDiv.style.display = 'none';
-                if (myDiv.parentElement) myDiv.parentElement.style.display = 'none';
+                myDiv.style.position = 'absolute';
+                myDiv.style.left = '-9999px';
+                myDiv.style.top = '-9999px';
+                myDiv.style.visibility = 'hidden';
+                myDiv.style.height = '0px';
+                myDiv.style.width = '0px';
+                myDiv.style.overflow = 'hidden';
+                myDiv.style.display = 'block';
+
+                if (myDiv.parentElement) {
+                    myDiv.parentElement.style.position = 'absolute';
+                    myDiv.parentElement.style.left = '-9999px';
+                    myDiv.parentElement.style.height = '0px';
+                    myDiv.parentElement.style.overflow = 'hidden';
+                    myDiv.parentElement.style.display = 'block';
+                }
             }
 
+            const targetAttr = task.link.getAttribute('onmouseover') || task.link.getAttribute('onclick') || '';
             const jsCode = targetAttr.replace(/^javascript:/i, '').trim();
             if (jsCode) {
                 if (window.eccsLog) window.eccsLog.info("Executing native hover for row", { index: task.index, csbNo: task.csbNo, jsCode });
