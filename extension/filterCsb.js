@@ -316,7 +316,7 @@
             return uniqueHawbs.size;
         }
 
-        // Apply filtering logic with whitespace normalization and child mydiv hiding
+        // Apply filtering logic with whitespace normalization
         function applyFilters() {
             const csbQuery = csbInput.value.toLowerCase().replace(/\s+/g, '');
             const hawbQuery = hawbInput.value.toLowerCase().replace(/\s+/g, '');
@@ -354,9 +354,6 @@
 
                 const matchesAll = matchesCsb && matchesHawb && matchesCourier && matchesStatus && matchesDesc && matchesAirlines && matchesDest && matchesWeight;
 
-                const nextRow = row.nextElementSibling;
-                const isMyDivRow = nextRow && (nextRow.querySelector('[id^="mydiv"]') || (nextRow.id && nextRow.id.startsWith('mydiv')));
-
                 if (matchesAll) {
                     row.style.display = '';
                 } else {
@@ -392,7 +389,7 @@
         // Set initial counter
         applyFilters();
 
-        // --- Robust Null-Safe DOM Extraction for Both Key-Value and Header-Data Table Formats ---
+        // --- Comprehensive Label & Structure Extraction for CSB-III, CSB-IV, CSB-V & SEZ ---
         function extractFieldFromDOM(container, labelNames) {
             if (!container) return "";
 
@@ -435,7 +432,7 @@
                 }
             }
 
-            // Text fallback parsing
+            // Text fallback parsing using comprehensive label regex
             const rawText = (container.textContent || '').replace(/\s+/g, ' ').trim();
             for (const name of labelNames) {
                 const escapedLabel = name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -449,19 +446,52 @@
         }
 
         function extractDescription(container) {
-            return extractFieldFromDOM(container, ['Description of Goods (Item wise)', 'Description of Goods', 'Goods Description', 'Description', 'Item Description']);
+            return extractFieldFromDOM(container, [
+                'Description of Goods (Item wise)',
+                'Description of Goods',
+                'Goods Description',
+                'Item Description',
+                'Description',
+                'Items',
+                'Goods'
+            ]);
         }
 
         function extractAirlines(container) {
-            return extractFieldFromDOM(container, ['International Airlines', 'Airlines', 'Airline Name', 'Flight']);
+            return extractFieldFromDOM(container, [
+                'International Airlines',
+                'Airlines',
+                'Airline Name',
+                'Flight Name',
+                'Flight No.',
+                'Flight No',
+                'Flight',
+                'Carrier'
+            ]);
         }
 
         function extractDest(container) {
-            return extractFieldFromDOM(container, ['Airport of Destination', 'Destination', 'Port of Destination']);
+            return extractFieldFromDOM(container, [
+                'Airport of Destination',
+                'Port of Destination',
+                'Destination Airport',
+                'Destination Port',
+                'Destination',
+                'Port of Discharge'
+            ]);
         }
 
         function extractWeight(container) {
-            return extractFieldFromDOM(container, ['Manifest Weight', 'Weight (in Kg.)', 'Gross Weight', 'Declared Weight', 'Weight']);
+            return extractFieldFromDOM(container, [
+                'Manifest Weight',
+                'Weight (in Kg.)',
+                'Weight (in Kgs.)',
+                'Weight(in Kg.)',
+                'Gross Weight',
+                'Declared Weight',
+                'Total Weight',
+                'Weight'
+            ]);
         }
 
         // Silent Native Handler Trigger (Styles target mydiv offscreen without setting display:none so native ECCS JS proceeds)
@@ -470,6 +500,7 @@
 
             const myDiv = document.getElementById('mydiv' + task.index);
             if (myDiv) {
+                myDiv.innerHTML = ''; // CRITICAL: Erase stale innerHTML from previous page renders to prevent data leakage!
                 myDiv.style.position = 'absolute';
                 myDiv.style.left = '-9999px';
                 myDiv.style.top = '-9999px';
@@ -551,7 +582,7 @@
             }
         }
 
-        // --- Load details for Export Clearance Lists in background sequentially to avoid form mutation race conditions ---
+        // --- Load details for Export Clearance Lists in background sequentially ---
         async function loadAllDetails() {
             if (!isExport) return;
 
@@ -590,47 +621,49 @@
 
             applyFilters();
 
-            // Step B: Process rows SEQUENTIALLY to prevent race conditions on shared form fields
+            // Step B: Process rows SEQUENTIALLY with DOM clearing and polling for fresh AJAX data
             for (const task of rowTasks) {
                 if (window.eccsLog) window.eccsLog.info(`Processing row ${task.rowIndex}`, { index: task.index, csbNo: task.csbNo });
 
-                // 1. Trigger native hover for THIS specific row alone
+                const myDiv = document.getElementById('mydiv' + task.index);
+                if (myDiv) myDiv.innerHTML = ''; // CLEAR STALE HTML BEFORE TRIGGERING HOVER!
+
+                // 1. Trigger native hover for THIS specific row
                 triggerNativeHover(task);
 
-                // 2. Wait 120ms for ECCS native AJAX response to land in mydiv
-                await new Promise(resolve => setTimeout(resolve, 120));
-
-                // 3. Read details from mydiv for THIS row
+                // 2. Poll for up to 600ms for ECCS native AJAX response to populate mydiv
                 let details = null;
-                const myDiv = document.getElementById('mydiv' + task.index);
-                
-                if (myDiv && myDiv.textContent && myDiv.textContent.trim().length > 10) {
-                    const snippet = myDiv.textContent.trim().substring(0, 150);
-                    if (window.eccsLog) window.eccsLog.info(`mydiv${task.index} populated`, { snippet });
+                let elapsed = 0;
+                while (elapsed < 600) {
+                    await new Promise(r => setTimeout(r, 50));
+                    elapsed += 50;
 
-                    const desc = extractDescription(myDiv);
-                    const airlines = extractAirlines(myDiv);
-                    const dest = extractDest(myDiv);
-                    const weight = extractWeight(myDiv);
-                    if (desc || airlines || dest || weight) {
-                        details = { desc, airlines, dest, weight };
+                    if (myDiv && myDiv.textContent && myDiv.textContent.trim().length > 10) {
+                        const desc = extractDescription(myDiv);
+                        const airlines = extractAirlines(myDiv);
+                        const dest = extractDest(myDiv);
+                        const weight = extractWeight(myDiv);
+                        if (desc || airlines || dest || weight) {
+                            details = { desc, airlines, dest, weight };
+                            break;
+                        }
                     }
-                } else {
-                    if (window.eccsLog) window.eccsLog.warn(`mydiv${task.index} was empty after 120ms, using fetch fallback`);
                 }
 
-                // 4. Fallback if mydiv was empty
-                if (!details || (!details.desc && !details.airlines)) {
-                    details = await fetchBackgroundDetails(task.actionUrl, task.csbNo, task.index);
+                // 3. Fallback if polling produced no fields
+                if (!details || (!details.desc && !details.airlines && !details.dest && !details.weight)) {
+                    if (task.actionUrl && task.csbNo) {
+                        details = await fetchBackgroundDetails(task.actionUrl, task.csbNo, task.index);
+                    }
                 }
 
-                // 5. Populate cells for THIS row immediately
-                task.descTd.textContent = details.desc || "N/A";
-                task.airTd.textContent = details.airlines || "N/A";
-                task.destTd.textContent = details.dest || "N/A";
-                task.weightTd.textContent = details.weight || "N/A";
+                // 4. Populate cells for THIS row
+                task.descTd.textContent = (details && details.desc) ? details.desc : "N/A";
+                task.airTd.textContent = (details && details.airlines) ? details.airlines : "N/A";
+                task.destTd.textContent = (details && details.dest) ? details.dest : "N/A";
+                task.weightTd.textContent = (details && details.weight) ? details.weight : "N/A";
 
-                if (window.eccsLog) window.eccsLog.info(`Row ${task.rowIndex} completed`, { desc: details.desc, airlines: details.airlines, dest: details.dest, weight: details.weight });
+                if (window.eccsLog) window.eccsLog.info(`Row ${task.rowIndex} completed`, details);
             }
             
             debouncedApplyFilters();
