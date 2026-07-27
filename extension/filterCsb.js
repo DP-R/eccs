@@ -1,5 +1,5 @@
 // ==========================================
-// ECCS Extension: Dynamic CSB View Filters & Hover Details
+// ECCS Extension: Dynamic CSB View Filters & Silent Background Hover Details
 // ==========================================
 
 (function() {
@@ -439,76 +439,37 @@
             return extractFieldFromDOM(container, ['Manifest Weight', 'Weight (in Kg.)', 'Gross Weight', 'Declared Weight', 'Weight']);
         }
 
-        // Helper: Trigger native hover event dynamically
-        function fetchDetails(index, csbNo, actionUrl, linkElement) {
-            return new Promise((resolve) => {
-                const mydiv = document.getElementById('mydiv' + index);
-                if (!mydiv) {
-                    resolve({ desc: "", airlines: "", dest: "", weight: "" });
-                    return;
-                }
+        // Silent Background Fetching (No DOM mutation / No hover box taking up space)
+        async function fetchBackgroundDetails(actionUrl, idOrCsbNo, index) {
+            if (!actionUrl || !idOrCsbNo) return { desc: "", airlines: "", dest: "", weight: "" };
 
-                if (mydiv.textContent.trim() !== "") {
-                    const desc = extractDescription(mydiv);
-                    const airlines = extractAirlines(mydiv);
-                    const dest = extractDest(mydiv);
-                    const weight = extractWeight(mydiv);
-                    if (desc || airlines || dest || weight) {
-                        resolve({ desc, airlines, dest, weight });
-                        return;
-                    }
-                }
+            // Construct target URL relative to current location
+            const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+            const targetUrl = actionUrl.startsWith('http') || actionUrl.startsWith('/') ? actionUrl : baseUrl + actionUrl;
+            
+            // Build query URL matching Struts action expectations
+            const urlWithParams = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}csbNo=${encodeURIComponent(idOrCsbNo)}&index=${encodeURIComponent(index || '0')}`;
 
-                const observer = new MutationObserver(() => {
-                    const text = mydiv.textContent.trim();
-                    if (text !== "") {
-                        const desc = extractDescription(mydiv);
-                        const airlines = extractAirlines(mydiv);
-                        const dest = extractDest(mydiv);
-                        const weight = extractWeight(mydiv);
-                        if (desc || airlines || dest || weight) {
-                            observer.disconnect();
-                            resolve({ desc, airlines, dest, weight });
-                        }
-                    }
-                });
+            try {
+                const response = await fetch(urlWithParams, { credentials: 'same-origin' });
+                if (!response.ok) return { desc: "", airlines: "", dest: "", weight: "" };
+                const htmlText = await response.text();
 
-                observer.observe(mydiv, { childList: true, subtree: true });
+                // Parse offscreen in memory with DOMParser (never touches visible page DOM)
+                const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+                const desc = extractDescription(doc);
+                const airlines = extractAirlines(doc);
+                const dest = extractDest(doc);
+                const weight = extractWeight(doc);
 
-                // Trigger hover natively on link element
-                try {
-                    if (linkElement) {
-                        // Dispatch mouseover event to invoke ECCS listener
-                        linkElement.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true }));
-
-                        // Fallback: Execute onmouseover attribute script if present
-                        const onmouseoverAttr = linkElement.getAttribute('onmouseover');
-                        if (onmouseoverAttr) {
-                            const cleanScript = onmouseoverAttr.replace(/^javascript:/i, '').trim();
-                            if (cleanScript) {
-                                try {
-                                    new Function(cleanScript)();
-                                } catch (e) {}
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.error("[ECCS Extension] Error triggering mouseover:", e);
-                }
-
-                // Safety timeout guard (1500ms)
-                setTimeout(() => {
-                    observer.disconnect();
-                    const desc = extractDescription(mydiv);
-                    const airlines = extractAirlines(mydiv);
-                    const dest = extractDest(mydiv);
-                    const weight = extractWeight(mydiv);
-                    resolve({ desc, airlines, dest, weight });
-                }, 1500);
-            });
+                return { desc, airlines, dest, weight };
+            } catch (e) {
+                console.error("[ECCS Extension] Silent background fetch error:", e);
+                return { desc: "", airlines: "", dest: "", weight: "" };
+            }
         }
 
-        // --- Load details for Export Clearance Lists alone ---
+        // --- Load details for Export Clearance Lists in background without touching visible DOM ---
         async function loadAllDetails() {
             if (!isExport) return;
 
@@ -542,7 +503,7 @@
             // Initial render complete immediately
             applyFilters();
 
-            // Step B: Stagger background fetches in small non-blocking batches of 3
+            // Step B: Stagger background HTTP fetches in small non-blocking batches of 3
             const BATCH_SIZE = 3;
             for (let i = 0; i < rowTasks.length; i += BATCH_SIZE) {
                 const batch = rowTasks.slice(i, i + BATCH_SIZE);
@@ -554,7 +515,7 @@
                         const actionUrl = (matches && matches[0]) ? matches[0].replace(/'/g, '') : '';
                         const index = (matches && matches[2]) ? matches[2].replace(/'/g, '') : String(task.rowIndex);
 
-                        const details = await fetchDetails(index, csbNo, actionUrl, task.link);
+                        const details = await fetchBackgroundDetails(actionUrl, csbNo, index);
                         task.descTd.textContent = details.desc || "N/A";
                         task.airTd.textContent = details.airlines || "N/A";
                         task.destTd.textContent = details.dest || "N/A";
@@ -574,7 +535,7 @@
             debouncedApplyFilters();
         }
 
-        // Load hover details for export lists
+        // Load hover details for export lists silently in background
         loadAllDetails();
     }
 
