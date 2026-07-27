@@ -422,7 +422,7 @@
                     resolve({ desc: "", airlines: "", dest: "", weight: "" });
                 }
 
-                // Timeout safety guard
+                // Safety timeout guard (1200ms) to ensure no row gets stuck waiting
                 setTimeout(() => {
                     observer.disconnect();
                     const desc = extractDescription(mydiv);
@@ -430,63 +430,79 @@
                     const dest = extractDest(mydiv);
                     const weight = extractWeight(mydiv);
                     resolve({ desc, airlines, dest, weight });
-                }, 3000);
+                }, 1200);
             });
         }
 
-        // --- 7. Load details for all rows in parallel (efficient asynchronous fetching) ---
-        function loadAllDetails() {
-            dataRows.forEach(async (row, rowIndex) => {
+        // --- 7. Load details for all rows with 0ms UI delay and staggered background fetching ---
+        async function loadAllDetails() {
+            // Step A: Append new columns to the far right of all rows immediately (0ms UI latency)
+            const rowTasks = dataRows.map((row, rowIndex) => {
                 const link = Array.from(row.querySelectorAll('a')).find(a => {
                     const html = a.outerHTML || '';
                     return html.includes('viewCSB') || html.includes('viewArrivedCSB') || html.includes('viewP') || html.includes('CreateExamReport');
                 });
                 
-                // Append 4 new columns to the right of each row immediately
+                // Append 4 new columns at the far right of the row
                 const descTd = document.createElement('td');
-                descTd.height = "25"; descTd.width = "130"; descTd.align = "center"; descTd.className = "eccs-desc-cell"; descTd.textContent = "...";
+                descTd.height = "25"; descTd.width = "130"; descTd.align = "center"; descTd.className = "eccs-desc-cell"; descTd.textContent = "-";
                 row.appendChild(descTd);
 
                 const airTd = document.createElement('td');
-                airTd.height = "25"; airTd.width = "130"; airTd.align = "center"; airTd.className = "eccs-desc-cell"; airTd.textContent = "...";
+                airTd.height = "25"; airTd.width = "130"; airTd.align = "center"; airTd.className = "eccs-desc-cell"; airTd.textContent = "-";
                 row.appendChild(airTd);
 
                 const destTd = document.createElement('td');
-                destTd.height = "25"; destTd.width = "130"; destTd.align = "center"; destTd.className = "eccs-desc-cell"; destTd.textContent = "...";
+                destTd.height = "25"; destTd.width = "130"; destTd.align = "center"; destTd.className = "eccs-desc-cell"; destTd.textContent = "-";
                 row.appendChild(destTd);
 
                 const weightTd = document.createElement('td');
-                weightTd.height = "25"; weightTd.width = "130"; weightTd.align = "center"; weightTd.className = "eccs-desc-cell"; weightTd.textContent = "...";
+                weightTd.height = "25"; weightTd.width = "130"; weightTd.align = "center"; weightTd.className = "eccs-desc-cell"; weightTd.textContent = "-";
                 row.appendChild(weightTd);
 
-                if (link) {
-                    const targetAttr = link.getAttribute('onmouseover') || link.getAttribute('onclick') || link.getAttribute('href') || '';
-                    const matches = targetAttr.match(/'([^']+)'/g);
-                    if (matches && matches.length >= 2) {
-                        const actionUrl = matches[0].replace(/'/g, '');
-                        const csbNo = matches[1].replace(/'/g, '');
-                        const index = matches[2] ? matches[2].replace(/'/g, '') : String(rowIndex);
-                        
-                        const details = await fetchDetails(index, csbNo, actionUrl);
-                        descTd.textContent = details.desc || "N/A";
-                        airTd.textContent = details.airlines || "N/A";
-                        destTd.textContent = details.dest || "N/A";
-                        weightTd.textContent = details.weight || "N/A";
-                    } else {
-                        descTd.textContent = "N/A";
-                        airTd.textContent = "N/A";
-                        destTd.textContent = "N/A";
-                        weightTd.textContent = "N/A";
-                    }
-                } else {
-                    descTd.textContent = "N/A";
-                    airTd.textContent = "N/A";
-                    destTd.textContent = "N/A";
-                    weightTd.textContent = "N/A";
-                }
-                
-                debouncedApplyFilters();
+                return { row, rowIndex, link, descTd, airTd, destTd, weightTd };
             });
+
+            // Initial render complete immediately
+            applyFilters();
+
+            // Step B: Stagger background fetches in small non-blocking batches of 3
+            const BATCH_SIZE = 3;
+            for (let i = 0; i < rowTasks.length; i += BATCH_SIZE) {
+                const batch = rowTasks.slice(i, i + BATCH_SIZE);
+                await Promise.all(batch.map(async (task) => {
+                    if (task.link) {
+                        const targetAttr = task.link.getAttribute('onmouseover') || task.link.getAttribute('onclick') || task.link.getAttribute('href') || '';
+                        const matches = targetAttr.match(/'([^']+)'/g);
+                        if (matches && matches.length >= 2) {
+                            const actionUrl = matches[0].replace(/'/g, '');
+                            const csbNo = matches[1].replace(/'/g, '');
+                            const index = matches[2] ? matches[2].replace(/'/g, '') : String(task.rowIndex);
+                            
+                            const details = await fetchDetails(index, csbNo, actionUrl);
+                            task.descTd.textContent = details.desc || "N/A";
+                            task.airTd.textContent = details.airlines || "N/A";
+                            task.destTd.textContent = details.dest || "N/A";
+                            task.weightTd.textContent = details.weight || "N/A";
+                        } else {
+                            task.descTd.textContent = "N/A";
+                            task.airTd.textContent = "N/A";
+                            task.destTd.textContent = "N/A";
+                            task.weightTd.textContent = "N/A";
+                        }
+                    } else {
+                        task.descTd.textContent = "N/A";
+                        task.airTd.textContent = "N/A";
+                        task.destTd.textContent = "N/A";
+                        task.weightTd.textContent = "N/A";
+                    }
+                }));
+
+                // Micro pause (30ms) between batches to maintain browser UI smoothness
+                await new Promise(resolve => setTimeout(resolve, 30));
+            }
+            
+            debouncedApplyFilters();
         }
 
         // Load all details on start
