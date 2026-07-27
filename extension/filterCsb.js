@@ -358,7 +358,7 @@
 
                 if (matchesAll) {
                     row.style.display = '';
-                    if (isMyDivRow) nextRow.style.display = '';
+                    if (isMyDivRow) nextRow.style.display = 'none'; // Keep mydiv row hidden so no space is taken
                 } else {
                     row.style.display = 'none';
                     if (isMyDivRow) nextRow.style.display = 'none';
@@ -465,14 +465,34 @@
             return extractFieldFromDOM(container, ['Manifest Weight', 'Weight (in Kg.)', 'Gross Weight', 'Declared Weight', 'Weight']);
         }
 
-        // Silent Background Fetching using HTTP POST (application/x-www-form-urlencoded) for Struts form binding
+        // Silent Native Handler Trigger
+        function triggerNativeHover(task) {
+            if (!task.link) return;
+            const targetAttr = task.link.getAttribute('onmouseover') || task.link.getAttribute('onclick') || '';
+            
+            // Ensure target mydiv element exists and is strictly hidden from view
+            const myDiv = document.getElementById('mydiv' + task.index);
+            if (myDiv) {
+                myDiv.style.display = 'none';
+                if (myDiv.parentElement) myDiv.parentElement.style.display = 'none';
+            }
+
+            const jsCode = targetAttr.replace(/^javascript:/i, '').trim();
+            if (jsCode) {
+                try {
+                    const fn = new Function(jsCode);
+                    fn();
+                } catch (e) {}
+            }
+        }
+
+        // Silent Background Fetching (Fallback)
         async function fetchBackgroundDetails(actionUrl, idOrCsbNo, index) {
             if (!actionUrl || !idOrCsbNo) return { desc: "", airlines: "", dest: "", weight: "" };
 
             const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
             const targetUrl = actionUrl.startsWith('http') || actionUrl.startsWith('/') ? actionUrl : baseUrl + actionUrl;
             
-            // Build form body parameters for Struts Action Form binding
             const params = new URLSearchParams();
             params.set('csbNo', idOrCsbNo);
             params.set('csbNumber', idOrCsbNo);
@@ -489,7 +509,6 @@
             const urlWithParams = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}${bodyStr}`;
 
             try {
-                // Try HTTP POST with urlencoded form data (Struts Action standard)
                 let response = await fetch(targetUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -498,14 +517,10 @@
                 });
 
                 if (!response.ok) {
-                    // Fallback to HTTP GET
                     response = await fetch(urlWithParams, { credentials: 'same-origin' });
                 }
 
-                if (!response.ok) {
-                    if (window.eccsLog) window.eccsLog.warn("HTTP error during background fetch", { status: response.status, url: targetUrl });
-                    return { desc: "", airlines: "", dest: "", weight: "" };
-                }
+                if (!response.ok) return { desc: "", airlines: "", dest: "", weight: "" };
 
                 const htmlText = await response.text();
                 const doc = new DOMParser().parseFromString(htmlText, 'text/html');
@@ -515,11 +530,8 @@
                 const dest = extractDest(doc);
                 const weight = extractWeight(doc);
 
-                if (window.eccsLog) window.eccsLog.info("Extracted details for row", { index, idOrCsbNo, desc, airlines, dest, weight });
                 return { desc, airlines, dest, weight };
             } catch (e) {
-                if (window.eccsLog) window.eccsLog.error("Silent background fetch error", { error: e.message, url: targetUrl });
-                console.error("[ECCS Extension] Silent background fetch error:", e);
                 return { desc: "", airlines: "", dest: "", weight: "" };
             }
         }
@@ -528,13 +540,19 @@
         async function loadAllDetails() {
             if (!isExport) return;
 
-            // Step A: Append new columns to the far right of all rows immediately (0ms UI latency)
+            // Step A: Append new columns to the far right of all rows immediately
             const rowTasks = dataRows.map((row, rowIndex) => {
                 const link = Array.from(row.querySelectorAll('a')).find(a => {
                     const html = a.outerHTML || '';
                     return html.includes('view') || html.includes('CSB') || html.includes('csb') || html.includes('CreateExamReport') || html.includes('ExamReport');
                 });
                 
+                const targetAttr = link ? (link.getAttribute('onmouseover') || link.getAttribute('onclick') || link.getAttribute('href') || '') : '';
+                const matches = targetAttr.match(/'([^']+)'/g);
+                const csbNo = (matches && matches[1]) ? matches[1].replace(/'/g, '') : '';
+                const actionUrl = (matches && matches[0]) ? matches[0].replace(/'/g, '') : '';
+                const index = (matches && matches[2]) ? matches[2].replace(/'/g, '') : String(rowIndex);
+
                 // Append 4 new columns at the far right of the row
                 const descTd = document.createElement('td');
                 descTd.height = "25"; descTd.width = "130"; descTd.align = "center"; descTd.className = "eccs-desc-cell"; descTd.textContent = "-";
@@ -552,39 +570,42 @@
                 weightTd.height = "25"; weightTd.width = "130"; weightTd.align = "center"; weightTd.className = "eccs-desc-cell"; weightTd.textContent = "-";
                 row.appendChild(weightTd);
 
-                return { row, rowIndex, link, descTd, airTd, destTd, weightTd };
+                return { row, rowIndex, index, link, csbNo, actionUrl, descTd, airTd, destTd, weightTd };
             });
 
-            // Initial render complete immediately
             applyFilters();
 
-            // Step B: Stagger background HTTP fetches in small non-blocking batches of 3
-            const BATCH_SIZE = 3;
-            for (let i = 0; i < rowTasks.length; i += BATCH_SIZE) {
-                const batch = rowTasks.slice(i, i + BATCH_SIZE);
-                await Promise.all(batch.map(async (task) => {
-                    if (task.link) {
-                        const targetAttr = task.link.getAttribute('onmouseover') || task.link.getAttribute('onclick') || task.link.getAttribute('href') || '';
-                        const matches = targetAttr.match(/'([^']+)'/g);
-                        const csbNo = (matches && matches[1]) ? matches[1].replace(/'/g, '') : '';
-                        const actionUrl = (matches && matches[0]) ? matches[0].replace(/'/g, '') : '';
-                        const index = (matches && matches[2]) ? matches[2].replace(/'/g, '') : String(task.rowIndex);
+            // Step B: Trigger native hover functions for each row index (mydiv is kept display:none)
+            rowTasks.forEach(task => {
+                triggerNativeHover(task);
+            });
 
-                        const details = await fetchBackgroundDetails(actionUrl, csbNo, index);
-                        task.descTd.textContent = details.desc || "N/A";
-                        task.airTd.textContent = details.airlines || "N/A";
-                        task.destTd.textContent = details.dest || "N/A";
-                        task.weightTd.textContent = details.weight || "N/A";
-                    } else {
-                        task.descTd.textContent = "N/A";
-                        task.airTd.textContent = "N/A";
-                        task.destTd.textContent = "N/A";
-                        task.weightTd.textContent = "N/A";
+            // Pause 150ms to allow native AJAX responses to land in mydiv
+            await new Promise(resolve => setTimeout(resolve, 150));
+
+            // Step C: Read details from native mydiv or fallback to HTTP fetch
+            for (const task of rowTasks) {
+                let details = null;
+                const myDiv = document.getElementById('mydiv' + task.index);
+                
+                if (myDiv && myDiv.textContent && myDiv.textContent.trim().length > 10) {
+                    const desc = extractDescription(myDiv);
+                    const airlines = extractAirlines(myDiv);
+                    const dest = extractDest(myDiv);
+                    const weight = extractWeight(myDiv);
+                    if (desc || airlines || dest || weight) {
+                        details = { desc, airlines, dest, weight };
                     }
-                }));
+                }
 
-                // Micro pause (30ms) between batches to maintain browser UI smoothness
-                await new Promise(resolve => setTimeout(resolve, 30));
+                if (!details || (!details.desc && !details.airlines)) {
+                    details = await fetchBackgroundDetails(task.actionUrl, task.csbNo, task.index);
+                }
+
+                task.descTd.textContent = details.desc || "N/A";
+                task.airTd.textContent = details.airlines || "N/A";
+                task.destTd.textContent = details.dest || "N/A";
+                task.weightTd.textContent = details.weight || "N/A";
             }
             
             debouncedApplyFilters();
