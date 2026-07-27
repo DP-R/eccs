@@ -5,14 +5,14 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["filterCsb.js"],
+      "js": ["logger.js", "filterCsb.js"],
       "run_at": "document_end",
       "all_frames": true,
       "world": "MAIN"
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["lock.js", "expand.js", "resize.js", "xray.js", "beautifyDetails.js"],
+      "js": ["logger.js", "lock.js", "expand.js", "resize.js", "xray.js", "beautifyDetails.js"],
       "run_at": "document_end",
       "all_frames": true
     }

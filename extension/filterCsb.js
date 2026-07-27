@@ -52,11 +52,12 @@
         }
 
         if (!targetTable || !headerRow || dataRows.length === 0) return;
+        if (targetTable.querySelector('.eccs-filter-row')) return;
 
         console.log("[ECCS Extension] Initializing filters on target list view...");
 
         // Dynamically detect column indices from header row
-        const headerTextArr = Array.from(headerRow.querySelectorAll('td, th')).map(c => c.textContent.replace(/\s+/g, ' ').trim());
+        const headerTextArr = Array.from(headerRow.querySelectorAll('td, th')).map(c => (c.textContent || '').replace(/\s+/g, ' ').trim());
         let csbColIdx = headerTextArr.findIndex(t => /CSB|Shipping\s*Bill/i.test(t));
         let hawbColIdx = headerTextArr.findIndex(t => /HAWB/i.test(t));
         let courierColIdx = headerTextArr.findIndex(t => /Courier/i.test(t));
@@ -67,51 +68,54 @@
         if (courierColIdx === -1) courierColIdx = 3;
         if (statusColIdx === -1) statusColIdx = 4;
 
-        // Inject Stylesheet
-        const style = document.createElement('style');
-        style.textContent = `
-            .eccs-filter-input {
-                background: #ffffff !important;
-                color: #0f172a !important;
-                border: 1px solid #cbd5e1 !important;
-                border-radius: 4px !important;
-                padding: 4px 6px !important;
-                font-size: 11px !important;
-                width: 95% !important;
-                outline: none !important;
-                box-sizing: border-box !important;
-                font-family: sans-serif !important;
-            }
-            .eccs-filter-input:focus {
-                border-color: #2563eb !important;
-                box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
-            }
-            .eccs-filter-counter {
-                font-size: 11px !important;
-                font-weight: 700 !important;
-                color: #2563eb !important;
-                white-space: nowrap !important;
-                font-family: sans-serif !important;
-            }
-            .eccs-filter-row td {
-                background-color: #f8fafc !important;
-                padding: 6px 4px !important;
-                border: 1px solid #cbd5e1 !important;
-            }
-            .eccs-desc-cell {
-                font-family: sans-serif !important;
-                font-size: 11px !important;
-                color: #0f172a !important;
-                font-weight: 600 !important;
-                padding: 4px 6px !important;
-                border: 1px solid #cbd5e1 !important;
-                background-color: #ffffff !important;
-                max-width: 160px !important;
-                word-wrap: break-word !important;
-                white-space: normal !important;
-            }
-        `;
-        document.head.appendChild(style);
+        // Inject Stylesheet only once
+        if (!document.getElementById('eccs-filter-style')) {
+            const style = document.createElement('style');
+            style.id = 'eccs-filter-style';
+            style.textContent = `
+                .eccs-filter-input {
+                    background: #ffffff !important;
+                    color: #0f172a !important;
+                    border: 1px solid #cbd5e1 !important;
+                    border-radius: 4px !important;
+                    padding: 4px 6px !important;
+                    font-size: 11px !important;
+                    width: 95% !important;
+                    outline: none !important;
+                    box-sizing: border-box !important;
+                    font-family: sans-serif !important;
+                }
+                .eccs-filter-input:focus {
+                    border-color: #2563eb !important;
+                    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+                }
+                .eccs-filter-counter {
+                    font-size: 11px !important;
+                    font-weight: 700 !important;
+                    color: #2563eb !important;
+                    white-space: nowrap !important;
+                    font-family: sans-serif !important;
+                }
+                .eccs-filter-row td {
+                    background-color: #f8fafc !important;
+                    padding: 6px 4px !important;
+                    border: 1px solid #cbd5e1 !important;
+                }
+                .eccs-desc-cell {
+                    font-family: sans-serif !important;
+                    font-size: 11px !important;
+                    color: #0f172a !important;
+                    font-weight: 600 !important;
+                    padding: 4px 6px !important;
+                    border: 1px solid #cbd5e1 !important;
+                    background-color: #ffffff !important;
+                    max-width: 160px !important;
+                    word-wrap: break-word !important;
+                    white-space: normal !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
 
         // Force container and table responsiveness so newly appended columns are fully visible
         targetTable.style.width = "100%";
@@ -303,7 +307,7 @@
                 if (row.style.display !== 'none') {
                     const cells = Array.from(row.querySelectorAll('td'));
                     if (cells[hawbColIdx]) {
-                        const hawbText = cells[hawbColIdx].textContent.replace(/\s+/g, '').trim();
+                        const hawbText = (cells[hawbColIdx].textContent || '').replace(/\s+/g, '').trim();
                         if (hawbText) uniqueHawbs.add(hawbText);
                     }
                 }
@@ -327,15 +331,15 @@
                 const cells = Array.from(row.querySelectorAll('td'));
                 if (cells.length < 3) return;
 
-                const csbText = cells[csbColIdx] ? cells[csbColIdx].textContent.toLowerCase().replace(/\s+/g, '') : '';
-                const hawbText = cells[hawbColIdx] ? cells[hawbColIdx].textContent.toLowerCase().replace(/\s+/g, '') : '';
-                const courierText = cells[courierColIdx] ? cells[courierColIdx].textContent.toLowerCase().replace(/\s+/g, ' ') : '';
-                const statusText = cells[statusColIdx] ? cells[statusColIdx].textContent.toLowerCase().replace(/\s+/g, ' ') : '';
+                const csbText = cells[csbColIdx] ? (cells[csbColIdx].textContent || '').toLowerCase().replace(/\s+/g, '') : '';
+                const hawbText = cells[hawbColIdx] ? (cells[hawbColIdx].textContent || '').toLowerCase().replace(/\s+/g, '') : '';
+                const courierText = cells[courierColIdx] ? (cells[courierColIdx].textContent || '').toLowerCase().replace(/\s+/g, ' ') : '';
+                const statusText = cells[statusColIdx] ? (cells[statusColIdx].textContent || '').toLowerCase().replace(/\s+/g, ' ') : '';
                 
-                const descText = (descColIdx !== -1 && cells[descColIdx]) ? cells[descColIdx].textContent.toLowerCase() : '';
-                const airlinesText = (airColIdx !== -1 && cells[airColIdx]) ? cells[airColIdx].textContent.toLowerCase() : '';
-                const destText = (destColIdx !== -1 && cells[destColIdx]) ? cells[destColIdx].textContent.toLowerCase() : '';
-                const weightText = (weightColIdx !== -1 && cells[weightColIdx]) ? cells[weightColIdx].textContent.toLowerCase() : '';
+                const descText = (descColIdx !== -1 && cells[descColIdx]) ? (cells[descColIdx].textContent || '').toLowerCase() : '';
+                const airlinesText = (airColIdx !== -1 && cells[airColIdx]) ? (cells[airColIdx].textContent || '').toLowerCase() : '';
+                const destText = (destColIdx !== -1 && cells[destColIdx]) ? (cells[destColIdx].textContent || '').toLowerCase() : '';
+                const weightText = (weightColIdx !== -1 && cells[weightColIdx]) ? (cells[weightColIdx].textContent || '').toLowerCase() : '';
 
                 const matchesCsb = !csbQuery || csbText.includes(csbQuery);
                 const matchesHawb = !hawbQuery || hawbText.includes(hawbQuery);
@@ -364,7 +368,7 @@
             // Update unique HAWB counter label
             const totalUnique = new Set(dataRows.map(r => {
                 const cells = Array.from(r.querySelectorAll('td'));
-                return cells[hawbColIdx] ? cells[hawbColIdx].textContent.replace(/\s+/g, '').trim() : '';
+                return cells[hawbColIdx] ? (cells[hawbColIdx].textContent || '').replace(/\s+/g, '').trim() : '';
             }).filter(Boolean)).size;
 
             counterSpan.textContent = `[${getUniqueHawbCount()}/${totalUnique} HAWBs]`;
@@ -389,8 +393,10 @@
         // Set initial counter
         applyFilters();
 
-        // --- Robust DOM Extraction for Both Key-Value and Header-Data Table Formats ---
+        // --- Robust Null-Safe DOM Extraction for Both Key-Value and Header-Data Table Formats ---
         function extractFieldFromDOM(container, labelNames) {
+            if (!container) return "";
+
             const tables = Array.from(container.querySelectorAll('table'));
             for (const table of tables) {
                 const trs = Array.from(table.querySelectorAll('tr'));
@@ -398,13 +404,13 @@
                 if (trs.length >= 2) {
                     const headerCells = Array.from(trs[0].querySelectorAll('td, th'));
                     for (let colIdx = 0; colIdx < headerCells.length; colIdx++) {
-                        const headerText = headerCells[colIdx].textContent.replace(/\s+/g, ' ').trim().toLowerCase();
+                        const headerText = (headerCells[colIdx]?.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
                         if (labelNames.some(name => headerText.includes(name.toLowerCase()))) {
                             const dataRow = trs[1];
                             if (dataRow) {
                                 const dataCells = Array.from(dataRow.querySelectorAll('td, th'));
                                 if (dataCells[colIdx]) {
-                                    const val = dataCells[colIdx].textContent.replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
+                                    const val = (dataCells[colIdx]?.textContent || '').replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
                                     if (val) return val;
                                 }
                             }
@@ -415,15 +421,15 @@
                 // Format A: Key-Value pair matching
                 const tds = Array.from(table.querySelectorAll('td'));
                 for (let i = 0; i < tds.length; i++) {
-                    const txt = tds[i].textContent.replace(/\s+/g, ' ').trim().replace(/:$/, '').trim().toLowerCase();
+                    const txt = (tds[i]?.textContent || '').replace(/\s+/g, ' ').trim().replace(/:$/, '').trim().toLowerCase();
                     if (labelNames.some(name => txt.includes(name.toLowerCase()))) {
                         const nextTd = tds[i].nextElementSibling;
-                        if (nextTd && nextTd.tagName.toLowerCase() === 'td') {
-                            const val = nextTd.textContent.replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
+                        if (nextTd && nextTd.tagName && nextTd.tagName.toLowerCase() === 'td') {
+                            const val = (nextTd.textContent || '').replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
                             if (val) return val;
                         }
                         if (tds[i+1]) {
-                            const val = tds[i+1].textContent.replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
+                            const val = (tds[i+1]?.textContent || '').replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
                             if (val) return val;
                         }
                     }
@@ -431,12 +437,12 @@
             }
 
             // Text fallback parsing
-            const rawText = container.textContent.replace(/\s+/g, ' ').trim();
+            const rawText = (container.textContent || '').replace(/\s+/g, ' ').trim();
             for (const name of labelNames) {
                 const escapedLabel = name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
                 const regex = new RegExp(escapedLabel + '\\s*[:\\-]?\\s*([\\s\\S]*?)(?=\\s*(?:[A-Z][a-zA-Z0-9\\s()\\.\\/]+:|$))', 'i');
                 const match = rawText.match(regex);
-                if (match && match[1].trim()) {
+                if (match && match[1] && match[1].trim()) {
                     return match[1].replace(/&nbsp;/gi, '').trim();
                 }
             }
@@ -481,7 +487,10 @@
 
             try {
                 const response = await fetch(urlWithParams, { credentials: 'same-origin' });
-                if (!response.ok) return { desc: "", airlines: "", dest: "", weight: "" };
+                if (!response.ok) {
+                    if (window.eccsLog) window.eccsLog.warn("HTTP error during background fetch", { status: response.status, url: urlWithParams });
+                    return { desc: "", airlines: "", dest: "", weight: "" };
+                }
                 const htmlText = await response.text();
 
                 const doc = new DOMParser().parseFromString(htmlText, 'text/html');
@@ -490,8 +499,10 @@
                 const dest = extractDest(doc);
                 const weight = extractWeight(doc);
 
+                if (window.eccsLog) window.eccsLog.info("Extracted details for row", { index, csbNo: idOrCsbNo, desc, airlines, dest, weight });
                 return { desc, airlines, dest, weight };
             } catch (e) {
+                if (window.eccsLog) window.eccsLog.error("Silent background fetch error", { error: e.message, url: urlWithParams });
                 console.error("[ECCS Extension] Silent background fetch error:", e);
                 return { desc: "", airlines: "", dest: "", weight: "" };
             }
