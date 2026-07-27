@@ -14,7 +14,7 @@
         // Find table with CSB or CBE headers using normalized whitespace and flexible matching
         const targetTable = Array.from(document.querySelectorAll('table')).find(table => {
             const normText = table.textContent.replace(/\s+/g, ' ');
-            const hasCsbOrCbe = /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry/i.test(normText);
+            const hasCsbOrCbe = /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry|HAWB/i.test(normText);
             const hasCourierOrHawb = /Courier|HAWB|Status/i.test(normText);
             return hasCsbOrCbe && hasCourierOrHawb;
         });
@@ -26,7 +26,7 @@
         const rows = Array.from(targetTable.querySelectorAll('tr'));
         const headerRow = rows.find(row => {
             const normText = row.textContent.replace(/\s+/g, ' ');
-            return /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry/i.test(normText) && (/Courier|HAWB|Status|Number/i.test(normText));
+            return /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry|HAWB/i.test(normText) && (/Courier|HAWB|Status|Number/i.test(normText));
         });
 
         if (!headerRow) return;
@@ -35,12 +35,24 @@
         const dataRows = rows.filter(row => {
             if (row === headerRow || row.classList.contains('eccs-filter-row')) return false;
             const hasInput = row.querySelector('input[type="checkbox"], input[name="selectedIndex"], input[name="indexes"], input[name="csbNum"]');
-            const hasCsbLink = row.querySelector('a[href*="CSB"], a[href*="csb"], a[onmouseover*="viewCSB"], a[href*="view"]');
+            const hasDetailLink = row.querySelector('a[onmouseover*="view"], a[href*="view"], a[href*="CSB"], a[href*="csb"]');
             const cellCount = row.querySelectorAll('td').length;
-            return (hasInput || hasCsbLink) && cellCount >= 3;
+            return (hasInput || hasDetailLink) && cellCount >= 3;
         });
 
         if (dataRows.length === 0) return;
+
+        // Dynamically detect column indices from header row
+        const headerTextArr = Array.from(headerRow.querySelectorAll('td, th')).map(c => c.textContent.replace(/\s+/g, ' ').trim());
+        let csbColIdx = headerTextArr.findIndex(t => /CSB|Shipping\s*Bill/i.test(t));
+        let hawbColIdx = headerTextArr.findIndex(t => /HAWB/i.test(t));
+        let courierColIdx = headerTextArr.findIndex(t => /Courier/i.test(t));
+        let statusColIdx = headerTextArr.findIndex(t => /Status/i.test(t));
+
+        if (csbColIdx === -1) csbColIdx = 1;
+        if (hawbColIdx === -1) hawbColIdx = 2;
+        if (courierColIdx === -1) courierColIdx = 3;
+        if (statusColIdx === -1) statusColIdx = 4;
 
         // Inject Stylesheet
         const style = document.createElement('style');
@@ -76,8 +88,14 @@
             .eccs-desc-cell {
                 font-family: sans-serif !important;
                 font-size: 11px !important;
-                color: #475569 !important;
-                font-weight: 500 !important;
+                color: #0f172a !important;
+                font-weight: 600 !important;
+                padding: 4px 6px !important;
+                border: 1px solid #cbd5e1 !important;
+                background-color: #ffffff !important;
+                max-width: 160px !important;
+                word-wrap: break-word !important;
+                white-space: normal !important;
             }
         `;
         document.head.appendChild(style);
@@ -89,8 +107,17 @@
             targetTable.parentElement.style.overflowX = "auto";
         }
 
+        // Determine indices for appended columns
+        let descColIdx = -1, airColIdx = -1, destColIdx = -1, weightColIdx = -1;
+
         // --- EXPORT CLEARANCE LISTS ALONE: Append 4 Hover Columns at far right ---
         if (isExport) {
+            const baseColCount = headerRow.querySelectorAll('td, th').length;
+            descColIdx = baseColCount;
+            airColIdx = baseColCount + 1;
+            destColIdx = baseColCount + 2;
+            weightColIdx = baseColCount + 3;
+
             // Increment Colspan of Header/Footer rows to fit 4 new columns
             Array.from(targetTable.querySelectorAll('td[colspan]')).forEach(td => {
                 const currentCols = parseInt(td.getAttribute('colspan'), 10);
@@ -262,8 +289,8 @@
             dataRows.forEach(row => {
                 if (row.style.display !== 'none') {
                     const cells = Array.from(row.querySelectorAll('td'));
-                    if (cells[2]) {
-                        const hawbText = cells[2].textContent.replace(/\s+/g, '').trim();
+                    if (cells[hawbColIdx]) {
+                        const hawbText = cells[hawbColIdx].textContent.replace(/\s+/g, '').trim();
                         if (hawbText) uniqueHawbs.add(hawbText);
                     }
                 }
@@ -271,7 +298,7 @@
             return uniqueHawbs.size;
         }
 
-        // Apply filtering logic using direct index alignment
+        // Apply filtering logic using dynamic column alignment
         function applyFilters() {
             const csbQuery = csbInput.value.toLowerCase().trim();
             const hawbQuery = hawbInput.value.toLowerCase().trim();
@@ -287,15 +314,15 @@
                 const cells = Array.from(row.querySelectorAll('td'));
                 if (cells.length < 5) return;
 
-                const csbText = cells[1] ? cells[1].textContent.toLowerCase() : '';
-                const hawbText = cells[2] ? cells[2].textContent.toLowerCase() : '';
-                const courierText = cells[3] ? cells[3].textContent.toLowerCase() : '';
-                const statusText = cells[4] ? cells[4].textContent.toLowerCase() : '';
+                const csbText = cells[csbColIdx] ? cells[csbColIdx].textContent.toLowerCase() : '';
+                const hawbText = cells[hawbColIdx] ? cells[hawbColIdx].textContent.toLowerCase() : '';
+                const courierText = cells[courierColIdx] ? cells[courierColIdx].textContent.toLowerCase() : '';
+                const statusText = cells[statusColIdx] ? cells[statusColIdx].textContent.toLowerCase() : '';
                 
-                const descText = cells[6] ? cells[6].textContent.toLowerCase() : '';
-                const airlinesText = cells[7] ? cells[7].textContent.toLowerCase() : '';
-                const destText = cells[8] ? cells[8].textContent.toLowerCase() : '';
-                const weightText = cells[9] ? cells[9].textContent.toLowerCase() : '';
+                const descText = (descColIdx !== -1 && cells[descColIdx]) ? cells[descColIdx].textContent.toLowerCase() : '';
+                const airlinesText = (airColIdx !== -1 && cells[airColIdx]) ? cells[airColIdx].textContent.toLowerCase() : '';
+                const destText = (destColIdx !== -1 && cells[destColIdx]) ? cells[destColIdx].textContent.toLowerCase() : '';
+                const weightText = (weightColIdx !== -1 && cells[weightColIdx]) ? cells[weightColIdx].textContent.toLowerCase() : '';
 
                 const matchesCsb = !csbQuery || csbText.includes(csbQuery);
                 const matchesHawb = !hawbQuery || hawbText.includes(hawbQuery);
@@ -317,13 +344,13 @@
             // Update unique HAWB counter label
             const totalUnique = new Set(dataRows.map(r => {
                 const cells = Array.from(r.querySelectorAll('td'));
-                return cells[2] ? cells[2].textContent.replace(/\s+/g, '').trim() : '';
+                return cells[hawbColIdx] ? cells[hawbColIdx].textContent.replace(/\s+/g, '').trim() : '';
             }).filter(Boolean)).size;
 
             counterSpan.textContent = `[${getUniqueHawbCount()}/${totalUnique} HAWBs]`;
         }
 
-        // Debounce applyFilters to reduce CPU usage and layout thrashing
+        // Debounce applyFilters
         let filterTimeout;
         function debouncedApplyFilters() {
             clearTimeout(filterTimeout);
@@ -342,64 +369,78 @@
         // Set initial counter
         applyFilters();
 
-        // --- Helpers: Extract values from injected detail view HTML ---
+        // --- Robust DOM Extraction for Both Key-Value and Header-Data Table Formats ---
         function extractFieldFromDOM(container, labelNames) {
-            const tds = Array.from(container.querySelectorAll('td'));
-            for (let i = 0; i < tds.length; i++) {
-                const txt = tds[i].textContent.replace(/\s+/g, ' ').trim().replace(/:$/, '').trim().toLowerCase();
-                if (labelNames.some(name => txt.includes(name.toLowerCase()))) {
-                    const nextTd = tds[i].nextElementSibling;
-                    if (nextTd && nextTd.tagName.toLowerCase() === 'td') {
-                        return nextTd.textContent.replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
+            const tables = Array.from(container.querySelectorAll('table'));
+            for (const table of tables) {
+                const trs = Array.from(table.querySelectorAll('tr'));
+                // Format B: Multi-column header row + data row
+                if (trs.length >= 2) {
+                    const headerCells = Array.from(trs[0].querySelectorAll('td, th'));
+                    for (let colIdx = 0; colIdx < headerCells.length; colIdx++) {
+                        const headerText = headerCells[colIdx].textContent.replace(/\s+/g, ' ').trim().toLowerCase();
+                        if (labelNames.some(name => headerText.includes(name.toLowerCase()))) {
+                            const dataRow = trs[1];
+                            if (dataRow) {
+                                const dataCells = Array.from(dataRow.querySelectorAll('td, th'));
+                                if (dataCells[colIdx]) {
+                                    const val = dataCells[colIdx].textContent.replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
+                                    if (val) return val;
+                                }
+                            }
+                        }
                     }
-                    if (tds[i+1]) {
-                        return tds[i+1].textContent.replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
+                }
+
+                // Format A: Key-Value pair matching
+                const tds = Array.from(table.querySelectorAll('td'));
+                for (let i = 0; i < tds.length; i++) {
+                    const txt = tds[i].textContent.replace(/\s+/g, ' ').trim().replace(/:$/, '').trim().toLowerCase();
+                    if (labelNames.some(name => txt.includes(name.toLowerCase()))) {
+                        const nextTd = tds[i].nextElementSibling;
+                        if (nextTd && nextTd.tagName.toLowerCase() === 'td') {
+                            const val = nextTd.textContent.replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
+                            if (val) return val;
+                        }
+                        if (tds[i+1]) {
+                            const val = tds[i+1].textContent.replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
+                            if (val) return val;
+                        }
                     }
+                }
+            }
+
+            // Text fallback parsing
+            const rawText = container.textContent.replace(/\s+/g, ' ').trim();
+            for (const name of labelNames) {
+                const escapedLabel = name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const regex = new RegExp(escapedLabel + '\\s*[:\\-]?\\s*([\\s\\S]*?)(?=\\s*(?:[A-Z][a-zA-Z0-9\\s()\\.\\/]+:|$))', 'i');
+                const match = rawText.match(regex);
+                if (match && match[1].trim()) {
+                    return match[1].replace(/&nbsp;/gi, '').trim();
                 }
             }
             return "";
         }
 
-        function getValueFromText(text, labelName) {
-            const escapedLabel = labelName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-            const regex = new RegExp(escapedLabel + '\\s*[:\\-]?\\s*([\\s\\S]*?)(?=\\s*(?:[A-Z][a-zA-Z0-9\\s()\\.\\/]+:|$))', 'i');
-            const match = text.match(regex);
-            if (match) {
-                return match[1].replace(/&nbsp;/gi, '').trim();
-            }
-            return "";
-        }
-
         function extractDescription(container) {
-            let val = extractFieldFromDOM(container, ['Description of Goods', 'Goods Description', 'Description']);
-            if (val) return val;
-            const rawText = container.textContent.replace(/\s+/g, ' ').trim();
-            return getValueFromText(rawText, 'Description of Goods') || getValueFromText(rawText, 'Description');
+            return extractFieldFromDOM(container, ['Description of Goods (Item wise)', 'Description of Goods', 'Goods Description', 'Description', 'Item Description']);
         }
 
         function extractAirlines(container) {
-            let val = extractFieldFromDOM(container, ['International Airlines', 'Airlines', 'Airline Name', 'Flight']);
-            if (val) return val;
-            const rawText = container.textContent.replace(/\s+/g, ' ').trim();
-            return getValueFromText(rawText, 'International Airlines') || getValueFromText(rawText, 'Airlines');
+            return extractFieldFromDOM(container, ['International Airlines', 'Airlines', 'Airline Name', 'Flight']);
         }
 
         function extractDest(container) {
-            let val = extractFieldFromDOM(container, ['Airport of Destination', 'Destination', 'Port of Destination']);
-            if (val) return val;
-            const rawText = container.textContent.replace(/\s+/g, ' ').trim();
-            return getValueFromText(rawText, 'Airport of Destination') || getValueFromText(rawText, 'Destination');
+            return extractFieldFromDOM(container, ['Airport of Destination', 'Destination', 'Port of Destination']);
         }
 
         function extractWeight(container) {
-            let val = extractFieldFromDOM(container, ['Manifest Weight', 'Weight (in Kg.)', 'Gross Weight', 'Weight', 'Declared Weight']);
-            if (val) return val;
-            const rawText = container.textContent.replace(/\s+/g, ' ').trim();
-            return getValueFromText(rawText, 'Manifest Weight') || getValueFromText(rawText, 'Weight (in Kg.)') || getValueFromText(rawText, 'Weight');
+            return extractFieldFromDOM(container, ['Manifest Weight', 'Weight (in Kg.)', 'Gross Weight', 'Declared Weight', 'Weight']);
         }
 
-        // Helper: Trigger background AJAX details fetch
-        function fetchDetails(index, csbNo, actionUrl) {
+        // Helper: Trigger native hover event dynamically
+        function fetchDetails(index, csbNo, actionUrl, linkElement) {
             return new Promise((resolve) => {
                 const mydiv = document.getElementById('mydiv' + index);
                 if (!mydiv) {
@@ -412,37 +453,50 @@
                     const airlines = extractAirlines(mydiv);
                     const dest = extractDest(mydiv);
                     const weight = extractWeight(mydiv);
-                    resolve({ desc, airlines, dest, weight });
-                    return;
+                    if (desc || airlines || dest || weight) {
+                        resolve({ desc, airlines, dest, weight });
+                        return;
+                    }
                 }
 
                 const observer = new MutationObserver(() => {
                     const text = mydiv.textContent.trim();
                     if (text !== "") {
-                        observer.disconnect();
                         const desc = extractDescription(mydiv);
                         const airlines = extractAirlines(mydiv);
                         const dest = extractDest(mydiv);
                         const weight = extractWeight(mydiv);
-                        resolve({ desc, airlines, dest, weight });
+                        if (desc || airlines || dest || weight) {
+                            observer.disconnect();
+                            resolve({ desc, airlines, dest, weight });
+                        }
                     }
                 });
 
                 observer.observe(mydiv, { childList: true, subtree: true });
 
+                // Trigger hover natively on link element
                 try {
-                    if (typeof window.viewCSBDetails === 'function') {
-                        window.viewCSBDetails(actionUrl, csbNo, index);
-                    } else {
-                        observer.disconnect();
-                        resolve({ desc: "", airlines: "", dest: "", weight: "" });
+                    if (linkElement) {
+                        // Dispatch mouseover event to invoke ECCS listener
+                        linkElement.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true }));
+
+                        // Fallback: Execute onmouseover attribute script if present
+                        const onmouseoverAttr = linkElement.getAttribute('onmouseover');
+                        if (onmouseoverAttr) {
+                            const cleanScript = onmouseoverAttr.replace(/^javascript:/i, '').trim();
+                            if (cleanScript) {
+                                try {
+                                    new Function(cleanScript)();
+                                } catch (e) {}
+                            }
+                        }
                     }
                 } catch (e) {
-                    observer.disconnect();
-                    resolve({ desc: "", airlines: "", dest: "", weight: "" });
+                    console.error("[ECCS Extension] Error triggering mouseover:", e);
                 }
 
-                // Safety timeout guard (1200ms)
+                // Safety timeout guard (1500ms)
                 setTimeout(() => {
                     observer.disconnect();
                     const desc = extractDescription(mydiv);
@@ -450,7 +504,7 @@
                     const dest = extractDest(mydiv);
                     const weight = extractWeight(mydiv);
                     resolve({ desc, airlines, dest, weight });
-                }, 1200);
+                }, 1500);
             });
         }
 
@@ -462,7 +516,7 @@
             const rowTasks = dataRows.map((row, rowIndex) => {
                 const link = Array.from(row.querySelectorAll('a')).find(a => {
                     const html = a.outerHTML || '';
-                    return html.includes('viewCSB') || html.includes('viewArrivedCSB') || html.includes('viewP') || html.includes('CreateExamReport');
+                    return html.includes('view') || html.includes('CSB') || html.includes('csb') || html.includes('CreateExamReport');
                 });
                 
                 // Append 4 new columns at the far right of the row
@@ -496,22 +550,15 @@
                     if (task.link) {
                         const targetAttr = task.link.getAttribute('onmouseover') || task.link.getAttribute('onclick') || task.link.getAttribute('href') || '';
                         const matches = targetAttr.match(/'([^']+)'/g);
-                        if (matches && matches.length >= 2) {
-                            const actionUrl = matches[0].replace(/'/g, '');
-                            const csbNo = matches[1].replace(/'/g, '');
-                            const index = matches[2] ? matches[2].replace(/'/g, '') : String(task.rowIndex);
-                            
-                            const details = await fetchDetails(index, csbNo, actionUrl);
-                            task.descTd.textContent = details.desc || "N/A";
-                            task.airTd.textContent = details.airlines || "N/A";
-                            task.destTd.textContent = details.dest || "N/A";
-                            task.weightTd.textContent = details.weight || "N/A";
-                        } else {
-                            task.descTd.textContent = "N/A";
-                            task.airTd.textContent = "N/A";
-                            task.destTd.textContent = "N/A";
-                            task.weightTd.textContent = "N/A";
-                        }
+                        const csbNo = (matches && matches[1]) ? matches[1].replace(/'/g, '') : '';
+                        const actionUrl = (matches && matches[0]) ? matches[0].replace(/'/g, '') : '';
+                        const index = (matches && matches[2]) ? matches[2].replace(/'/g, '') : String(task.rowIndex);
+
+                        const details = await fetchDetails(index, csbNo, actionUrl, task.link);
+                        task.descTd.textContent = details.desc || "N/A";
+                        task.airTd.textContent = details.airlines || "N/A";
+                        task.destTd.textContent = details.dest || "N/A";
+                        task.weightTd.textContent = details.weight || "N/A";
                     } else {
                         task.descTd.textContent = "N/A";
                         task.airTd.textContent = "N/A";
