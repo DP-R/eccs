@@ -2,7 +2,7 @@
 // ECCS Extension: Automated Continuous Session Logger
 // Automatically records all user actions, navigation, clicks, inputs,
 // network requests, and errors from start to end.
-// Download log anytime with Ctrl + Shift + L or Ctrl + Shift + D
+// Download log anytime with Ctrl + Shift + D or Ctrl + Shift + E
 // ==========================================
 
 (function() {
@@ -124,7 +124,7 @@
         appendLog('ERROR', 'UNHANDLED_REJECTION', e.reason ? String(e.reason) : 'Promise rejection');
     });
 
-    // --- 5. Log Export Function (Ctrl + Shift + L or Ctrl + Shift + D) ---
+    // --- 5. Log Export Function (Ctrl + Shift + D or Ctrl + Shift + E) ---
     function exportLogsToFile() {
         const logs = getLogHistory();
         if (logs.length === 0) {
@@ -162,8 +162,8 @@
     }
 
     document.addEventListener('keydown', e => {
-        // Ctrl + Shift + L  OR  Ctrl + Shift + D exports log file
-        if (e.ctrlKey && e.shiftKey && (e.key.toLowerCase() === 'l' || e.key.toLowerCase() === 'd')) {
+        // Ctrl + Shift + D  OR  Ctrl + Shift + E exports log file (Leaves Ctrl + Shift + L for Browser Lock)
+        if (e.ctrlKey && e.shiftKey && (e.key.toLowerCase() === 'd' || e.key.toLowerCase() === 'e')) {
             e.preventDefault();
             exportLogsToFile();
         }
