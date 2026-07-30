@@ -104,17 +104,22 @@
             const isSubsequent = (sessionStorage.currentHawb === hawbNo && sessionStorage.isSubsequent === "true");
 
             if (!isSubsequent) {
-                // FIRST ONE: Wait 5 seconds (5000ms) before clicking
+                // FIRST PACKAGE: Wait 5 seconds, then click ONCE to submit package 1
                 sessionStorage.currentHawb = hawbNo || '';
-                sessionStorage.isSubsequent = "true";
 
                 setTimeout(() => {
-                    clickClearButton(clearButton, totalPackages);
+                    if (document.body.contains(clearButton)) {
+                        clearButton.click();
+                    }
                 }, 5000);
             } else {
-                // SUBSEQUENT ONES: Click with a very small time gap (300ms)
+                // SUBSEQUENT PACKAGES (re-opened after reinserting HAWB):
+                // Click rapidly equal to the remaining packages count
+                const remaining = parseInt(sessionStorage.remainingCount || "1", 10);
+                const clickCount = remaining > 0 ? remaining : totalPackages;
+
                 setTimeout(() => {
-                    clickClearButton(clearButton, totalPackages);
+                    clickClearButton(clearButton, clickCount);
                 }, 300);
             }
             return;
@@ -139,6 +144,7 @@
                         
                         sessionStorage.currentHawb = hawbNo;
                         sessionStorage.isSubsequent = "true";
+                        sessionStorage.remainingCount = String(total - current);
                         
                         input.value = hawbNo;
                         input.dispatchEvent(new Event('change', { bubbles: true }));
