@@ -3,6 +3,8 @@
 // ==========================================
 
 (function() {
+    let activeLoadId = 0;
+
     function initFilters() {
         const path = window.location.pathname.toLowerCase();
         
@@ -498,30 +500,19 @@
             ]);
         }
 
-        // Silent Native Handler Trigger (Styles target mydiv offscreen without setting display:none so native ECCS JS proceeds)
-        function triggerNativeHover(task) {
-            if (!task.link) return;
+        // Silent Native Handler Trigger
+        function triggerNativeHover(task, targetDiv) {
+            if (!task.link || !targetDiv) return;
 
-            const myDiv = document.getElementById('mydiv' + task.index);
-            if (myDiv) {
-                myDiv.innerHTML = ''; // CRITICAL: Erase stale innerHTML from previous page renders to prevent data leakage!
-                myDiv.style.position = 'absolute';
-                myDiv.style.left = '-9999px';
-                myDiv.style.top = '-9999px';
-                myDiv.style.visibility = 'hidden';
-                myDiv.style.height = '0px';
-                myDiv.style.width = '0px';
-                myDiv.style.overflow = 'hidden';
-                myDiv.style.display = 'block';
-
-                if (myDiv.parentElement) {
-                    myDiv.parentElement.style.position = 'absolute';
-                    myDiv.parentElement.style.left = '-9999px';
-                    myDiv.parentElement.style.height = '0px';
-                    myDiv.parentElement.style.overflow = 'hidden';
-                    myDiv.parentElement.style.display = 'block';
-                }
-            }
+            targetDiv.innerHTML = ''; // CRITICAL: Erase stale innerHTML to prevent cross-row or cross-tab leakage!
+            targetDiv.style.position = 'absolute';
+            targetDiv.style.left = '-9999px';
+            targetDiv.style.top = '-9999px';
+            targetDiv.style.visibility = 'hidden';
+            targetDiv.style.height = '0px';
+            targetDiv.style.width = '0px';
+            targetDiv.style.overflow = 'hidden';
+            targetDiv.style.display = 'block';
 
             const targetAttr = task.link.getAttribute('onmouseover') || task.link.getAttribute('onclick') || '';
             const jsCode = targetAttr.replace(/^javascript:/i, '').trim();
@@ -536,7 +527,7 @@
             }
         }
 
-        // Silent Background Fetching (Fallback)
+        // Silent Background Fetching (Fallback for ALL rows when hover is rate-limited or fails)
         async function fetchBackgroundDetails(actionUrl, idOrCsbNo, index) {
             if (!actionUrl || !idOrCsbNo) return { desc: "", airlines: "", dest: "", weight: "" };
 
@@ -547,6 +538,8 @@
             params.set('csbNo', idOrCsbNo);
             params.set('csbNumber', idOrCsbNo);
             params.set('csbID', idOrCsbNo);
+            params.set('csbRefNumber', idOrCsbNo);
+            params.set('refNo', idOrCsbNo);
             params.set('hawbId', idOrCsbNo);
             params.set('hawbID', idOrCsbNo);
             params.set('hawbNo', idOrCsbNo);
@@ -590,6 +583,14 @@
         async function loadAllDetails() {
             if (!isExportDetailList) return;
 
+            const thisLoadId = ++activeLoadId;
+
+            // Wipe ALL existing mydiv containers in DOM globally before starting to eliminate stale data leakage
+            document.querySelectorAll('[id^="mydiv"]').forEach(div => {
+                div.innerHTML = '';
+                div.textContent = '';
+            });
+
             // Step A: Append new columns to the far right of all rows immediately
             const rowTasks = dataRows.map((row, rowIndex) => {
                 const link = Array.from(row.querySelectorAll('a')).find(a => {
@@ -605,19 +606,19 @@
 
                 // Append 4 new columns at the far right of the row
                 const descTd = document.createElement('td');
-                descTd.height = "25"; descTd.width = "130"; descTd.align = "center"; descTd.className = "eccs-desc-cell"; descTd.textContent = "-";
+                descTd.height = "25"; descTd.width = "130"; descTd.align = "center"; descTd.className = "eccs-desc-cell"; descTd.textContent = "...";
                 row.appendChild(descTd);
 
                 const airTd = document.createElement('td');
-                airTd.height = "25"; airTd.width = "130"; airTd.align = "center"; airTd.className = "eccs-desc-cell"; airTd.textContent = "-";
+                airTd.height = "25"; airTd.width = "130"; airTd.align = "center"; airTd.className = "eccs-desc-cell"; airTd.textContent = "...";
                 row.appendChild(airTd);
 
                 const destTd = document.createElement('td');
-                destTd.height = "25"; destTd.width = "130"; destTd.align = "center"; destTd.className = "eccs-desc-cell"; destTd.textContent = "-";
+                destTd.height = "25"; destTd.width = "130"; destTd.align = "center"; destTd.className = "eccs-desc-cell"; destTd.textContent = "...";
                 row.appendChild(destTd);
 
                 const weightTd = document.createElement('td');
-                weightTd.height = "25"; weightTd.width = "130"; weightTd.align = "center"; weightTd.className = "eccs-desc-cell"; weightTd.textContent = "-";
+                weightTd.height = "25"; weightTd.width = "130"; weightTd.align = "center"; weightTd.className = "eccs-desc-cell"; weightTd.textContent = "...";
                 row.appendChild(weightTd);
 
                 return { row, rowIndex, index, link, csbNo, actionUrl, descTd, airTd, destTd, weightTd };
@@ -625,22 +626,33 @@
 
             applyFilters();
 
-            // Step B: Process rows SEQUENTIALLY with DOM clearing and polling for fresh AJAX data
+            // Step B: Process ALL rows sequentially with dedicated isolated containers & fallback fetch
             for (const task of rowTasks) {
+                if (activeLoadId !== thisLoadId) return; // Cancel if newer load initiated
+
                 if (window.eccsLog) window.eccsLog.info(`Processing row ${task.rowIndex}`, { index: task.index, csbNo: task.csbNo });
 
-                const myDiv = document.getElementById('mydiv' + task.index);
-                if (myDiv) myDiv.innerHTML = ''; // CLEAR STALE HTML BEFORE TRIGGERING HOVER!
+                let myDiv = document.getElementById('mydiv' + task.index);
+                if (!myDiv) {
+                    // Create isolated temporary div container if native mydiv is missing in DOM for higher rows
+                    myDiv = document.createElement('div');
+                    myDiv.id = 'eccs-temp-mydiv-' + task.rowIndex;
+                    myDiv.style.display = 'none';
+                    document.body.appendChild(myDiv);
+                }
+
+                myDiv.innerHTML = ''; // Wipe isolated container
 
                 // 1. Trigger native hover for THIS specific row
-                triggerNativeHover(task);
+                triggerNativeHover(task, myDiv);
 
-                // 2. Poll for up to 600ms for ECCS native AJAX response to populate mydiv
+                // 2. Poll for up to 600ms for ECCS native AJAX response to populate myDiv
                 let details = null;
                 let elapsed = 0;
                 while (elapsed < 600) {
-                    await new Promise(r => setTimeout(r, 50));
-                    elapsed += 50;
+                    if (activeLoadId !== thisLoadId) return;
+                    await new Promise(r => setTimeout(r, 40));
+                    elapsed += 40;
 
                     if (myDiv && myDiv.textContent && myDiv.textContent.trim().length > 10) {
                         const desc = extractDescription(myDiv);
@@ -654,14 +666,16 @@
                     }
                 }
 
-                // 3. Fallback if polling produced no fields
+                // 3. Fallback: If hover timed out or failed for ANY row (rows 4, 5, 6, 7...), fetch directly in background
                 if (!details || (!details.desc && !details.airlines && !details.dest && !details.weight)) {
                     if (task.actionUrl && task.csbNo) {
                         details = await fetchBackgroundDetails(task.actionUrl, task.csbNo, task.index);
                     }
                 }
 
-                // 4. Populate cells for THIS row
+                if (activeLoadId !== thisLoadId) return;
+
+                // 4. Populate cells for THIS row cleanly
                 task.descTd.textContent = (details && details.desc) ? details.desc : "N/A";
                 task.airTd.textContent = (details && details.airlines) ? details.airlines : "N/A";
                 task.destTd.textContent = (details && details.dest) ? details.dest : "N/A";
