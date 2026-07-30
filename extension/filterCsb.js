@@ -6,16 +6,12 @@
     function initFilters() {
         const path = window.location.pathname.toLowerCase();
         
-        // Exact pages where the 4 Hover Detail Columns (Description, Airlines, Dest, Weight) should be appended
-        const exportDetailPages = [
+        // Exact Examination List Pages where the 4 Hover Detail Columns (Description, Airlines, Dest, Weight) should be appended
+        const exportExamPages = [
             'listexamcsb5.do',
-            'listexamcsb4.do',
-            'listcsb4.do',
-            'listcsb3.do',
-            'listcsb5.do',
-            'listsez.do'
+            'listexamcsb4.do'
         ];
-        const isExportDetailList = exportDetailPages.some(page => path.includes(page));
+        const isExportDetailList = exportExamPages.some(page => path.includes(page));
 
         // Iterate through all tables to find the actual table containing data rows
         let targetTable = null;
@@ -49,15 +45,17 @@
                 return (hasInput || hasDetailLink || cellCount >= 4) && cellCount >= 3;
             });
 
-            if (foundDataRows.length > 0) {
+            // ONLY target tables containing 2 or more data rows (multi-HAWB list views). Single-HAWB views are skipped.
+            if (foundDataRows.length >= 2) {
                 targetTable = table;
                 headerRow = foundHeader;
                 dataRows = foundDataRows;
-                break; // Found the actual shipment list table!
+                break; // Found the actual multi-shipment list table!
             }
         }
 
-        if (!targetTable || !headerRow || dataRows.length === 0) return;
+        // Do NOT inject filter rows or extra columns on single-HAWB tables or empty lists
+        if (!targetTable || !headerRow || dataRows.length < 2) return;
         if (targetTable.querySelector('.eccs-filter-row')) return;
 
         console.log("[ECCS Extension] Initializing filters on target list view...");
@@ -134,7 +132,7 @@
         // Determine indices for appended columns
         let descColIdx = -1, airColIdx = -1, destColIdx = -1, weightColIdx = -1;
 
-        // --- EXPORT CLEARANCE & EXAMINATION LISTS ALONE: Append 4 Hover Columns at far right ---
+        // --- EXPORT EXAMINATION LISTS ALONE: Append 4 Hover Columns at far right ---
         if (isExportDetailList) {
             const baseColCount = headerRow.querySelectorAll('td, th').length;
             descColIdx = baseColCount;
