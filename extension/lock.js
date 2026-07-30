@@ -51,8 +51,9 @@
     if (localStorage.lock == "1")
         showLock();
 
+    // Lock Browser shortcut: Ctrl + Shift + K (Leaves Ctrl + Shift + L for log export)
     document.addEventListener("keydown", e => {
-        if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() == "l") {
+        if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() == "k") {
             e.preventDefault();
             localStorage.lock = 1;
             showLock();
