@@ -1,0 +1,8 @@
+# Ignore directories
+archive/
+html/
+
+# Ignore temporary & log files
+*.log
+*.tmp
+.DS_Store
