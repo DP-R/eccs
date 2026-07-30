@@ -5,11 +5,17 @@
 (function() {
     function initFilters() {
         const path = window.location.pathname.toLowerCase();
-        const isExport = path.includes('/export/');
-        const isImport = path.includes('/imp/');
-
-        // Strictly run on Export Clearance Lists and Import Cargo List Views
-        if (!isExport && !isImport) return;
+        
+        // Exact pages where the 4 Hover Detail Columns (Description, Airlines, Dest, Weight) should be appended
+        const exportDetailPages = [
+            'listexamcsb5.do',
+            'listexamcsb4.do',
+            'listcsb4.do',
+            'listcsb3.do',
+            'listcsb5.do',
+            'listsez.do'
+        ];
+        const isExportDetailList = exportDetailPages.some(page => path.includes(page));
 
         // Iterate through all tables to find the actual table containing data rows
         let targetTable = null;
@@ -55,11 +61,11 @@
         if (targetTable.querySelector('.eccs-filter-row')) return;
 
         console.log("[ECCS Extension] Initializing filters on target list view...");
-        if (window.eccsLog) window.eccsLog.info("Filters initializing on list view", { rowsCount: dataRows.length });
+        if (window.eccsLog) window.eccsLog.info("Filters initializing on list view", { rowsCount: dataRows.length, isExportDetailList });
 
         // Dynamically detect column indices from header row
         const headerTextArr = Array.from(headerRow.querySelectorAll('td, th')).map(c => (c.textContent || '').replace(/\s+/g, ' ').trim());
-        let csbColIdx = headerTextArr.findIndex(t => /CSB|Shipping\s*Bill/i.test(t));
+        let csbColIdx = headerTextArr.findIndex(t => /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry/i.test(t));
         let hawbColIdx = headerTextArr.findIndex(t => /HAWB/i.test(t));
         let courierColIdx = headerTextArr.findIndex(t => /Courier/i.test(t));
         let statusColIdx = headerTextArr.findIndex(t => /Status/i.test(t));
@@ -128,8 +134,8 @@
         // Determine indices for appended columns
         let descColIdx = -1, airColIdx = -1, destColIdx = -1, weightColIdx = -1;
 
-        // --- EXPORT CLEARANCE LISTS ALONE: Append 4 Hover Columns at far right ---
-        if (isExport) {
+        // --- EXPORT CLEARANCE & EXAMINATION LISTS ALONE: Append 4 Hover Columns at far right ---
+        if (isExportDetailList) {
             const baseColCount = headerRow.querySelectorAll('td, th').length;
             descColIdx = baseColCount;
             airColIdx = baseColCount + 1;
@@ -210,7 +216,7 @@
         td1.align = 'center';
         const csbInput = document.createElement('input');
         csbInput.type = 'text';
-        csbInput.placeholder = isExport ? 'Filter CSB...' : 'Filter CBE...';
+        csbInput.placeholder = isExportDetailList ? 'Filter CSB...' : 'Filter CBE/CSB...';
         csbInput.className = 'eccs-filter-input';
         td1.appendChild(csbInput);
         filterRow.appendChild(td1);
@@ -256,7 +262,7 @@
 
         let descInput, airlinesInput, destInput, weightInput;
 
-        if (isExport) {
+        if (isExportDetailList) {
             // Column 6: Description of Goods Filter
             const tdDesc = document.createElement('td');
             tdDesc.align = 'center';
@@ -379,7 +385,7 @@
 
         // Attach listeners
         const inputs = [csbInput, hawbInput, courierInput, statusInput];
-        if (isExport) {
+        if (isExportDetailList) {
             inputs.push(descInput, airlinesInput, destInput, weightInput);
         }
         inputs.forEach(input => {
@@ -584,7 +590,7 @@
 
         // --- Load details for Export Clearance Lists in background sequentially ---
         async function loadAllDetails() {
-            if (!isExport) return;
+            if (!isExportDetailList) return;
 
             // Step A: Append new columns to the far right of all rows immediately
             const rowTasks = dataRows.map((row, rowIndex) => {
