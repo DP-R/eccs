@@ -12,7 +12,7 @@
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["logger.js", "lock.js", "expand.js", "resize.js", "xray.js", "beautifyDetails.js"],
+      "js": ["logger.js", "lock.js", "login.js", "expand.js", "resize.js", "xray.js", "beautifyDetails.js"],
       "run_at": "document_end",
       "all_frames": true
     }
