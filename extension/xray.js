@@ -73,18 +73,22 @@
         return 1;
     }
 
-    function clickClearButton(button, count) {
-        if (!button) return;
+    // High-Speed Rapid Multi-Click Function (50ms gap between clicks before page unloads)
+    function clickClearButtonRapid(button, count) {
+        if (!button || count <= 0) return;
         
+        console.log(`[ECCS X-Ray] Rapidly clicking X-Ray Clear ${count} times...`);
+        if (window.eccsLog) window.eccsLog.info(`Rapidly clicking X-Ray Clear ${count} times`);
+
         let clicks = 0;
         const interval = setInterval(() => {
-            if (clicks < count && document.body.contains(button)) {
+            if (clicks < count) {
                 button.click();
                 clicks++;
             } else {
                 clearInterval(interval);
             }
-        }, 300); // Small 300ms time gap between clicks
+        }, 50); // 50ms rapid gap so all remaining clicks fire before form unloads!
     }
 
     function automateXray() {
@@ -101,11 +105,13 @@
             const hawbNo = getScannedHawb();
             const totalPackages = getNoOfPackages();
             
-            const isSubsequent = (sessionStorage.currentHawb === hawbNo && sessionStorage.isSubsequent === "true");
+            const isSubsequent = sessionStorage.isSubsequent === "true" || (sessionStorage.remainingCount && parseInt(sessionStorage.remainingCount, 10) > 0);
 
             if (!isSubsequent) {
-                // FIRST PACKAGE: Wait 5 seconds, then click ONCE to submit package 1
+                // PACKAGE 1: Wait 5 seconds, then click ONCE to submit Package 1
                 sessionStorage.currentHawb = hawbNo || '';
+                console.log("[ECCS X-Ray] Package 1: Waiting 5s safety delay before single click...");
+                if (window.eccsLog) window.eccsLog.info("Package 1: Waiting 5s safety delay");
 
                 setTimeout(() => {
                     if (document.body.contains(clearButton)) {
@@ -113,14 +119,21 @@
                     }
                 }, 5000);
             } else {
-                // SUBSEQUENT PACKAGES (re-opened after reinserting HAWB):
-                // Click rapidly equal to the remaining packages count
-                const remaining = parseInt(sessionStorage.remainingCount || "1", 10);
-                const clickCount = remaining > 0 ? remaining : totalPackages;
+                // SUBSEQUENT PACKAGES (Package 2, 3... re-opened after re-inserting HAWB):
+                // Skip 5s wait and click RAPIDLY equal to remainingCount at once!
+                const remaining = parseInt(sessionStorage.remainingCount || String(totalPackages - 1), 10);
+                const clickCount = remaining > 0 ? remaining : (totalPackages > 1 ? totalPackages - 1 : 1);
+
+                console.log(`[ECCS X-Ray] Subsequent Package: Firing ${clickCount} rapid clicks at once...`);
+                if (window.eccsLog) window.eccsLog.info(`Subsequent Package: Firing ${clickCount} rapid clicks`);
+
+                // Clear subsequent flags for next fresh HAWB
+                sessionStorage.removeItem("isSubsequent");
+                sessionStorage.removeItem("remainingCount");
 
                 setTimeout(() => {
-                    clickClearButton(clearButton, clickCount);
-                }, 300);
+                    clickClearButtonRapid(clearButton, clickCount);
+                }, 200);
             }
             return;
         }
@@ -142,9 +155,13 @@
                         input.dataset.automated = 'true';
                         done = 1;
                         
+                        const remainingCount = total - current;
                         sessionStorage.currentHawb = hawbNo;
                         sessionStorage.isSubsequent = "true";
-                        sessionStorage.remainingCount = String(total - current);
+                        sessionStorage.remainingCount = String(remainingCount);
+
+                        console.log(`[ECCS X-Ray] Page 1: Package ${current} of ${total} recorded. Remaining: ${remainingCount}`);
+                        if (window.eccsLog) window.eccsLog.info(`Page 1: Package ${current} of ${total}. Remaining: ${remainingCount}`);
                         
                         input.value = hawbNo;
                         input.dispatchEvent(new Event('change', { bubbles: true }));
