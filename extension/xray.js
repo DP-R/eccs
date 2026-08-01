@@ -73,22 +73,18 @@
         return 1;
     }
 
-    // High-Speed Rapid Multi-Click Function (50ms gap between clicks before page unloads)
-    function clickClearButtonRapid(button, count) {
+    // Synchronous Multi-Click Function (Fires count rapid clicks synchronously in 1 JS tick, exactly like physical clicking)
+    function clickClearButtonSynchronous(button, count) {
         if (!button || count <= 0) return;
         
-        console.log(`[ECCS X-Ray] Rapidly clicking X-Ray Clear ${count} times...`);
-        if (window.eccsLog) window.eccsLog.info(`Rapidly clicking X-Ray Clear ${count} times`);
+        console.log(`[ECCS X-Ray] Synchronously firing ${count} clicks on X-Ray Clear button...`);
+        if (window.eccsLog) window.eccsLog.info(`Synchronously firing ${count} clicks on X-Ray Clear`);
 
-        let clicks = 0;
-        const interval = setInterval(() => {
-            if (clicks < count) {
-                button.click();
-                clicks++;
-            } else {
-                clearInterval(interval);
-            }
-        }, 50); // 50ms rapid gap so all remaining clicks fire before form unloads!
+        for (let i = 0; i < count; i++) {
+            button.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+            button.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+            button.click();
+        }
     }
 
     function automateXray() {
@@ -120,20 +116,19 @@
                 }, 5000);
             } else {
                 // SUBSEQUENT PACKAGES (Package 2, 3... re-opened after re-inserting HAWB):
-                // Skip 5s wait and click RAPIDLY equal to remainingCount at once!
+                // Skip 5s wait and click SYNCHRONOUSLY equal to remainingCount at once!
                 const remaining = parseInt(sessionStorage.remainingCount || String(totalPackages - 1), 10);
                 const clickCount = remaining > 0 ? remaining : (totalPackages > 1 ? totalPackages - 1 : 1);
 
-                console.log(`[ECCS X-Ray] Subsequent Package: Firing ${clickCount} rapid clicks at once...`);
-                if (window.eccsLog) window.eccsLog.info(`Subsequent Package: Firing ${clickCount} rapid clicks`);
+                console.log(`[ECCS X-Ray] Subsequent Package: Firing ${clickCount} synchronous clicks at once...`);
+                if (window.eccsLog) window.eccsLog.info(`Subsequent Package: Firing ${clickCount} synchronous clicks`);
 
                 // Clear subsequent flags for next fresh HAWB
                 sessionStorage.removeItem("isSubsequent");
                 sessionStorage.removeItem("remainingCount");
 
-                setTimeout(() => {
-                    clickClearButtonRapid(clearButton, clickCount);
-                }, 200);
+                // Execute synchronous multi-clicking
+                clickClearButtonSynchronous(clearButton, clickCount);
             }
             return;
         }
