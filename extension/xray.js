@@ -73,7 +73,7 @@
         return 1;
     }
 
-    // Synchronous Multi-Click Function (Fires count rapid clicks synchronously in 1 JS tick, exactly like physical clicking)
+    // Synchronous Multi-Click Function with Error Safety & Disabled-State Reset
     function clickClearButtonSynchronous(button, count) {
         if (!button || count <= 0) return;
         
@@ -81,9 +81,14 @@
         if (window.eccsLog) window.eccsLog.info(`Synchronously firing ${count} clicks on X-Ray Clear`);
 
         for (let i = 0; i < count; i++) {
-            button.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
-            button.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
-            button.click();
+            try {
+                button.disabled = false; // Re-enable if Struts/jQuery disabled the button on previous click
+                button.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+                button.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+                button.click();
+            } catch (err) {
+                console.warn(`[ECCS X-Ray] Click ${i + 1} handled safely:`, err);
+            }
         }
     }
 
@@ -127,7 +132,7 @@
                 sessionStorage.removeItem("isSubsequent");
                 sessionStorage.removeItem("remainingCount");
 
-                // Execute synchronous multi-clicking
+                // Execute error-safe synchronous multi-clicking
                 clickClearButtonSynchronous(clearButton, clickCount);
             }
             return;
