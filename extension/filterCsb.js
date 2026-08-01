@@ -7,9 +7,10 @@
 
     function initFilters() {
         const path = window.location.pathname.toLowerCase();
+        const actionName = path.substring(path.lastIndexOf('/') + 1);
         
-        // Exact Export List Pages where the 4 Hover Detail Columns (Description, Airlines, Dest, Weight) should be appended
-        const exportDetailPages = [
+        // Strictly whitelist ONLY the 6 exact Export List action endpoints
+        const exactExportPages = [
             'listexamcsb5.do',
             'listexamcsb4.do',
             'listcsb4.do',
@@ -17,7 +18,7 @@
             'listcsb5.do',
             'listsez.do'
         ];
-        const isExportDetailList = exportDetailPages.some(page => path.includes(page));
+        const isExportDetailList = exactExportPages.includes(actionName);
 
         // Iterate through all tables to find the actual table containing data rows
         let targetTable = null;
@@ -138,7 +139,7 @@
         // Determine indices for appended columns
         let descColIdx = -1, airColIdx = -1, destColIdx = -1, weightColIdx = -1;
 
-        // --- EXPORT LIST PAGES: Append 4 Hover Columns at far right ---
+        // --- EXPORT LIST PAGES ALONE: Append 4 Hover Columns at far right ---
         if (isExportDetailList) {
             const baseColCount = headerRow.querySelectorAll('td, th').length;
             descColIdx = baseColCount;
