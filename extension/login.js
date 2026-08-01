@@ -3,35 +3,30 @@
 // ==========================================
 
 (function() {
+    function setInputValue(input, val) {
+        if (!input) return;
+        input.value = ''; // Explicitly clear any existing or browser autofilled text
+        input.value = val; // Direct replacement (overwrites completely, never appends)
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
     function autoLogin() {
         const usernameInput = document.getElementById("username");
         const passwordInput = document.getElementById("password");
         const captchaInput = document.getElementById("txtInput");
         const captchaDiv = document.getElementById("mainCaptcha") || document.querySelector(".log-captcha + *");
 
-        // Fill username if empty
-        if (usernameInput && !usernameInput.value.trim()) {
-            usernameInput.value = "14937314";
-            usernameInput.dispatchEvent(new Event('input', { bubbles: true }));
-            usernameInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        // Always replace username and password with fresh credentials
+        setInputValue(usernameInput, "14937314");
+        setInputValue(passwordInput, "Codelink@5");
 
-        // Fill password if empty
-        if (passwordInput && !passwordInput.value.trim()) {
-            passwordInput.value = "Codelink@5";
-            passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-            passwordInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-
-        // Copy captcha text, strip all whitespaces, and paste into txtInput
+        // Copy captcha text, strip all whitespaces, and paste cleanly into txtInput
         if (captchaDiv && captchaInput) {
             const rawCaptcha = captchaDiv.textContent || captchaDiv.innerText || "";
             const cleanCaptcha = rawCaptcha.replace(/\s+/g, "").trim();
             
-            captchaInput.value = cleanCaptcha;
-            captchaInput.dispatchEvent(new Event('input', { bubbles: true }));
-            captchaInput.dispatchEvent(new Event('change', { bubbles: true }));
-
+            setInputValue(captchaInput, cleanCaptcha);
             console.log("[ECCS Extension] Auto-filled Captcha:", cleanCaptcha);
         }
 
