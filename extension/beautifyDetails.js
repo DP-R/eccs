@@ -6,6 +6,9 @@
     // Strictly run ONLY on Single-Bill View Pages, NOT on Multi-CBE List Views
     const path = window.location.pathname.toLowerCase();
 
+    // Explicitly exclude viewCBEXI.do as requested by user
+    if (path.includes('viewcbexi')) return;
+
     // Check if the page is a multi-row selection list page (where all CBEs/CSBs are listed)
     const isMultiRowList = Array.from(document.querySelectorAll('table')).some(table => {
         const inputs = table.querySelectorAll('input[type="checkbox"][name="selectedIndex"], input[type="checkbox"][name="indexes"], input[type="radio"][name="selectedIndex"]');
