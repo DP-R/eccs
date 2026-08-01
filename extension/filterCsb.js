@@ -8,12 +8,16 @@
     function initFilters() {
         const path = window.location.pathname.toLowerCase();
         
-        // Exact Examination List Pages where the 4 Hover Detail Columns (Description, Airlines, Dest, Weight) should be appended
-        const exportExamPages = [
+        // Exact Export List Pages where the 4 Hover Detail Columns (Description, Airlines, Dest, Weight) should be appended
+        const exportDetailPages = [
             'listexamcsb5.do',
-            'listexamcsb4.do'
+            'listexamcsb4.do',
+            'listcsb4.do',
+            'listcsb3.do',
+            'listcsb5.do',
+            'listsez.do'
         ];
-        const isExportDetailList = exportExamPages.some(page => path.includes(page));
+        const isExportDetailList = exportDetailPages.some(page => path.includes(page));
 
         // Iterate through all tables to find the actual table containing data rows
         let targetTable = null;
@@ -134,7 +138,7 @@
         // Determine indices for appended columns
         let descColIdx = -1, airColIdx = -1, destColIdx = -1, weightColIdx = -1;
 
-        // --- EXPORT EXAMINATION LISTS ALONE: Append 4 Hover Columns at far right ---
+        // --- EXPORT LIST PAGES: Append 4 Hover Columns at far right ---
         if (isExportDetailList) {
             const baseColCount = headerRow.querySelectorAll('td, th').length;
             descColIdx = baseColCount;
@@ -504,7 +508,7 @@
         function triggerNativeHover(task, targetDiv) {
             if (!task.link || !targetDiv) return;
 
-            targetDiv.innerHTML = ''; // CRITICAL: Erase stale innerHTML to prevent cross-row or cross-tab leakage!
+            targetDiv.innerHTML = ''; // Erase stale innerHTML to prevent cross-row leakage
             targetDiv.style.position = 'absolute';
             targetDiv.style.left = '-9999px';
             targetDiv.style.top = '-9999px';
@@ -517,13 +521,10 @@
             const targetAttr = task.link.getAttribute('onmouseover') || task.link.getAttribute('onclick') || '';
             const jsCode = targetAttr.replace(/^javascript:/i, '').trim();
             if (jsCode) {
-                if (window.eccsLog) window.eccsLog.info("Executing native hover for row", { index: task.index, csbNo: task.csbNo, jsCode });
                 try {
                     const fn = new Function(jsCode);
                     fn();
-                } catch (e) {
-                    if (window.eccsLog) window.eccsLog.error("Native hover execution error", { index: task.index, error: e.message });
-                }
+                } catch (e) {}
             }
         }
 
@@ -579,7 +580,59 @@
             }
         }
 
-        // --- Load details for Export Clearance Lists in background sequentially ---
+        // High-Speed Row Processing Unit
+        async function processRowFast(task, thisLoadId) {
+            if (activeLoadId !== thisLoadId) return;
+
+            let myDiv = document.getElementById('mydiv' + task.index);
+            if (!myDiv) {
+                myDiv = document.createElement('div');
+                myDiv.id = 'eccs-temp-mydiv-' + task.rowIndex;
+                myDiv.style.display = 'none';
+                document.body.appendChild(myDiv);
+            }
+            myDiv.innerHTML = '';
+
+            // 1. Trigger native hover JS
+            triggerNativeHover(task, myDiv);
+
+            // 2. High-Speed micro-polling (up to 150ms total, checking every 15ms)
+            let details = null;
+            let elapsed = 0;
+            while (elapsed < 150) {
+                if (activeLoadId !== thisLoadId) return;
+                await new Promise(r => setTimeout(r, 15));
+                elapsed += 15;
+
+                if (myDiv && myDiv.textContent && myDiv.textContent.trim().length > 10) {
+                    const desc = extractDescription(myDiv);
+                    const airlines = extractAirlines(myDiv);
+                    const dest = extractDest(myDiv);
+                    const weight = extractWeight(myDiv);
+                    if (desc || airlines || dest || weight) {
+                        details = { desc, airlines, dest, weight };
+                        break;
+                    }
+                }
+            }
+
+            // 3. Parallel Background Fetch Fallback if DOM polling didn't return immediately
+            if (!details || (!details.desc && !details.airlines && !details.dest && !details.weight)) {
+                if (task.actionUrl && task.csbNo) {
+                    details = await fetchBackgroundDetails(task.actionUrl, task.csbNo, task.index);
+                }
+            }
+
+            if (activeLoadId !== thisLoadId) return;
+
+            // 4. Update row UI instantly
+            task.descTd.textContent = (details && details.desc) ? details.desc : "N/A";
+            task.airTd.textContent = (details && details.airlines) ? details.airlines : "N/A";
+            task.destTd.textContent = (details && details.dest) ? details.dest : "N/A";
+            task.weightTd.textContent = (details && details.weight) ? details.weight : "N/A";
+        }
+
+        // --- Load details for Export Clearance Lists in ULTRA FAST parallel batches ---
         async function loadAllDetails() {
             if (!isExportDetailList) return;
 
@@ -626,62 +679,12 @@
 
             applyFilters();
 
-            // Step B: Process ALL rows sequentially with dedicated isolated containers & fallback fetch
-            for (const task of rowTasks) {
-                if (activeLoadId !== thisLoadId) return; // Cancel if newer load initiated
-
-                if (window.eccsLog) window.eccsLog.info(`Processing row ${task.rowIndex}`, { index: task.index, csbNo: task.csbNo });
-
-                let myDiv = document.getElementById('mydiv' + task.index);
-                if (!myDiv) {
-                    // Create isolated temporary div container if native mydiv is missing in DOM for higher rows
-                    myDiv = document.createElement('div');
-                    myDiv.id = 'eccs-temp-mydiv-' + task.rowIndex;
-                    myDiv.style.display = 'none';
-                    document.body.appendChild(myDiv);
-                }
-
-                myDiv.innerHTML = ''; // Wipe isolated container
-
-                // 1. Trigger native hover for THIS specific row
-                triggerNativeHover(task, myDiv);
-
-                // 2. Poll for up to 600ms for ECCS native AJAX response to populate myDiv
-                let details = null;
-                let elapsed = 0;
-                while (elapsed < 600) {
-                    if (activeLoadId !== thisLoadId) return;
-                    await new Promise(r => setTimeout(r, 40));
-                    elapsed += 40;
-
-                    if (myDiv && myDiv.textContent && myDiv.textContent.trim().length > 10) {
-                        const desc = extractDescription(myDiv);
-                        const airlines = extractAirlines(myDiv);
-                        const dest = extractDest(myDiv);
-                        const weight = extractWeight(myDiv);
-                        if (desc || airlines || dest || weight) {
-                            details = { desc, airlines, dest, weight };
-                            break;
-                        }
-                    }
-                }
-
-                // 3. Fallback: If hover timed out or failed for ANY row (rows 4, 5, 6, 7...), fetch directly in background
-                if (!details || (!details.desc && !details.airlines && !details.dest && !details.weight)) {
-                    if (task.actionUrl && task.csbNo) {
-                        details = await fetchBackgroundDetails(task.actionUrl, task.csbNo, task.index);
-                    }
-                }
-
+            // Step B: Process ALL rows in ULTRA-FAST parallel batches of 5
+            const BATCH_SIZE = 5;
+            for (let i = 0; i < rowTasks.length; i += BATCH_SIZE) {
                 if (activeLoadId !== thisLoadId) return;
-
-                // 4. Populate cells for THIS row cleanly
-                task.descTd.textContent = (details && details.desc) ? details.desc : "N/A";
-                task.airTd.textContent = (details && details.airlines) ? details.airlines : "N/A";
-                task.destTd.textContent = (details && details.dest) ? details.dest : "N/A";
-                task.weightTd.textContent = (details && details.weight) ? details.weight : "N/A";
-
-                if (window.eccsLog) window.eccsLog.info(`Row ${task.rowIndex} completed`, details);
+                const batch = rowTasks.slice(i, i + BATCH_SIZE);
+                await Promise.all(batch.map(task => processRowFast(task, thisLoadId)));
             }
             
             debouncedApplyFilters();
