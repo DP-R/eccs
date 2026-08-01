@@ -3,12 +3,22 @@
 // ==========================================
 
 (function() {
-    // Only run on CBE & CSB View/Details pages
+    // Strictly run ONLY on Single-Bill View Pages, NOT on Multi-CBE List Views
     const path = window.location.pathname.toLowerCase();
-    const isCbeView = path.includes('/imp/') && (path.includes('view') || path.includes('details') || path.includes('cbexi'));
-    const isCsbView = path.includes('/export/') && (path.includes('view') || path.includes('details') || path.includes('csb'));
 
-    if (!isCbeView && !isCsbView) return;
+    // Check if the page is a multi-row selection list page (where all CBEs/CSBs are listed)
+    const isMultiRowList = Array.from(document.querySelectorAll('table')).some(table => {
+        const inputs = table.querySelectorAll('input[type="checkbox"][name="selectedIndex"], input[type="checkbox"][name="indexes"], input[type="radio"][name="selectedIndex"]');
+        return inputs.length >= 2;
+    });
+
+    // DO NOT render beautified summary on Multi-CBE / Multi-CSB list pages!
+    if (isMultiRowList) return;
+
+    // Must be a Single-Bill View / Details endpoint or page containing single document details
+    const isSingleView = path.includes('view') || path.includes('details') || path.includes('csb') || path.includes('cbe') || path.includes('rboe') || path.includes('examreport');
+    if (!isSingleView) return;
+
     if (document.getElementById('eccs-beautified-summary')) return;
 
     // --- 1. Helper to extract key-value pairs from ECCS standard tables ---
@@ -25,7 +35,6 @@
                     if (text && (i + 1 < tds.length)) {
                         const valTd = tds[i + 1];
                         const valText = (valTd.textContent || '').replace(/\s+/g, ' ').trim();
-                        // Store normalized key
                         const key = text.toLowerCase();
                         if (valText && valText !== ":" && !labelMap[key]) {
                             labelMap[key] = {
@@ -63,8 +72,10 @@
         return defaultVal;
     }
 
-    // --- 2. Extract Key Fields ---
-    const documentNo = getValue(["cbe-xi number", "cbe-xii number", "cbe-xiii number", "cbe-xiv number", "csb number", "csb-iv number", "csb-v number", "csb-iii number", "csb reference number", "hawb number"], "N/A");
+    // Ensure we are viewing a single bill document
+    const documentNo = getValue(["cbe-xi number", "cbe-xii number", "cbe-xiii number", "cbe-xiv number", "csb number", "csb-iv number", "csb-v number", "csb-iii number", "csb reference number", "hawb number"], "");
+    if (!documentNo || documentNo === "N/A") return; // Skip if no document number found
+
     const courierName = getValue(["authorized courier name", "courier name", "name of authorized courier", "name of the authorized courier"], "N/A");
     const hawbNo = getValue(["hawb number", "hawb no.", "hawb no"], "N/A");
     const consName = getValue(["consignee name", "name of consignee", "name of the consignee", "consignor name", "name of consignor", "name of the consignor"], "N/A");
@@ -74,15 +85,6 @@
     const currency = getValue(["invoice currency", "currency"], "");
     const status = getValue(["status", "current status"], "N/A");
     const flightNo = getValue(["international flight number", "flight number", "flight no.", "flight name"], "N/A");
-
-    // Look for any general supporting documents HTML
-    let supportingDocsHtml = "N/A";
-    for (const key in labelMap) {
-        if (key.includes("supporting") || key.includes("document") || key.includes("upload")) {
-            supportingDocsHtml = labelMap[key].innerHTML;
-            break;
-        }
-    }
 
     // Parse Items Table if available
     let itemsRowsHtml = '';
@@ -115,7 +117,7 @@
         itemsRowsHtml = `<tr><td colspan="7" style="padding: 8px; text-align: center; color: #64748b;">No item breakdown available.</td></tr>`;
     }
 
-    // --- 3. Construct Modern Consolidated Dashboard ---
+    // --- 2. Construct Modern Single-Bill Dashboard ---
     const summaryContainer = document.createElement('div');
     summaryContainer.id = 'eccs-beautified-summary';
     summaryContainer.style = `
@@ -219,12 +221,12 @@
                 background: #eff6ff;
                 color: #2563eb;
                 border: 1px solid #bfdbfe;
-                padding: 3px 8px;
+                padding: 4px 10px;
                 border-radius: 4px;
                 font-size: 11px;
                 font-weight: 600;
                 text-decoration: none;
-                margin: 2px 4px 2px 0;
+                margin: 3px 6px 3px 0;
             }
             .doc-badge:hover {
                 background: #dbeafe;
@@ -232,7 +234,7 @@
         </style>
 
         <div class="section-title">
-            <span>ECCS Consolidated Details: ${documentNo}</span>
+            <span>ECCS Bill Summary: ${documentNo}</span>
             <span style="font-size: 11px; font-weight: 600; background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 4px;">Status: ${status}</span>
         </div>
 
@@ -314,34 +316,27 @@
 
     // Ensure the original main layout is visible
     const originalMain = document.querySelector('.main-container');
-    if (originalMain) {
-        originalMain.style.display = '';
-    }
+    if (originalMain) originalMain.style.display = '';
     const originalFooter = document.querySelector('footer');
-    if (originalFooter) {
-        originalFooter.style.display = '';
-    }
+    if (originalFooter) originalFooter.style.display = '';
 
     // Prepend the summary table at the very top of the page body
     document.body.insertBefore(summaryContainer, document.body.firstChild);
 
-    // --- 4. Clean and Extract Instruction Tables Without IFrames or Headers ---
+    // --- 3. Clean and Extract Instruction HTML Without IFrames or Headers ---
     function cleanInstructionHTML(html, targetKeyword) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         
-        // Remove page headers, navigation bars, footers, scripts, styles, and nested iframes from fetched doc
         doc.querySelectorAll('header, footer, nav, script, iframe, style, .main-header, .navbar, .header-bottom, img[src*="logo"]').forEach(el => el.remove());
 
         const candidateTables = Array.from(doc.querySelectorAll('table'));
-        
         let targetTable = candidateTables.find(table => {
             const txt = table.textContent.toLowerCase();
             return (txt.includes(targetKeyword) || txt.includes("instruction") || txt.includes("compliance") || txt.includes("remarks") || txt.includes("details")) &&
                    !table.querySelector('header, nav, .navbar');
         });
 
-        // Fallback: pick table with data rows
         if (!targetTable && candidateTables.length > 0) {
             targetTable = candidateTables.find(t => t.querySelectorAll('tr').length >= 1 && t.textContent.trim().length > 5);
         }
@@ -361,7 +356,6 @@
                 cell.removeAttribute('bgcolor');
             });
 
-            // Convert raw Javascript popup links into clean new-tab links
             targetTable.querySelectorAll('a').forEach(a => {
                 const href = a.getAttribute('href') || '';
                 if (href.startsWith('javascript:')) {
@@ -378,123 +372,69 @@
         return cleanText ? `<div style="padding: 4px; color: #334155; font-size: 11px;">${cleanText}</div>` : `<div style="color: #64748b;">No ${targetKeyword.toUpperCase()} details required.</div>`;
     }
 
-    // --- 5. Fetch and Display CCR Details in the Background ---
+    // --- 4. Populate CCR, RMS, and Supporting Documents (Both Page & Background) ---
+
+    // A. CCR Instructions
+    const ccrContainer = document.getElementById('ccr-details-content');
     const ccrLink = document.querySelector('a[href*="viewCCRIntructions"]');
-    if (ccrLink) {
+    const pageCcrText = getValueHtml(["ccr instruction", "ccr instructions", "ccr remarks", "ccr details"]);
+
+    if (ccrLink && ccrContainer) {
         let url = ccrLink.getAttribute('href');
         if (url.startsWith("javascript:")) {
             const matches = url.match(/'([^']+)'/g);
             if (matches && matches.length >= 3) {
-                const action = matches[0].replace(/'/g, '');
-                const refNo = matches[1].replace(/'/g, '');
-                const hawbId = matches[2].replace(/'/g, '');
-                url = `${action}?refNo=${refNo}&hawbId=${hawbId}`;
+                url = `${matches[0].replace(/'/g, '')}?refNo=${matches[1].replace(/'/g, '')}&hawbId=${matches[2].replace(/'/g, '')}`;
             }
         }
-        
         fetch(url)
-            .then(res => {
-                if (!res.ok) throw new Error("Status " + res.status);
-                return res.text();
-            })
-            .then(html => {
-                const content = cleanInstructionHTML(html, 'ccr');
-                const container = document.getElementById('ccr-details-content');
-                if (container) container.innerHTML = content;
-            })
-            .catch(err => {
-                const container = document.getElementById('ccr-details-content');
-                if (container) container.innerHTML = `<div style="color: #ef4444; font-weight: bold;">Failed to load CCR details: ${err.message}</div>`;
-            });
-    } else {
-        const container = document.getElementById('ccr-details-content');
-        if (container) {
-            container.innerHTML = `<div style="color: #64748b;">No CCR instructions required for this HAWB.</div>`;
-        }
+            .then(res => res.text())
+            .then(html => { ccrContainer.innerHTML = cleanInstructionHTML(html, 'ccr'); })
+            .catch(() => { ccrContainer.innerHTML = pageCcrText !== "N/A" ? `<div style="font-size: 11px;">${pageCcrText}</div>` : `<div style="color: #64748b;">No CCR instructions required.</div>`; });
+    } else if (ccrContainer) {
+        ccrContainer.innerHTML = (pageCcrText && pageCcrText !== "N/A") ? `<div style="font-size: 11px;">${pageCcrText}</div>` : `<div style="color: #64748b;">No CCR instructions required.</div>`;
     }
 
-    // --- 6. Fetch and Display RMS Instructions in the Background ---
+    // B. RMS Instructions
+    const rmsContainer = document.getElementById('rms-details-content');
     const rmsLink = document.querySelector('a[href*="viewRMSIntructions"]') || document.querySelector('a[href*="viewRMS"]');
-    if (rmsLink) {
+    const pageRmsText = getValueHtml(["rms instruction", "rms instructions", "rms remarks", "rms details", "rms action"]);
+
+    if (rmsLink && rmsContainer) {
         let url = rmsLink.getAttribute('href');
         if (url.startsWith("javascript:")) {
             const matches = url.match(/'([^']+)'/g);
             if (matches && matches.length >= 3) {
-                const action = matches[0].replace(/'/g, '');
-                const refNo = matches[1].replace(/'/g, '');
-                const hawbId = matches[2].replace(/'/g, '');
-                url = `${action}?refNo=${refNo}&hawbId=${hawbId}`;
+                url = `${matches[0].replace(/'/g, '')}?refNo=${matches[1].replace(/'/g, '')}&hawbId=${matches[2].replace(/'/g, '')}`;
             }
         }
-        
-        fetch(url)
-            .then(res => {
-                if (!res.ok) throw new Error("Status " + res.status);
-                return res.text();
-            })
-            .then(html => {
-                const content = cleanInstructionHTML(html, 'rms');
-                const container = document.getElementById('rms-details-content');
-                if (container) container.innerHTML = content;
-            })
-            .catch(err => {
-                const container = document.getElementById('rms-details-content');
-                if (container) container.innerHTML = `<div style="color: #ef4444; font-weight: bold;">Failed to load RMS details: ${err.message}</div>`;
-            });
-    } else {
-        const container = document.getElementById('rms-details-content');
-        if (container) {
-            const rawRms = getValueHtml(["rms instruction", "rms instructions"]) || "N/A";
-            container.innerHTML = `<div style="font-size: 11px; color: #334155;">${rawRms}</div>`;
-        }
-    }
-
-    // --- 7. Fetch and Render Supporting Documents Inline ---
-    const docContainer = document.getElementById('supporting-docs-content');
-    const docLink = document.querySelector('a[href*="listExpDocumentsAttached"]') || document.querySelector('a[href*="ViewUploadedFile"]');
-
-    if (docLink && docContainer) {
-        let url = docLink.getAttribute('href');
-        if (url.startsWith("javascript:")) {
-            const matches = url.match(/'([^']+)'/g);
-            if (matches && matches.length >= 3) {
-                const action = matches[0].replace(/'/g, '');
-                const hawbId = matches[1].replace(/'/g, '');
-                const csbNo = matches[2].replace(/'/g, '');
-                url = `${action}?hawbID=${hawbId}&csbNumber=${csbNo}`;
-            }
-        }
-
         fetch(url)
             .then(res => res.text())
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                
-                // Extract document links
-                const docLinks = Array.from(doc.querySelectorAll('a')).filter(a => {
-                    const txt = a.textContent.toLowerCase();
-                    const href = (a.getAttribute('href') || '').toLowerCase();
-                    return txt.includes('.pdf') || txt.includes('.tif') || txt.includes('.jpg') || txt.includes('.png') || href.includes('uploadedfile') || href.includes('document');
-                });
+            .then(html => { rmsContainer.innerHTML = cleanInstructionHTML(html, 'rms'); })
+            .catch(() => { rmsContainer.innerHTML = pageRmsText !== "N/A" ? `<div style="font-size: 11px;">${pageRmsText}</div>` : `<div style="color: #64748b;">No RMS instructions.</div>`; });
+    } else if (rmsContainer) {
+        rmsContainer.innerHTML = (pageRmsText && pageRmsText !== "N/A") ? `<div style="font-size: 11px;">${pageRmsText}</div>` : `<div style="color: #64748b;">No RMS instructions.</div>`;
+    }
 
-                if (docLinks.length > 0) {
-                    let badgesHtml = '';
-                    docLinks.forEach(a => {
-                        const fileName = a.textContent.trim();
-                        const href = a.getAttribute('href');
-                        badgesHtml += `<a class="doc-badge" href="${href}" target="_blank">📄 ${fileName}</a>`;
-                    });
-                    docContainer.innerHTML = badgesHtml;
-                } else {
-                    const cleanText = cleanInstructionHTML(html, 'document');
-                    docContainer.innerHTML = cleanText;
-                }
-            })
-            .catch(() => {
-                docContainer.innerHTML = supportingDocsHtml !== "N/A" ? `<div style="font-size:11px;">${supportingDocsHtml}</div>` : `<div style="color: #64748b;">No attached supporting documents.</div>`;
+    // C. Supporting Documents (Scans page links + background fetch)
+    const docContainer = document.getElementById('supporting-docs-content');
+    const docLinksOnPage = Array.from(document.querySelectorAll('a')).filter(a => {
+        const txt = (a.textContent || '').toLowerCase();
+        const href = (a.getAttribute('href') || '').toLowerCase();
+        return href.includes('listexpdocuments') || href.includes('uploadedfile') || txt.includes('.pdf') || txt.includes('.tif') || txt.includes('.jpg') || txt.includes('.png') || txt.includes('view documents');
+    });
+
+    if (docContainer) {
+        if (docLinksOnPage.length > 0) {
+            let badgesHtml = '';
+            docLinksOnPage.forEach(a => {
+                const fileName = a.textContent.trim() || 'Attached Document';
+                const href = a.getAttribute('href') || '#';
+                badgesHtml += `<a class="doc-badge" href="${href}" target="_blank">📄 ${fileName}</a>`;
             });
-    } else if (docContainer) {
-        docContainer.innerHTML = supportingDocsHtml !== "N/A" ? `<div style="font-size:11px;">${supportingDocsHtml}</div>` : `<div style="color: #64748b;">No attached supporting documents.</div>`;
+            docContainer.innerHTML = badgesHtml;
+        } else {
+            docContainer.innerHTML = `<div style="color: #64748b;">No attached supporting documents.</div>`;
+        }
     }
 })();
