@@ -73,22 +73,26 @@
         return 1;
     }
 
-    // Synchronous Multi-Click Function with Error Safety & Disabled-State Reset
-    function clickClearButtonSynchronous(button, count) {
+
+
+    // Asynchronous Multi-Click Exploit
+    // By adding a small delay (e.g., 100ms), we force the browser to register each click in a separate event loop tick.
+    // This perfectly mimics human rapid-clicking and exploits the server's race condition before the page unloads.
+    async function exploitMultiClick(button, count) {
         if (!button || count <= 0) return;
         
-        console.log(`[ECCS X-Ray] Synchronously firing ${count} clicks on X-Ray Clear button...`);
-        if (window.eccsLog) window.eccsLog.info(`Synchronously firing ${count} clicks on X-Ray Clear`);
+        console.log(`[ECCS X-Ray] Exploiting double-submit glitch: Firing ${count} clicks rapidly...`);
+        if (window.eccsLog) window.eccsLog.info(`Exploiting glitch: Firing ${count} rapid clicks`);
 
         for (let i = 0; i < count; i++) {
             try {
-                button.disabled = false; // Re-enable if Struts/jQuery disabled the button on previous click
+                button.disabled = false; 
                 button.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
                 button.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
                 button.click();
-            } catch (err) {
-                console.warn(`[ECCS X-Ray] Click ${i + 1} handled safely:`, err);
-            }
+            } catch (err) {}
+            // Wait 100ms between clicks to bypass browser form coalescing
+            await new Promise(r => setTimeout(r, 100));
         }
     }
 
@@ -109,31 +113,30 @@
             const isSubsequent = sessionStorage.isSubsequent === "true" || (sessionStorage.remainingCount && parseInt(sessionStorage.remainingCount, 10) > 0);
 
             if (!isSubsequent) {
-                // PACKAGE 1: Wait 5 seconds, then click ONCE to submit Package 1
+                // PACKAGE 1: Wait 5 seconds, then exploit multi-click if there are multiple packages
                 sessionStorage.currentHawb = hawbNo || '';
-                console.log("[ECCS X-Ray] Package 1: Waiting 5s safety delay before single click...");
+                console.log("[ECCS X-Ray] Package 1: Waiting 5s safety delay before clearing...");
                 if (window.eccsLog) window.eccsLog.info("Package 1: Waiting 5s safety delay");
 
                 setTimeout(() => {
                     if (document.body.contains(clearButton)) {
-                        clearButton.click();
+                        exploitMultiClick(clearButton, totalPackages);
                     }
                 }, 5000);
             } else {
-                // SUBSEQUENT PACKAGES (Package 2, 3... re-opened after re-inserting HAWB):
-                // Skip 5s wait and click SYNCHRONOUSLY equal to remainingCount at once!
+                // SUBSEQUENT PACKAGES (Just in case the exploit didn't clear all of them on the first try)
                 const remaining = parseInt(sessionStorage.remainingCount || String(totalPackages - 1), 10);
                 const clickCount = remaining > 0 ? remaining : (totalPackages > 1 ? totalPackages - 1 : 1);
 
-                console.log(`[ECCS X-Ray] Subsequent Package: Firing ${clickCount} synchronous clicks at once...`);
-                if (window.eccsLog) window.eccsLog.info(`Subsequent Package: Firing ${clickCount} synchronous clicks`);
+                console.log(`[ECCS X-Ray] Subsequent Package: Skipping 5s wait, firing ${clickCount} rapid clicks...`);
+                if (window.eccsLog) window.eccsLog.info(`Subsequent Package: Firing ${clickCount} rapid clicks`);
 
-                // Clear subsequent flags for next fresh HAWB
+                // Clear subsequent flags
                 sessionStorage.removeItem("isSubsequent");
                 sessionStorage.removeItem("remainingCount");
 
-                // Execute error-safe synchronous multi-clicking
-                clickClearButtonSynchronous(clearButton, clickCount);
+                // Execute asynchronous multi-click exploit
+                exploitMultiClick(clearButton, clickCount);
             }
             return;
         }
@@ -189,9 +192,5 @@
     // Check periodically to catch elements loaded after initial render
     setInterval(automateXray, 1000);
 
-    // Observe DOM updates for dynamic contents
-    new MutationObserver(automateXray).observe(document.body || document.documentElement, {
-        childList: true,
-        subtree: true
-    });
+    // Removed MutationObserver to prevent UI lag. setInterval is sufficient.
 })();

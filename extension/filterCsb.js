@@ -385,7 +385,7 @@
         let filterTimeout;
         function debouncedApplyFilters() {
             clearTimeout(filterTimeout);
-            filterTimeout = setTimeout(applyFilters, 20);
+            filterTimeout = setTimeout(applyFilters, 250);
         }
 
         // Attach listeners
@@ -631,6 +631,9 @@
             task.airTd.textContent = (details && details.airlines) ? details.airlines : "N/A";
             task.destTd.textContent = (details && details.dest) ? details.dest : "N/A";
             task.weightTd.textContent = (details && details.weight) ? details.weight : "N/A";
+            
+            // Clean up temporary DOM element
+            if (myDiv) myDiv.remove();
         }
 
         // --- Load details for Export Clearance Lists in ULTRA FAST parallel batches ---
@@ -640,9 +643,8 @@
             const thisLoadId = ++activeLoadId;
 
             // Wipe ALL existing mydiv containers in DOM globally before starting to eliminate stale data leakage
-            document.querySelectorAll('[id^="mydiv"]').forEach(div => {
-                div.innerHTML = '';
-                div.textContent = '';
+            document.querySelectorAll('[id^="mydiv"], [id^="eccs-temp-mydiv"]').forEach(div => {
+                div.remove();
             });
 
             // Step A: Append new columns to the far right of all rows immediately
@@ -697,7 +699,11 @@
 
     // Trigger initialization
     initFilters();
-    new MutationObserver(initFilters).observe(document.body || document.documentElement, {
+    let mutationTimeout;
+    new MutationObserver(() => {
+        clearTimeout(mutationTimeout);
+        mutationTimeout = setTimeout(initFilters, 500);
+    }).observe(document.body || document.documentElement, {
         childList: true,
         subtree: true
     });

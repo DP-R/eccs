@@ -323,8 +323,9 @@
     const originalFooter = document.querySelector('footer');
     if (originalFooter) originalFooter.style.display = '';
 
-    // Prepend the summary table at the very top of the page body
-    document.body.insertBefore(summaryContainer, document.body.firstChild);
+    // Prepend the summary table to a safer container if available, else body
+    const mainContent = document.querySelector('.main-container') || document.querySelector('form') || document.body;
+    mainContent.insertBefore(summaryContainer, mainContent.firstChild);
 
     // --- 3. Clean and Extract Instruction HTML Without IFrames or Headers ---
     function cleanInstructionHTML(html, targetKeyword) {
