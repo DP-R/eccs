@@ -37,6 +37,8 @@
                     const text = (tds[i].textContent || '').replace(/\s+/g, ' ').trim().replace(/:$/, '').trim();
                     if (text && (i + 1 < tds.length)) {
                         const valTd = tds[i + 1];
+                        if (valTd.tagName.toLowerCase() === 'th') continue; // Skip if value is a table header
+                        
                         const valText = (valTd.textContent || '').replace(/\s+/g, ' ').trim();
                         const key = text.toLowerCase();
                         if (valText && valText !== ":" && !labelMap[key]) {
@@ -76,15 +78,18 @@
     }
 
     // Ensure we are viewing a single bill document
-    const documentNo = getValue(["cbe-xi number", "cbe-xii number", "cbe-xiii number", "cbe-xiv number", "csb number", "csb-iv number", "csb-v number", "csb-iii number", "csb reference number", "hawb number"], "");
-    if (!documentNo || documentNo === "N/A") return; // Skip if no document number found
+    const documentNo = getValue(["cbe-xi number", "cbe-xii number", "cbe-xiii number", "cbe-xiv number", "cbe-xi no.", "cbe-xii no.", "cbe-xiii no.", "cbe-xiv no.", "csb number", "csb-iv number", "csb-v number", "csb-iii number", "csb reference number", "hawb number"], "");
+    if (!documentNo || documentNo === "N/A" || documentNo.length > 50) return; // Skip if no document number found
 
     const courierName = getValue(["authorized courier name", "courier name", "name of authorized courier", "name of the authorized courier"], "N/A");
     const hawbNo = getValue(["hawb number", "hawb no.", "hawb no"], "N/A");
+    
+    // STRICT CHECK: Ensure it's a real details page
+    if (courierName === "N/A" || hawbNo === "N/A" || hawbNo === "Flight Number" || hawbNo.length > 30) return;
     const consName = getValue(["consignee name", "name of consignee", "name of the consignee", "consignor name", "name of consignor", "name of the consignor"], "N/A");
-    const portDest = getValue(["airport of destination", "port of destination", "destination airport", "destination port"], "N/A");
-    const weight = getValue(["manifest weight", "weight (in kg.)", "gross weight", "weight"], "N/A");
-    const totalVal = getValue(["invoice value", "total value", "fob value", "assessable value"], "N/A");
+    const portDest = getValue(["airport of destination", "port of destination", "destination airport", "destination port", "port of arrival", "airport of arrival"], "N/A");
+    const weight = getValue(["manifest weight", "weight (in kg.)", "gross weight", "weight", "gross weight (kgs)", "gross weight (kgs.)"], "N/A");
+    const totalVal = getValue(["invoice value", "total value", "fob value", "assessable value", "invoice value (rs.)", "assessable value (rs.)", "assessable value(rs.)"], "N/A");
     const currency = getValue(["invoice currency", "currency"], "");
     const status = getValue(["status", "current status"], "N/A");
     const flightNo = getValue(["international flight number", "flight number", "flight no.", "flight name"], "N/A");
@@ -387,11 +392,16 @@
         let url = ccrLink.getAttribute('href');
         if (url.startsWith("javascript:")) {
             const matches = url.match(/'([^']+)'/g);
-            if (matches && matches.length >= 3) {
-                url = `${matches[0].replace(/'/g, '')}?refNo=${matches[1].replace(/'/g, '')}&hawbId=${matches[2].replace(/'/g, '')}`;
+            if (matches && matches.length >= 2) {
+                if (matches.length >= 3) {
+                    url = `${matches[0].replace(/'/g, '')}?refNo=${matches[1].replace(/'/g, '')}&hawbId=${matches[2].replace(/'/g, '')}`;
+                } else {
+                    url = `${matches[0].replace(/'/g, '')}?refNo=${matches[1].replace(/'/g, '')}`;
+                }
             }
         }
-        fetch(url)
+        url += (url.includes('?') ? '&' : '?') + '_ts=' + new Date().getTime(); // Cache buster
+        fetch(url, { cache: "no-store" })
             .then(res => res.text())
             .then(html => { ccrContainer.innerHTML = cleanInstructionHTML(html, 'ccr'); })
             .catch(() => { ccrContainer.innerHTML = pageCcrText !== "N/A" ? `<div style="font-size: 11px;">${pageCcrText}</div>` : `<div style="color: #64748b;">No CCR instructions required.</div>`; });
@@ -408,11 +418,16 @@
         let url = rmsLink.getAttribute('href');
         if (url.startsWith("javascript:")) {
             const matches = url.match(/'([^']+)'/g);
-            if (matches && matches.length >= 3) {
-                url = `${matches[0].replace(/'/g, '')}?refNo=${matches[1].replace(/'/g, '')}&hawbId=${matches[2].replace(/'/g, '')}`;
+            if (matches && matches.length >= 2) {
+                if (matches.length >= 3) {
+                    url = `${matches[0].replace(/'/g, '')}?refNo=${matches[1].replace(/'/g, '')}&hawbId=${matches[2].replace(/'/g, '')}`;
+                } else {
+                    url = `${matches[0].replace(/'/g, '')}?refNo=${matches[1].replace(/'/g, '')}`;
+                }
             }
         }
-        fetch(url)
+        url += (url.includes('?') ? '&' : '?') + '_ts=' + new Date().getTime(); // Cache buster
+        fetch(url, { cache: "no-store" })
             .then(res => res.text())
             .then(html => { rmsContainer.innerHTML = cleanInstructionHTML(html, 'rms'); })
             .catch(() => { rmsContainer.innerHTML = pageRmsText !== "N/A" ? `<div style="font-size: 11px;">${pageRmsText}</div>` : `<div style="color: #64748b;">No RMS instructions.</div>`; });

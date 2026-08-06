@@ -190,124 +190,52 @@
             });
         };
 
-        // --- Create Filter Row aligned with column structure ---
+        const filterInputs = []; // Array of inputs aligned with columns
+
         const filterRow = document.createElement('tr');
         filterRow.className = 'eccs-filter-row';
 
-        // Column 0: Clear button
-        const td0 = document.createElement('td');
-        td0.align = 'center';
-        const resetBtn = document.createElement('a');
-        resetBtn.href = '#';
-        resetBtn.textContent = 'Clear';
-        resetBtn.style = 'font-size: 11px; font-weight: bold; color: #ef4444; text-decoration: none;';
-        resetBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            csbInput.value = '';
-            hawbInput.value = '';
-            courierInput.value = '';
-            statusInput.value = '';
-            if (descInput) descInput.value = '';
-            if (airlinesInput) airlinesInput.value = '';
-            if (destInput) destInput.value = '';
-            if (weightInput) weightInput.value = '';
-            applyFilters();
+        Array.from(headerRow.querySelectorAll('td, th')).forEach((th, idx) => {
+            const td = document.createElement('td');
+            td.align = 'center';
+            
+            if (idx === 0) {
+                const resetBtn = document.createElement('a');
+                resetBtn.href = '#';
+                resetBtn.textContent = 'Clear';
+                resetBtn.style = 'font-size: 11px; font-weight: bold; color: #ef4444; text-decoration: none;';
+                resetBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    filterInputs.forEach(input => { if (input) input.value = ''; });
+                    applyFilters();
+                });
+                td.appendChild(resetBtn);
+                filterInputs.push(null);
+            } else {
+                const title = (th.textContent || '').replace(/\s+/g, ' ').trim();
+                if (title && !title.toLowerCase().includes('remarks') && !title.toLowerCase().includes('select') && !title.toLowerCase().includes('arrival date')) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.placeholder = 'Filter...';
+                    input.className = 'eccs-filter-input';
+                    input.addEventListener('input', applyFilters);
+                    td.appendChild(input);
+                    filterInputs.push(input);
+                } else {
+                    if (title.toLowerCase().includes('remarks') || title.toLowerCase().includes('arrival date')) {
+                        const counterSpan = document.createElement('span');
+                        counterSpan.className = 'eccs-filter-counter';
+                        counterSpan.style = 'font-size: 11px; font-weight: bold; color: #2563eb;';
+                        if (!document.getElementById('eccs-hawb-counter')) {
+                            counterSpan.id = 'eccs-hawb-counter';
+                        }
+                        td.appendChild(counterSpan);
+                    }
+                    filterInputs.push(null);
+                }
+            }
+            filterRow.appendChild(td);
         });
-        td0.appendChild(resetBtn);
-        filterRow.appendChild(td0);
-
-        // Column 1: CSB / CBE Filter
-        const td1 = document.createElement('td');
-        td1.align = 'center';
-        const csbInput = document.createElement('input');
-        csbInput.type = 'text';
-        csbInput.placeholder = isExportDetailList ? 'Filter CSB...' : 'Filter CBE/CSB...';
-        csbInput.className = 'eccs-filter-input';
-        td1.appendChild(csbInput);
-        filterRow.appendChild(td1);
-
-        // Column 2: HAWB Filter
-        const td2 = document.createElement('td');
-        td2.align = 'center';
-        const hawbInput = document.createElement('input');
-        hawbInput.type = 'text';
-        hawbInput.placeholder = 'Filter HAWB...';
-        hawbInput.className = 'eccs-filter-input';
-        td2.appendChild(hawbInput);
-        filterRow.appendChild(td2);
-
-        // Column 3: Courier Filter
-        const td4 = document.createElement('td');
-        td4.align = 'center';
-        const courierInput = document.createElement('input');
-        courierInput.type = 'text';
-        courierInput.placeholder = 'Filter Courier...';
-        courierInput.className = 'eccs-filter-input';
-        td4.appendChild(courierInput);
-        filterRow.appendChild(td4);
-
-        // Column 4: Status Filter
-        const td5 = document.createElement('td');
-        td5.align = 'center';
-        const statusInput = document.createElement('input');
-        statusInput.type = 'text';
-        statusInput.placeholder = 'Filter Status...';
-        statusInput.className = 'eccs-filter-input';
-        td5.appendChild(statusInput);
-        filterRow.appendChild(td5);
-
-        // Column 5: Unique HAWB Counter
-        const td6 = document.createElement('td');
-        td6.align = 'center';
-        const counterSpan = document.createElement('span');
-        counterSpan.className = 'eccs-filter-counter';
-        counterSpan.style = 'font-size: 11px; font-weight: bold; color: #2563eb;';
-        td6.appendChild(counterSpan);
-        filterRow.appendChild(td6);
-
-        let descInput, airlinesInput, destInput, weightInput;
-
-        if (isExportDetailList) {
-            // Column 6: Description of Goods Filter
-            const tdDesc = document.createElement('td');
-            tdDesc.align = 'center';
-            descInput = document.createElement('input');
-            descInput.type = 'text';
-            descInput.placeholder = 'Filter Goods...';
-            descInput.className = 'eccs-filter-input';
-            tdDesc.appendChild(descInput);
-            filterRow.appendChild(tdDesc);
-
-            // Column 7: Airlines Filter
-            const tdAirlines = document.createElement('td');
-            tdAirlines.align = 'center';
-            airlinesInput = document.createElement('input');
-            airlinesInput.type = 'text';
-            airlinesInput.placeholder = 'Filter Airlines...';
-            airlinesInput.className = 'eccs-filter-input';
-            tdAirlines.appendChild(airlinesInput);
-            filterRow.appendChild(tdAirlines);
-
-            // Column 8: Airport of Destination Filter
-            const tdDest = document.createElement('td');
-            tdDest.align = 'center';
-            destInput = document.createElement('input');
-            destInput.type = 'text';
-            destInput.placeholder = 'Filter Dest...';
-            destInput.className = 'eccs-filter-input';
-            tdDest.appendChild(destInput);
-            filterRow.appendChild(tdDest);
-
-            // Column 9: Manifest Weight Filter
-            const tdWeight = document.createElement('td');
-            tdWeight.align = 'center';
-            weightInput = document.createElement('input');
-            weightInput.type = 'text';
-            weightInput.placeholder = 'Filter Weight...';
-            weightInput.className = 'eccs-filter-input';
-            tdWeight.appendChild(weightInput);
-            filterRow.appendChild(tdWeight);
-        }
 
         // Inject Filter Row right after Header Row
         headerRow.parentNode.insertBefore(filterRow, headerRow.nextSibling);
@@ -329,56 +257,43 @@
 
         // Apply filtering logic with whitespace normalization
         function applyFilters() {
-            const csbQuery = csbInput.value.toLowerCase().replace(/\s+/g, '');
-            const hawbQuery = hawbInput.value.toLowerCase().replace(/\s+/g, '');
-            const courierQuery = courierInput.value.toLowerCase().trim();
-            const statusQuery = statusInput.value.toLowerCase().trim();
+            let visibleHawbs = new Set();
             
-            const descQuery = descInput ? descInput.value.toLowerCase().trim() : '';
-            const airlinesQuery = airlinesInput ? airlinesInput.value.toLowerCase().trim() : '';
-            const destQuery = destInput ? destInput.value.toLowerCase().trim() : '';
-            const weightQuery = weightInput ? weightInput.value.toLowerCase().trim() : '';
-
             dataRows.forEach(row => {
                 const cells = Array.from(row.querySelectorAll('td'));
-                if (cells.length < 3) return;
+                let isMatch = true;
 
-                const csbText = cells[csbColIdx] ? (cells[csbColIdx].textContent || '').toLowerCase().replace(/\s+/g, '') : '';
-                const hawbText = cells[hawbColIdx] ? (cells[hawbColIdx].textContent || '').toLowerCase().replace(/\s+/g, '') : '';
-                const courierText = cells[courierColIdx] ? (cells[courierColIdx].textContent || '').toLowerCase().replace(/\s+/g, ' ') : '';
-                const statusText = cells[statusColIdx] ? (cells[statusColIdx].textContent || '').toLowerCase().replace(/\s+/g, ' ') : '';
-                
-                const descText = (descColIdx !== -1 && cells[descColIdx]) ? (cells[descColIdx].textContent || '').toLowerCase() : '';
-                const airlinesText = (airColIdx !== -1 && cells[airColIdx]) ? (cells[airColIdx].textContent || '').toLowerCase() : '';
-                const destText = (destColIdx !== -1 && cells[destColIdx]) ? (cells[destColIdx].textContent || '').toLowerCase() : '';
-                const weightText = (weightColIdx !== -1 && cells[weightColIdx]) ? (cells[weightColIdx].textContent || '').toLowerCase() : '';
+                for (let i = 0; i < filterInputs.length; i++) {
+                    const input = filterInputs[i];
+                    if (input && input.value.trim()) {
+                        const query = input.value.toLowerCase().trim();
+                        const cellText = (cells[i] ? cells[i].textContent : '').toLowerCase().replace(/\s+/g, ' ');
+                        if (!cellText.includes(query)) {
+                            isMatch = false;
+                            break;
+                        }
+                    }
+                }
 
-                const matchesCsb = !csbQuery || csbText.includes(csbQuery);
-                const matchesHawb = !hawbQuery || hawbText.includes(hawbQuery);
-                const matchesCourier = !courierQuery || courierText.includes(courierQuery);
-                const matchesStatus = !statusQuery || statusText.includes(statusQuery);
-                
-                const matchesDesc = !descQuery || descText.includes(descQuery);
-                const matchesAirlines = !airlinesQuery || airlinesText.includes(airlinesQuery);
-                const matchesDest = !destQuery || destText.includes(destQuery);
-                const matchesWeight = !weightQuery || weightText.includes(weightQuery);
-
-                const matchesAll = matchesCsb && matchesHawb && matchesCourier && matchesStatus && matchesDesc && matchesAirlines && matchesDest && matchesWeight;
-
-                if (matchesAll) {
+                if (isMatch) {
                     row.style.display = '';
+                    if (cells[hawbColIdx]) {
+                        const hawbText = (cells[hawbColIdx].textContent || '').replace(/\s+/g, '').trim();
+                        if (hawbText) visibleHawbs.add(hawbText);
+                    }
                 } else {
                     row.style.display = 'none';
                 }
             });
 
-            // Update unique HAWB counter label
-            const totalUnique = new Set(dataRows.map(r => {
-                const cells = Array.from(r.querySelectorAll('td'));
-                return cells[hawbColIdx] ? (cells[hawbColIdx].textContent || '').replace(/\s+/g, '').trim() : '';
-            }).filter(Boolean)).size;
-
-            counterSpan.textContent = `[${getUniqueHawbCount()}/${totalUnique} HAWBs]`;
+            const counterSpan = document.getElementById('eccs-hawb-counter');
+            if (counterSpan) {
+                const totalUnique = new Set(dataRows.map(r => {
+                    const cells = Array.from(r.querySelectorAll('td'));
+                    return cells[hawbColIdx] ? (cells[hawbColIdx].textContent || '').replace(/\s+/g, '').trim() : '';
+                }).filter(Boolean)).size;
+                counterSpan.textContent = `[${visibleHawbs.size}/${totalUnique} HAWBs]`;
+            }
         }
 
         // Debounce applyFilters
@@ -388,14 +303,7 @@
             filterTimeout = setTimeout(applyFilters, 250);
         }
 
-        // Attach listeners
-        const inputs = [csbInput, hawbInput, courierInput, statusInput];
-        if (isExportDetailList) {
-            inputs.push(descInput, airlinesInput, destInput, weightInput);
-        }
-        inputs.forEach(input => {
-            if (input) input.addEventListener('input', applyFilters);
-        });
+        // Attach listeners (handled during row creation)
 
         // Set initial counter
         applyFilters();
@@ -407,52 +315,58 @@
             const tables = Array.from(container.querySelectorAll('table'));
             for (const table of tables) {
                 const trs = Array.from(table.querySelectorAll('tr'));
-                // Format B: Multi-column header row + data row
+                
+                // 1. Check for Key-Value pairs in the same row
+                for (const tr of trs) {
+                    const cells = Array.from(tr.querySelectorAll('td, th'));
+                    for (let i = 0; i < cells.length - 1; i++) {
+                        const cellText = (cells[i].textContent || '').replace(/\s+/g, ' ').replace(/:$/, '').trim().toLowerCase();
+                        
+                        // Strict match or strict prefix match
+                        const isMatch = labelNames.some(name => {
+                            const lowerName = name.toLowerCase();
+                            return cellText === lowerName || cellText.startsWith(lowerName + ' ') || cellText.startsWith(lowerName + ':');
+                        });
+
+                        if (isMatch) {
+                            const nextCell = cells[i + 1];
+                            // Ensure the next cell isn't a header or another label
+                            if (nextCell && nextCell.tagName.toLowerCase() !== 'th') {
+                                const val = (nextCell.textContent || '').replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
+                                if (val && val !== ':') return val;
+                            }
+                        }
+                    }
+                }
+                
+                // 2. Check for Table Headers (Vertical format)
                 if (trs.length >= 2) {
-                    const headerCells = Array.from(trs[0].querySelectorAll('td, th'));
-                    for (let colIdx = 0; colIdx < headerCells.length; colIdx++) {
-                        const headerText = (headerCells[colIdx]?.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
-                        if (labelNames.some(name => headerText.includes(name.toLowerCase()))) {
-                            const dataRow = trs[1];
-                            if (dataRow) {
-                                const dataCells = Array.from(dataRow.querySelectorAll('td, th'));
-                                if (dataCells[colIdx]) {
-                                    const val = (dataCells[colIdx]?.textContent || '').replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
-                                    if (val) return val;
+                    for (let r = 0; r < trs.length - 1; r++) {
+                        const headerCells = Array.from(trs[r].querySelectorAll('td, th'));
+                        for (let colIdx = 0; colIdx < headerCells.length; colIdx++) {
+                            const headerText = (headerCells[colIdx]?.textContent || '').replace(/\s+/g, ' ').replace(/:$/, '').trim().toLowerCase();
+                            
+                            const isMatch = labelNames.some(name => {
+                                const lowerName = name.toLowerCase();
+                                return headerText === lowerName || headerText.startsWith(lowerName + ' ');
+                            });
+
+                            if (isMatch) {
+                                // Look at the same column index in the next row
+                                const dataRow = trs[r + 1];
+                                if (dataRow) {
+                                    const dataCells = Array.from(dataRow.querySelectorAll('td, th'));
+                                    if (dataCells[colIdx] && dataCells[colIdx].tagName.toLowerCase() !== 'th') {
+                                        const val = (dataCells[colIdx].textContent || '').replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
+                                        if (val && val !== ':') return val;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-
-                // Format A: Key-Value pair matching
-                const tds = Array.from(table.querySelectorAll('td'));
-                for (let i = 0; i < tds.length; i++) {
-                    const txt = (tds[i]?.textContent || '').replace(/\s+/g, ' ').trim().replace(/:$/, '').trim().toLowerCase();
-                    if (labelNames.some(name => txt.includes(name.toLowerCase()))) {
-                        const nextTd = tds[i].nextElementSibling;
-                        if (nextTd && nextTd.tagName && nextTd.tagName.toLowerCase() === 'td') {
-                            const val = (nextTd.textContent || '').replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
-                            if (val) return val;
-                        }
-                        if (tds[i+1]) {
-                            const val = (tds[i+1]?.textContent || '').replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
-                            if (val) return val;
-                        }
-                    }
-                }
             }
 
-            // Text fallback parsing using comprehensive label regex
-            const rawText = (container.textContent || '').replace(/\s+/g, ' ').trim();
-            for (const name of labelNames) {
-                const escapedLabel = name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-                const regex = new RegExp(escapedLabel + '\\s*[:\\-]?\\s*([\\s\\S]*?)(?=\\s*(?:[A-Z][a-zA-Z0-9\\s()\\.\\/]+:|$))', 'i');
-                const match = rawText.match(regex);
-                if (match && match[1] && match[1].trim()) {
-                    return match[1].replace(/&nbsp;/gi, '').trim();
-                }
-            }
             return "";
         }
 
@@ -505,29 +419,7 @@
             ]);
         }
 
-        // Silent Native Handler Trigger
-        function triggerNativeHover(task, targetDiv) {
-            if (!task.link || !targetDiv) return;
-
-            targetDiv.innerHTML = ''; // Erase stale innerHTML to prevent cross-row leakage
-            targetDiv.style.position = 'absolute';
-            targetDiv.style.left = '-9999px';
-            targetDiv.style.top = '-9999px';
-            targetDiv.style.visibility = 'hidden';
-            targetDiv.style.height = '0px';
-            targetDiv.style.width = '0px';
-            targetDiv.style.overflow = 'hidden';
-            targetDiv.style.display = 'block';
-
-            const targetAttr = task.link.getAttribute('onmouseover') || task.link.getAttribute('onclick') || '';
-            const jsCode = targetAttr.replace(/^javascript:/i, '').trim();
-            if (jsCode) {
-                try {
-                    const fn = new Function(jsCode);
-                    fn();
-                } catch (e) {}
-            }
-        }
+        // Removed triggerNativeHover entirely to prevent DOM races
 
         // Silent Background Fetching (Fallback for ALL rows when hover is rate-limited or fails)
         async function fetchBackgroundDetails(actionUrl, idOrCsbNo, index) {
@@ -536,21 +428,18 @@
             const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
             const targetUrl = actionUrl.startsWith('http') || actionUrl.startsWith('/') ? actionUrl : baseUrl + actionUrl;
             
-            const params = new URLSearchParams();
-            params.set('csbNo', idOrCsbNo);
-            params.set('csbNumber', idOrCsbNo);
-            params.set('csbID', idOrCsbNo);
-            params.set('csbRefNumber', idOrCsbNo);
-            params.set('refNo', idOrCsbNo);
-            params.set('hawbId', idOrCsbNo);
-            params.set('hawbID', idOrCsbNo);
-            params.set('hawbNo', idOrCsbNo);
-            params.set('hawbNumber', idOrCsbNo);
-            params.set('id', idOrCsbNo);
-            params.set('index', String(index || '0'));
-            params.set('selectedIndex', idOrCsbNo);
-
-            const bodyStr = params.toString();
+            let formData;
+            if (document.forms.length > 0) {
+                formData = new FormData(document.forms[0]);
+            } else {
+                formData = new FormData();
+            }
+            
+            formData.set('csbNo', idOrCsbNo);
+            formData.set('csbNumber', idOrCsbNo);
+            formData.set('selectedIndex', String(index || '0'));
+            
+            const bodyStr = new URLSearchParams(formData).toString();
             const urlWithParams = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}${bodyStr}`;
 
             try {
@@ -585,55 +474,19 @@
         async function processRowFast(task, thisLoadId) {
             if (activeLoadId !== thisLoadId) return;
 
-            let myDiv = document.getElementById('mydiv' + task.index);
-            if (!myDiv) {
-                myDiv = document.createElement('div');
-                myDiv.id = 'eccs-temp-mydiv-' + task.rowIndex;
-                myDiv.style.display = 'none';
-                document.body.appendChild(myDiv);
-            }
-            myDiv.innerHTML = '';
-
-            // 1. Trigger native hover JS
-            triggerNativeHover(task, myDiv);
-
-            // 2. High-Speed micro-polling (up to 150ms total, checking every 15ms)
+            // Fetch details directly without native hover to prevent race condition over global form
             let details = null;
-            let elapsed = 0;
-            while (elapsed < 150) {
-                if (activeLoadId !== thisLoadId) return;
-                await new Promise(r => setTimeout(r, 15));
-                elapsed += 15;
-
-                if (myDiv && myDiv.textContent && myDiv.textContent.trim().length > 10) {
-                    const desc = extractDescription(myDiv);
-                    const airlines = extractAirlines(myDiv);
-                    const dest = extractDest(myDiv);
-                    const weight = extractWeight(myDiv);
-                    if (desc || airlines || dest || weight) {
-                        details = { desc, airlines, dest, weight };
-                        break;
-                    }
-                }
-            }
-
-            // 3. Parallel Background Fetch Fallback if DOM polling didn't return immediately
-            if (!details || (!details.desc && !details.airlines && !details.dest && !details.weight)) {
-                if (task.actionUrl && task.csbNo) {
-                    details = await fetchBackgroundDetails(task.actionUrl, task.csbNo, task.index);
-                }
+            if (task.actionUrl && task.csbNo) {
+                details = await fetchBackgroundDetails(task.actionUrl, task.csbNo, task.index);
             }
 
             if (activeLoadId !== thisLoadId) return;
 
-            // 4. Update row UI instantly
+            // Update row UI instantly
             task.descTd.textContent = (details && details.desc) ? details.desc : "N/A";
             task.airTd.textContent = (details && details.airlines) ? details.airlines : "N/A";
             task.destTd.textContent = (details && details.dest) ? details.dest : "N/A";
             task.weightTd.textContent = (details && details.weight) ? details.weight : "N/A";
-            
-            // Clean up temporary DOM element
-            if (myDiv) myDiv.remove();
         }
 
         // --- Load details for Export Clearance Lists in ULTRA FAST parallel batches ---

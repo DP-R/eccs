@@ -75,69 +75,80 @@
 
 
 
-    // Asynchronous Multi-Click Exploit
-    // By adding a small delay (e.g., 100ms), we force the browser to register each click in a separate event loop tick.
-    // This perfectly mimics human rapid-clicking and exploits the server's race condition before the page unloads.
-    async function exploitMultiClick(button, count) {
-        if (!button || count <= 0) return;
-        
-        console.log(`[ECCS X-Ray] Exploiting double-submit glitch: Firing ${count} clicks rapidly...`);
-        if (window.eccsLog) window.eccsLog.info(`Exploiting glitch: Firing ${count} rapid clicks`);
+    // Extractor for multi-package data directly from the table
+    function getPackageLinks() {
+        const links = [];
+        const anchors = document.querySelectorAll('a[href^="getHAWBStatus.do?hId="]');
+        anchors.forEach(a => {
+            const href = a.getAttribute('href');
+            const hIdMatch = href.match(/hId=(\d+)/);
+            const hNoMatch = href.match(/hNo=(\d+)/);
+            
+            if (hIdMatch && hNoMatch) {
+                links.push({ hId: hIdMatch[1], hNo: hNoMatch[1] });
+            }
+        });
+        return links;
+    }
 
-        for (let i = 0; i < count; i++) {
-            try {
-                button.disabled = false; 
-                button.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
-                button.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
-                button.click();
-            } catch (err) {}
-            // Wait 100ms between clicks to bypass browser form coalescing
-            await new Promise(r => setTimeout(r, 100));
+    // Direct API call to clear package instantly instead of clicking
+    async function clearPackageBackground(hId, hNo) {
+        const tokenInput = document.querySelector('input[name="org.apache.struts.taglib.html.TOKEN"]');
+        const token = tokenInput ? tokenInput.value : '';
+        
+        const cIdMatch = document.cookie.match(/cId=([^;]+)/); // Just in case cId is needed, though usually standard
+        const cId = cIdMatch ? cIdMatch[1] : '300719'; // Fallback to a common one if needed, though mostly hId and hNo drive it
+
+        const params = new URLSearchParams();
+        params.set('org.apache.struts.taglib.html.TOKEN', token);
+        params.set('hawbNoToSubmit', '');
+        params.set('selecteduploadedDocID', '');
+        params.set('hawbNo', '');
+        
+        try {
+            await fetch(`/eccs/jsp/common/updateHAWBStatus.do?hId=${hId}&hNo=${hNo}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: params.toString()
+            });
+        } catch (e) {
+            console.error('[ECCS X-Ray] Background fetch failed for', hId, e);
         }
     }
 
-    function automateXray() {
+    async function automateXray() {
         if (localStorage.autoXrayEnabled === "false") {
             return;
         }
         if (done) return;
 
-        // --- PAGE 2: Auto-click "X-Ray Clear" button ---
+        // --- PAGE 2: Auto-clear via background POSTs ---
         const clearButton = document.querySelector('input[value="X-Ray Clear"]');
         if (clearButton) {
             done = 1;
             
-            const hawbNo = getScannedHawb();
-            const totalPackages = getNoOfPackages();
-            
-            const isSubsequent = sessionStorage.isSubsequent === "true" || (sessionStorage.remainingCount && parseInt(sessionStorage.remainingCount, 10) > 0);
+            const packages = getPackageLinks();
+            if (packages.length > 0) {
+                console.log(`[ECCS X-Ray] Executing direct API clear for ${packages.length} packages...`);
+                if (window.eccsLog) window.eccsLog.info(`Executing direct API clear for ${packages.length} packages...`);
 
-            if (!isSubsequent) {
-                // PACKAGE 1: Wait 5 seconds, then exploit multi-click if there are multiple packages
-                sessionStorage.currentHawb = hawbNo || '';
-                console.log("[ECCS X-Ray] Package 1: Waiting 5s safety delay before clearing...");
-                if (window.eccsLog) window.eccsLog.info("Package 1: Waiting 5s safety delay");
+                clearButton.value = "Clearing...";
+                clearButton.disabled = true;
 
-                setTimeout(() => {
-                    if (document.body.contains(clearButton)) {
-                        exploitMultiClick(clearButton, totalPackages);
-                    }
-                }, 5000);
+                // Fire all POST requests in parallel for maximum speed
+                await Promise.all(packages.map(pkg => clearPackageBackground(pkg.hId, pkg.hNo)));
+
+                console.log(`[ECCS X-Ray] Background clearance complete. Reloading page to sync state.`);
+                // Submit the form normally to sync the server state and return to the entry page
+                clearButton.disabled = false;
+                clearButton.click();
             } else {
-                // SUBSEQUENT PACKAGES (Just in case the exploit didn't clear all of them on the first try)
-                const remaining = parseInt(sessionStorage.remainingCount || String(totalPackages - 1), 10);
-                const clickCount = remaining > 0 ? remaining : (totalPackages > 1 ? totalPackages - 1 : 1);
-
-                console.log(`[ECCS X-Ray] Subsequent Package: Skipping 5s wait, firing ${clickCount} rapid clicks...`);
-                if (window.eccsLog) window.eccsLog.info(`Subsequent Package: Firing ${clickCount} rapid clicks`);
-
-                // Clear subsequent flags
-                sessionStorage.removeItem("isSubsequent");
-                sessionStorage.removeItem("remainingCount");
-
-                // Execute asynchronous multi-click exploit
-                exploitMultiClick(clearButton, clickCount);
+                // Fallback for single packages if link isn't found
+                clearButton.click();
             }
+            
             return;
         }
 

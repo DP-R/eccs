@@ -41,9 +41,9 @@
         }
     }
 
-    // Key binding: Ctrl + Shift + U triggers auto login
+    // Key binding: Ctrl + Shift + I triggers auto login
     document.addEventListener("keydown", e => {
-        if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "u") {
+        if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "i") {
             e.preventDefault();
             autoLogin();
         }
