@@ -64,9 +64,13 @@ As per the import documents,examined quantity seems higher than what has been de
             // Find the main input (not our injected filter inputs)
             const targetInput = Array.from(inputs).find(inp => !inp.classList.contains('eccs-filter-input') && !inp.readOnly && !inp.disabled && inp.style.display !== 'none');
             
-            if (targetInput && !targetInput.value.trim()) {
-                targetInput.value = "zd";
-                targetInput.dispatchEvent(new Event("input", { bubbles: true }));
+            if (targetInput) {
+                const val = targetInput.value.trim();
+                // Overwrite if it's empty OR if it's the generic useless prefix ECCS puts by default
+                if (!val || val === "CBEXI_MAA_2026-2027_0" || val.endsWith("_0")) {
+                    targetInput.value = "zd";
+                    targetInput.dispatchEvent(new Event("input", { bubbles: true }));
+                }
             }
         }, 100);
     }
