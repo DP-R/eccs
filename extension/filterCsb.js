@@ -413,7 +413,7 @@
         // Removed triggerNativeHover entirely to prevent DOM races
 
         // Silent Background Fetching (Fallback for ALL rows when hover is rate-limited or fails)
-        async function fetchBackgroundDetails(actionUrl, idOrCsbNo, index) {
+        async function fetchBackgroundDetails(actionUrl, idOrCsbNo, index, argMatches) {
             if (!actionUrl || !idOrCsbNo) return { desc: "", airlines: "", dest: "", weight: "" };
 
             const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
@@ -428,7 +428,16 @@
             
             formData.set('csbNo', idOrCsbNo);
             formData.set('csbNumber', idOrCsbNo);
+            formData.set('csbNum', idOrCsbNo);
+            formData.set('hiddenCSBVRefId', idOrCsbNo);
             formData.set('selectedIndex', String(index || '0'));
+            
+            // Populate extra arguments for CreateExamReport or others if they exist
+            if (argMatches && argMatches.length >= 5) {
+                formData.set('csbID', argMatches[2] || '');
+                formData.set('grpCatID', argMatches[3] || '');
+                formData.set('userID', argMatches[4] || '');
+            }
             
             const bodyStr = new URLSearchParams(formData).toString();
             const urlWithParams = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}${bodyStr}`;
@@ -468,7 +477,7 @@
             // Fetch details directly without native hover to prevent race condition over global form
             let details = null;
             if (task.actionUrl && task.csbNo) {
-                details = await fetchBackgroundDetails(task.actionUrl, task.csbNo, task.index);
+                details = await fetchBackgroundDetails(task.actionUrl, task.csbNo, task.index, task.argMatches);
             }
 
             if (activeLoadId !== thisLoadId) return;
@@ -500,9 +509,10 @@
                 
                 const targetAttr = link ? (link.getAttribute('onmouseover') || link.getAttribute('onclick') || link.getAttribute('href') || '') : '';
                 const matches = targetAttr.match(/'([^']+)'/g);
-                const csbNo = (matches && matches[1]) ? matches[1].replace(/'/g, '') : '';
-                const actionUrl = (matches && matches[0]) ? matches[0].replace(/'/g, '') : '';
-                const index = (matches && matches[2]) ? matches[2].replace(/'/g, '') : String(rowIndex);
+                const cleanMatches = matches ? matches.map(m => m.replace(/'/g, '')) : [];
+                const csbNo = cleanMatches[1] || '';
+                const actionUrl = cleanMatches[0] || '';
+                const index = cleanMatches[2] || String(rowIndex);
 
                 // Append 4 new columns at the far right of the row
                 const descTd = document.createElement('td');
@@ -521,7 +531,7 @@
                 weightTd.height = "25"; weightTd.width = "130"; weightTd.align = "center"; weightTd.className = "eccs-desc-cell"; weightTd.textContent = "...";
                 row.appendChild(weightTd);
 
-                return { row, rowIndex, index, link, csbNo, actionUrl, descTd, airTd, destTd, weightTd };
+                return { row, rowIndex, index, link, csbNo, actionUrl, argMatches: cleanMatches, descTd, airTd, destTd, weightTd };
             });
 
             applyFilters();
