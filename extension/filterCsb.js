@@ -207,39 +207,21 @@
             td.align = 'center';
             
             if (idx === 0) {
-                const resetBtn = document.createElement('a');
-                resetBtn.href = '#';
-                resetBtn.textContent = 'Clear';
-                resetBtn.style = 'font-size: 11px; font-weight: bold; color: #ef4444; text-decoration: none;';
-                resetBtn.addEventListener('click', (e) => {
+                td.innerHTML = `<a href="#" style="font-size: 11px; font-weight: bold; color: #ef4444; text-decoration: none;" class="eccs-clear-filters">Clear</a><br><span class="eccs-filter-counter" id="eccs-hawb-counter" style="font-size: 10px; font-weight: bold; color: #2563eb; display: block; margin-top: 4px;"></span>`;
+                td.querySelector('.eccs-clear-filters').addEventListener('click', (e) => {
                     e.preventDefault();
                     filterInputs.forEach(input => { if (input) input.value = ''; });
                     applyFilters();
                 });
-                td.appendChild(resetBtn);
                 filterInputs.push(null);
             } else {
-                const title = (th.textContent || '').replace(/\s+/g, ' ').trim();
-                if (title && !title.toLowerCase().includes('remarks') && !title.toLowerCase().includes('select') && !title.toLowerCase().includes('arrival date')) {
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.placeholder = 'Filter...';
-                    input.className = 'eccs-filter-input';
-                    input.addEventListener('input', applyFilters);
-                    td.appendChild(input);
-                    filterInputs.push(input);
-                } else {
-                    if (title.toLowerCase().includes('remarks') || title.toLowerCase().includes('arrival date')) {
-                        const counterSpan = document.createElement('span');
-                        counterSpan.className = 'eccs-filter-counter';
-                        counterSpan.style = 'font-size: 11px; font-weight: bold; color: #2563eb;';
-                        if (!document.getElementById('eccs-hawb-counter')) {
-                            counterSpan.id = 'eccs-hawb-counter';
-                        }
-                        td.appendChild(counterSpan);
-                    }
-                    filterInputs.push(null);
-                }
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = 'Filter...';
+                input.className = 'eccs-filter-input';
+                input.addEventListener('input', applyFilters);
+                td.appendChild(input);
+                filterInputs.push(input);
             }
             filterRow.appendChild(td);
         });
@@ -295,11 +277,22 @@
 
             const counterSpan = document.getElementById('eccs-hawb-counter');
             if (counterSpan) {
+                const primaryIdx = (headerTextArr.findIndex(t => /HAWB/i.test(t)) !== -1) 
+                                    ? headerTextArr.findIndex(t => /HAWB/i.test(t)) 
+                                    : (csbColIdx !== -1 ? csbColIdx : 1);
+                                    
                 const totalUnique = new Set(dataRows.map(r => {
                     const cells = Array.from(r.querySelectorAll('td'));
-                    return cells[hawbColIdx] ? (cells[hawbColIdx].textContent || '').replace(/\s+/g, '').trim() : '';
+                    return cells[primaryIdx] ? (cells[primaryIdx].textContent || '').replace(/\s+/g, '').trim() : '';
                 }).filter(Boolean)).size;
-                counterSpan.textContent = `[${visibleHawbs.size}/${totalUnique} HAWBs]`;
+                
+                // visibleHawbs counts how many unique primary items are visible
+                const visibleUnique = new Set(dataRows.filter(r => r.style.display !== 'none').map(r => {
+                    const cells = Array.from(r.querySelectorAll('td'));
+                    return cells[primaryIdx] ? (cells[primaryIdx].textContent || '').replace(/\s+/g, '').trim() : '';
+                }).filter(Boolean)).size;
+                
+                counterSpan.textContent = `[${visibleUnique}/${totalUnique} Items]`;
             }
         }
 
