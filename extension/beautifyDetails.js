@@ -367,10 +367,12 @@
 
             targetTable.querySelectorAll('a').forEach(a => {
                 const href = a.getAttribute('href') || '';
-                if (href.startsWith('javascript:')) {
-                    a.setAttribute('target', '_blank');
+                if (href.toLowerCase().startsWith('javascript:')) {
+                    a.removeAttribute('target');
                     a.style.color = '#2563eb';
                     a.style.fontWeight = 'bold';
+                } else {
+                    a.setAttribute('target', '_blank');
                 }
             });
 
@@ -449,7 +451,8 @@
             docLinksOnPage.forEach(a => {
                 const fileName = a.textContent.trim() || 'Attached Document';
                 const href = a.getAttribute('href') || '#';
-                badgesHtml += `<a class="doc-badge" href="${href}" target="_blank">📄 ${fileName}</a>`;
+                const targetAttr = href.toLowerCase().startsWith('javascript:') ? '' : 'target="_blank"';
+                badgesHtml += `<a class="doc-badge" href="${href}" ${targetAttr}>📄 ${fileName}</a>`;
             });
             docContainer.innerHTML = badgesHtml;
         } else {

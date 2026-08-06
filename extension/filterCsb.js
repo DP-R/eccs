@@ -9,6 +9,9 @@
         const path = window.location.pathname.toLowerCase();
         const actionName = path.substring(path.lastIndexOf('/') + 1);
         
+        // Exclude all non-list/non-search pages from filter injection
+        if (!actionName.includes('list') && !actionName.includes('search')) return;
+        
         // Strictly whitelist ONLY the 6 exact Export List action endpoints
         const exactExportPages = [
             'listexamcsb5.do',
@@ -46,10 +49,14 @@
 
             const foundDataRows = rows.filter(row => {
                 if (row === foundHeader || row.classList.contains('eccs-filter-row')) return false;
+                
+                // Exclude footer/pagination rows which typically use colspan
+                if (row.querySelector('td[colspan], th[colspan]')) return false;
+                
                 const hasInput = row.querySelector('input[type="checkbox"], input[type="radio"], input[name="selectedIndex"], input[name="indexes"], input[name="csbNum"]');
                 const hasDetailLink = row.querySelector('a[onmouseover*="view"], a[href*="view"], a[href*="CSB"], a[href*="csb"], a[href*="ExamReport"]');
                 const cellCount = row.querySelectorAll('td').length;
-                return (hasInput || hasDetailLink || cellCount >= 4) && cellCount >= 3;
+                return (hasInput || hasDetailLink) && cellCount >= 3;
             });
 
             // ONLY target tables containing 2 or more data rows (multi-HAWB list views). Single-HAWB views are skipped.
