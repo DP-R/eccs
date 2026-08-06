@@ -544,11 +544,15 @@
             applyFilters();
 
             // Step B: Process ALL rows in ULTRA-FAST parallel batches of 5
-            const BATCH_SIZE = 5;
-            for (let i = 0; i < rowTasks.length; i += BATCH_SIZE) {
+            // We MUST process sequentially! ECCS uses Apache Struts 1.x which stores the 
+            // FormBean in the Session scope. Parallel POST requests cause a race condition
+            // where concurrent requests overwrite the single shared FormBean, causing
+            // the server to return repeated results from the last processed ID.
+            for (let i = 0; i < rowTasks.length; i++) {
                 if (activeLoadId !== thisLoadId) return;
-                const batch = rowTasks.slice(i, i + BATCH_SIZE);
-                await Promise.all(batch.map(task => processRowFast(task, thisLoadId)));
+                await processRowFast(rowTasks[i], thisLoadId);
+                // Tiny pause to yield to the main thread and avoid hanging the browser
+                await new Promise(r => setTimeout(r, 20));
             }
             
             debouncedApplyFilters();
