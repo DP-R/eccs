@@ -323,6 +323,9 @@
             for (const table of tables) {
                 const trs = Array.from(table.querySelectorAll('tr'));
                 
+                // Common keywords that appear in headers to prevent extracting another header as a value
+                const headerKeywords = ['consignor', 'consignee', 'airport', 'airlines', 'weight', 'value', 'status', 'hawb', 'date', 'description', 'flight', 'courier', 'csb', 'cbe', 'item', 'quantity', 'uqc', 'ctsh'];
+
                 // 1. Check for Key-Value pairs in the same row
                 for (const tr of trs) {
                     const cells = Array.from(tr.querySelectorAll('td, th'));
@@ -335,7 +338,14 @@
                             const nextCell = cells[i + 1];
                             if (nextCell && nextCell.tagName.toLowerCase() !== 'th') {
                                 const val = (nextCell.textContent || '').replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
-                                if (val && val !== ':') return val;
+                                
+                                // Check if the extracted value is actually just another header!
+                                const valLower = val.toLowerCase();
+                                const isAnotherHeader = val.length < 50 && headerKeywords.some(kw => valLower.includes(kw));
+
+                                if (val && val !== ':' && !isAnotherHeader) {
+                                    return val;
+                                }
                             }
                         }
                     }
