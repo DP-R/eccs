@@ -55,4 +55,19 @@ As per the import documents,examined quantity seems higher than what has been de
             }
         }
     });
+
+    // Auto-trigger 'zd' expansion on listCBEXIDetailsInsp.do
+    if (window.location.pathname.toLowerCase().includes('listcbexidetailsinsp')) {
+        // Run slightly after load to ensure DOM is ready
+        setTimeout(() => {
+            const inputs = document.querySelectorAll('input[type="text"]');
+            // Find the main input (not our injected filter inputs)
+            const targetInput = Array.from(inputs).find(inp => !inp.classList.contains('eccs-filter-input') && !inp.readOnly && !inp.disabled && inp.style.display !== 'none');
+            
+            if (targetInput && !targetInput.value.trim()) {
+                targetInput.value = "zd";
+                targetInput.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+        }, 100);
+    }
 })();
