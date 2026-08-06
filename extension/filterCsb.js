@@ -322,15 +322,10 @@
                     for (let i = 0; i < cells.length - 1; i++) {
                         const cellText = (cells[i].textContent || '').replace(/\s+/g, ' ').replace(/:$/, '').trim().toLowerCase();
                         
-                        // Strict match or strict prefix match
-                        const isMatch = labelNames.some(name => {
-                            const lowerName = name.toLowerCase();
-                            return cellText === lowerName || cellText.startsWith(lowerName + ' ') || cellText.startsWith(lowerName + ':');
-                        });
+                        const isMatch = labelNames.some(name => cellText.includes(name.toLowerCase()));
 
                         if (isMatch) {
                             const nextCell = cells[i + 1];
-                            // Ensure the next cell isn't a header or another label
                             if (nextCell && nextCell.tagName.toLowerCase() !== 'th') {
                                 const val = (nextCell.textContent || '').replace(/\s+/g, ' ').replace(/&nbsp;/gi, '').trim();
                                 if (val && val !== ':') return val;
@@ -346,13 +341,9 @@
                         for (let colIdx = 0; colIdx < headerCells.length; colIdx++) {
                             const headerText = (headerCells[colIdx]?.textContent || '').replace(/\s+/g, ' ').replace(/:$/, '').trim().toLowerCase();
                             
-                            const isMatch = labelNames.some(name => {
-                                const lowerName = name.toLowerCase();
-                                return headerText === lowerName || headerText.startsWith(lowerName + ' ');
-                            });
+                            const isMatch = labelNames.some(name => headerText.includes(name.toLowerCase()));
 
                             if (isMatch) {
-                                // Look at the same column index in the next row
                                 const dataRow = trs[r + 1];
                                 if (dataRow) {
                                     const dataCells = Array.from(dataRow.querySelectorAll('td, th'));
