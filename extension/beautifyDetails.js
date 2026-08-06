@@ -16,10 +16,10 @@
     });
 
     // DO NOT render beautified summary on Multi-CBE / Multi-CSB list pages!
-    if (isMultiRowList) return;
+    if (isMultiRowList || path.includes('/list') || path.includes('listcsb') || path.includes('listcbe') || path.includes('listexam')) return;
 
     // Must be a Single-Bill View / Details endpoint or page containing single document details
-    const isSingleView = path.includes('view') || path.includes('details') || path.includes('csb') || path.includes('cbe') || path.includes('rboe') || path.includes('examreport');
+    const isSingleView = path.includes('view') || path.includes('details') || path.includes('examreport') || path.includes('rboe');
     if (!isSingleView) return;
 
     if (document.getElementById('eccs-beautified-summary')) return;
