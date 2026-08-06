@@ -551,20 +551,51 @@
                 return { row, rowIndex, index, link, csbNo, actionUrl, argMatches: cleanMatches, descTd, airTd, destTd, weightTd };
             });
 
-            applyFilters();
+            // We MUST process sequentially due to Apache Struts 1.x session race conditions!
+            // To speed up perceived performance, we use an IntersectionObserver to only load
+            // details for rows that are currently visible on the screen.
+            const fetchQueue = [];
+            let isProcessingQueue = false;
 
-            // Step B: Process ALL rows in ULTRA-FAST parallel batches of 5
-            // We MUST process sequentially! ECCS uses Apache Struts 1.x which stores the 
-            // FormBean in the Session scope. Parallel POST requests cause a race condition
-            // where concurrent requests overwrite the single shared FormBean, causing
-            // the server to return repeated results from the last processed ID.
-            for (let i = 0; i < rowTasks.length; i++) {
-                if (activeLoadId !== thisLoadId) return;
-                await processRowFast(rowTasks[i], thisLoadId);
-                // Tiny pause to yield to the main thread and avoid hanging the browser
-                await new Promise(r => setTimeout(r, 20));
+            async function processFetchQueue() {
+                if (isProcessingQueue) return;
+                isProcessingQueue = true;
+                while (fetchQueue.length > 0) {
+                    if (activeLoadId !== thisLoadId) break;
+                    const task = fetchQueue.shift();
+                    await processRowFast(task, thisLoadId);
+                    await new Promise(r => setTimeout(r, 20)); // yield
+                }
+                isProcessingQueue = false;
+                debouncedApplyFilters();
             }
+
+            const observer = new IntersectionObserver((entries) => {
+                let addedToQueue = false;
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const taskIdx = entry.target.getAttribute('data-task-idx');
+                        const task = rowTasks[taskIdx];
+                        if (task && !task.queued) {
+                            task.queued = true;
+                            fetchQueue.push(task);
+                            addedToQueue = true;
+                            // Stop observing once queued
+                            observer.unobserve(entry.target);
+                        }
+                    }
+                });
+                if (addedToQueue) {
+                    processFetchQueue();
+                }
+            }, { rootMargin: "300px" }); // Start loading slightly before it scrolls into view
+
+            rowTasks.forEach((task, i) => {
+                task.row.setAttribute('data-task-idx', i);
+                observer.observe(task.row);
+            });
             
+            // Apply initial filters immediately
             debouncedApplyFilters();
         }
 
