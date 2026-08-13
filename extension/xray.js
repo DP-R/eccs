@@ -119,16 +119,7 @@
     }
 
     function playAttentionSound() {
-        // 1. Try Speech Synthesis
-        try {
-            const utterance = new SpeechSynthesisUtterance("Attention! Multiple entries found.");
-            utterance.rate = 1.2;
-            utterance.pitch = 1.2;
-            utterance.volume = 1.0;
-            window.speechSynthesis.speak(utterance);
-        } catch(e) {}
-
-        // 2. Try Web Audio API Beeps
+        // Try Web Audio API Beeps
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (!AudioContext) return;
