@@ -118,6 +118,49 @@
         }
     }
 
+    function playAttentionSound() {
+        // 1. Try Speech Synthesis
+        try {
+            const utterance = new SpeechSynthesisUtterance("Attention! Multiple entries found.");
+            utterance.rate = 1.2;
+            utterance.pitch = 1.2;
+            utterance.volume = 1.0;
+            window.speechSynthesis.speak(utterance);
+        } catch(e) {}
+
+        // 2. Try Web Audio API Beeps
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            
+            const playTone = (freq, startTime, duration) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'square';
+                osc.frequency.value = freq;
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+                gain.gain.setValueAtTime(0.3, startTime + duration - 0.05);
+                gain.gain.linearRampToValueAtTime(0, startTime + duration);
+                
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            };
+
+            const now = ctx.currentTime;
+            playTone(880, now, 0.15);
+            playTone(880, now + 0.3, 0.15);
+            playTone(1200, now + 0.6, 0.4);
+        } catch(e) {
+            console.error("[ECCS X-Ray] Beep failed", e);
+        }
+    }
+
     async function automateXray() {
         if (localStorage.autoXrayEnabled === "false") {
             return;
@@ -150,6 +193,20 @@
             }
             
             return;
+        }
+        
+        // --- PAGE 3: Multiple HAWB Entries Found (Manual intervention needed) ---
+        const packages = getPackageLinks();
+        const suspiciousLink = document.querySelector('a[href*="stat=suspicious"]');
+        if (packages.length >= 1 && suspiciousLink && !clearButton) {
+            if (!sessionStorage.multiHawbBeepPlayed) {
+                console.log("[ECCS X-Ray] Multiple entries conflict. Playing alert sound.");
+                playAttentionSound();
+                sessionStorage.multiHawbBeepPlayed = "true";
+            }
+            return;
+        } else {
+            sessionStorage.removeItem("multiHawbBeepPlayed");
         }
 
         // --- PAGE 1: Auto-submit next packages ---
