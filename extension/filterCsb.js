@@ -426,6 +426,17 @@
         async function fetchBackgroundDetails(actionUrl, idOrCsbNo, index, argMatches) {
             if (!actionUrl || !idOrCsbNo) return { desc: "", airlines: "", dest: "", weight: "" };
 
+            // CACHING LAYER: Check if we already fetched these details in this session
+            const cacheKey = 'eccs_cache_' + idOrCsbNo;
+            try {
+                const cached = sessionStorage.getItem(cacheKey);
+                if (cached) {
+                    return JSON.parse(cached);
+                }
+            } catch (e) {
+                console.warn("[ECCS] Cache read error", e);
+            }
+
             const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
             const targetUrl = actionUrl.startsWith('http') || actionUrl.startsWith('/') ? actionUrl : baseUrl + actionUrl;
             
@@ -474,7 +485,12 @@
                 const dest = extractDest(doc);
                 const weight = extractWeight(doc);
 
-                return { desc, airlines, dest, weight };
+                const result = { desc, airlines, dest, weight };
+                try {
+                    sessionStorage.setItem(cacheKey, JSON.stringify(result));
+                } catch(e) {}
+                
+                return result;
             } catch (e) {
                 return { desc: "", airlines: "", dest: "", weight: "" };
             }
