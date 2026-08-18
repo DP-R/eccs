@@ -19,7 +19,7 @@
 
         // Always replace username and password with fresh credentials
         setInputValue(usernameInput, "14937314");
-        setInputValue(passwordInput, "Codelink@5");
+        setInputValue(passwordInput, "Codelink@51");
 
         // Copy captcha text, strip all whitespaces, and paste cleanly into txtInput
         if (captchaDiv && captchaInput) {
