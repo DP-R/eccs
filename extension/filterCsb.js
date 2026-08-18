@@ -509,62 +509,90 @@
 
                 let desc, airlines, dest, weight;
                 if (isImportDetailList) {
-                    const htmlStr = htmlText.replace(/\s+/g, ' ');
+                    let descArray = [];
+                    let qtyArray = [];
+                    let valArray = [];
+                    let consignee = "N/A";
                     
-                    // 1. Name of Consignee
-                    const consigneeMatch = htmlStr.match(/>\s*Name Of Consignee\s*:?\s*<\/(?:td|th)>\s*<(?:td|th)[^>]*>\s*([^<]+)/i);
-                    weight = (consigneeMatch && consigneeMatch[1]) ? consigneeMatch[1].replace(/&nbsp;/g, '').trim() : "N/A";
-                    
-                    // 2. Assessable Value (Upper Table)
-                    const valMatch = htmlStr.match(/>\s*Assessable Value\s*\(Rs\.\)\s*:?\s*<\/(?:td|th)>\s*<(?:td|th)[^>]*>\s*([\d\.,]+)/i)
-                                  || htmlStr.match(/>\s*Assessable Value\s*:\s*<\/(?:td|th)>\s*<(?:td|th)[^>]*>\s*([\d\.,]+)/i);
-                    dest = (valMatch && valMatch[1]) ? valMatch[1].replace(/&nbsp;/g, '').trim() : "N/A";
+                    // 1. Find the Consignee using native DOM
+                    const allCells = Array.from(doc.querySelectorAll('td, th'));
+                    for (let i = 0; i < allCells.length - 1; i++) {
+                        const text = (allCells[i].textContent || '').trim().toLowerCase();
+                        if (text === 'name of consignee:' || text === 'name of consignee :') {
+                            const nextCell = allCells[i+1];
+                            if (nextCell) {
+                                consignee = (nextCell.textContent || '').replace(/&nbsp;/gi, '').trim();
+                                break;
+                            }
+                        }
+                    }
 
-                    // 3. Item Description and Qty (Table Parsing)
-                    desc = "N/A";
-                    airlines = "N/A";
+                    // 2. Find the DETAILS OF ITEMS table and aggregate ALL items
+                    const tables = Array.from(doc.querySelectorAll('table'));
+                    let itemsTable = null;
+                    let headerRow = null;
                     
-                    // Extract the headers and first data row from the ITEMS table
-                    const tableMatch = htmlStr.match(/DETAILS OF ITEMS.*?<table[^>]*>.*?<tr[^>]*>(.*?)<\/tr>\s*(?:<input[^>]*>\s*)*<tr[^>]*>(.*?)<\/tr>/i) 
-                                    || htmlStr.match(/<td[^>]*>CTSH<\/td>(.*?)<\/tr>\s*(?:<input[^>]*>\s*)*<tr[^>]*>(.*?)<\/tr>/i);
-                    
-                    if (tableMatch) {
-                        const headersHtml = tableMatch[1];
-                        const dataHtml = tableMatch[2];
-                        
-                        let itemIdx = -1, qtyIdx = -1;
-                        let currentIdx = headersHtml.toLowerCase().includes('s. no') ? 2 : 1; // Start after CTSH depending on regex match
-                        
-                        // Count columns manually by parsing tds in headers
-                        const hCells = headersHtml.match(/<td[^>]*>(.*?)<\/td>/gi);
-                        if (hCells) {
-                            hCells.forEach((cell, idx) => {
-                                if (cell.match(/ITEM Description/i)) itemIdx = idx;
-                                if (cell.match(/Qty/i)) qtyIdx = idx;
-                            });
-                        }
-                        
-                        // Parse data row tds
-                        const dCells = dataHtml.match(/<td[^>]*>(.*?)<\/td>/gi);
-                        if (dCells) {
-                            if (itemIdx !== -1 && dCells[itemIdx]) {
-                                desc = dCells[itemIdx].replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, '').trim();
-                            }
-                            if (qtyIdx !== -1 && dCells[qtyIdx]) {
-                                airlines = dCells[qtyIdx].replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, '').trim();
+                    for (const table of tables) {
+                        const trs = Array.from(table.querySelectorAll('tr'));
+                        for (const tr of trs) {
+                            const trText = (tr.textContent || '').toLowerCase();
+                            if (trText.includes('ctsh') && trText.includes('description') && trText.includes('qty')) {
+                                itemsTable = table;
+                                headerRow = tr;
+                                break;
                             }
                         }
+                        if (itemsTable) break;
                     }
-                    
-                    // Ultimate Fallback if table regex fails
-                    if (desc === "N/A" || desc === "") {
-                        const fbDesc = htmlStr.match(/ITEM Description.*?<\/tr>\s*(?:<input[^>]*>\s*)*<tr[^>]*>.*?<td[^>]*>.*?<\/td>\s*<td[^>]*>.*?<\/td>\s*<td[^>]*>(.*?)<\/td>/i);
-                        if (fbDesc && fbDesc[1]) desc = fbDesc[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, '').trim();
+
+                    if (itemsTable && headerRow) {
+                        let descIdx = -1, qtyIdx = -1, valIdx = -1;
+                        const hCells = Array.from(headerRow.querySelectorAll('td, th'));
+                        
+                        hCells.forEach((cell, idx) => {
+                            const text = (cell.textContent || '').trim().toLowerCase();
+                            if (text.includes('description')) descIdx = idx;
+                            else if (text.includes('qty') || text.includes('quantity')) qtyIdx = idx;
+                            else if (text.includes('assessable value') || text.includes('value (rs')) valIdx = idx;
+                        });
+
+                        const allTrs = Array.from(itemsTable.querySelectorAll('tr'));
+                        const headerIndex = allTrs.indexOf(headerRow);
+                        
+                        for (let r = headerIndex + 1; r < allTrs.length; r++) {
+                            const tr = allTrs[r];
+                            const cells = Array.from(tr.querySelectorAll('td, th'));
+                            
+                            if (cells.length > Math.max(descIdx, qtyIdx, valIdx) && descIdx !== -1) {
+                                // Skip footer rows with colspans
+                                if (cells[0].getAttribute('colspan')) continue;
+                                
+                                const dText = (cells[descIdx].textContent || '').replace(/&nbsp;/gi, '').trim();
+                                const qText = qtyIdx !== -1 ? (cells[qtyIdx].textContent || '').replace(/&nbsp;/gi, '').trim() : "N/A";
+                                const vText = valIdx !== -1 ? (cells[valIdx].textContent || '').replace(/&nbsp;/gi, '').trim() : "N/A";
+                                
+                                // Only add if it looks like a valid item (not empty, not just a random label)
+                                if (dText && dText !== 'N/A' && dText.length > 1 && !dText.toLowerCase().includes('dutiable goods')) {
+                                    descArray.push(dText);
+                                    qtyArray.push(qText);
+                                    valArray.push(vText);
+                                } else if (dText.toLowerCase().includes('dutiable goods') && cells.length > descIdx + 1) {
+                                    // Sometimes shifted due to CTSH?
+                                    const shiftedDText = (cells[descIdx + 1].textContent || '').replace(/&nbsp;/gi, '').trim();
+                                    if (shiftedDText.length > 1) {
+                                        descArray.push(shiftedDText);
+                                        qtyArray.push(qtyIdx !== -1 ? (cells[qtyIdx + 1]?.textContent || '').replace(/&nbsp;/gi, '').trim() : "N/A");
+                                        valArray.push(valIdx !== -1 ? (cells[valIdx + 1]?.textContent || '').replace(/&nbsp;/gi, '').trim() : "N/A");
+                                    }
+                                }
+                            }
+                        }
                     }
-                    if (airlines === "N/A" || airlines === "") {
-                        const fbQty = htmlStr.match(/Qty.*?<\/tr>\s*(?:<input[^>]*>\s*)*<tr[^>]*>.*?<td[^>]*>.*?<\/td>\s*<td[^>]*>.*?<\/td>\s*<td[^>]*>.*?<\/td>\s*<td[^>]*>.*?<\/td>\s*<td[^>]*>(.*?)<\/td>/i);
-                        if (fbQty && fbQty[1]) airlines = fbQty[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, '').trim();
-                    }
+
+                    desc = descArray.length > 0 ? descArray.join('<hr style="margin:4px 0;border-color:#cbd5e1;">') : "N/A";
+                    airlines = qtyArray.length > 0 ? qtyArray.join('<hr style="margin:4px 0;border-color:#cbd5e1;">') : "N/A";
+                    dest = valArray.length > 0 ? valArray.join('<hr style="margin:4px 0;border-color:#cbd5e1;">') : "N/A";
+                    weight = consignee;
                 } else {
                     desc = extractFieldFromDOM(doc, ['ITEM Description', 'Item Description', 'Description']);
                     airlines = extractFieldFromDOM(doc, ['Airlines', 'Flight', 'Carrier']);
