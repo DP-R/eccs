@@ -476,9 +476,11 @@
             // Populate arguments for Import getHawbDetails
             if (argMatches && argMatches.length >= 4) {
                 formData.set('hawbRefNumber', argMatches[1] || '');
+                formData.set('hawbNumber', argMatches[1] || '');
                 formData.set('selectedHawb', argMatches[1] || '');
                 formData.set('cbeXIRefNumber', argMatches[2] || '');
                 formData.set('cbeRefNumber', argMatches[2] || '');
+                formData.set('cbeXIINumber', argMatches[2] || '');
                 formData.set('selectedCbe', argMatches[2] || '');
                 formData.set('selectedCbe3No', argMatches[2] || '');
                 formData.set('hawbId', argMatches[3] || '');
