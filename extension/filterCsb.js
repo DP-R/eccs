@@ -540,6 +540,11 @@
                 const actionUrl = cleanMatches[0] || '';
                 const index = cleanMatches[2] || String(rowIndex);
 
+                // Strip native hover to definitively block Struts race conditions when user scrubs mouse
+                if (link && link.hasAttribute('onmouseover')) {
+                    link.removeAttribute('onmouseover');
+                }
+
                 // Append 4 new columns at the far right of the row
                 const descTd = document.createElement('td');
                 descTd.height = "25"; descTd.width = "130"; descTd.align = "center"; descTd.className = "eccs-desc-cell"; descTd.textContent = "...";
