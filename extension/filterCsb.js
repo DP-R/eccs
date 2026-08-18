@@ -21,7 +21,20 @@
             'listcsb5.do',
             'listsez.do'
         ];
+        // Whitelist Import List action endpoints
+        const exactImportPages = [
+            'listsuspicioushawbetails.do',
+            'listcbexidetailsinsp.do',
+            'listinspexamcbexidetails.do',
+            'listhawbdetailsinspnondocs.do',
+            'listcbexi.do',
+            'listcbexii.do',
+            'listcbexiii.do',
+            'searchrboe.do'
+        ];
         const isExportDetailList = exactExportPages.includes(actionName);
+        const isImportDetailList = exactImportPages.includes(actionName);
+        const isActiveDetailList = isExportDetailList || isImportDetailList;
 
         // Iterate through all tables to find the actual table containing data rows
         let targetTable = null;
@@ -146,8 +159,8 @@
         // Determine indices for appended columns
         let descColIdx = -1, airColIdx = -1, destColIdx = -1, weightColIdx = -1;
 
-        // --- EXPORT LIST PAGES ALONE: Append 4 Hover Columns at far right ---
-        if (isExportDetailList) {
+        // --- EXPORT & IMPORT LIST PAGES ALONE: Append 4 Hover Columns at far right ---
+        if (isActiveDetailList) {
             const baseColCount = headerRow.querySelectorAll('td, th').length;
             descColIdx = baseColCount;
             airColIdx = baseColCount + 1;
@@ -163,12 +176,12 @@
             });
 
             // Append 4 new header cells at the far right
-            const headers = [
-                "Description of Goods",
-                "Airlines",
-                "Airport of Destination",
-                "Manifest Weight"
+            const headers = isExportDetailList ? [
+                "Description of Goods", "Airlines", "Airport of Destination", "Manifest Weight"
+            ] : [
+                "Item Description", "Qty", "Value (Rs.)", "Consignee"
             ];
+            
             headers.forEach(title => {
                 const th = document.createElement('td');
                 th.width = "130";
@@ -459,6 +472,17 @@
                 formData.set('grpCatID', argMatches[3] || '');
                 formData.set('userID', argMatches[4] || '');
             }
+            // Populate arguments for Import getHawbDetails
+            if (argMatches && argMatches.length >= 4) {
+                formData.set('hawbRefNumber', argMatches[1] || '');
+                formData.set('selectedHawb', argMatches[1] || '');
+                formData.set('cbeXIRefNumber', argMatches[2] || '');
+                formData.set('cbeRefNumber', argMatches[2] || '');
+                formData.set('selectedCbe', argMatches[2] || '');
+                formData.set('selectedCbe3No', argMatches[2] || '');
+                formData.set('hawbId', argMatches[3] || '');
+                formData.set('selectedHawbID', argMatches[3] || '');
+            }
             
             const bodyStr = new URLSearchParams(formData).toString();
             const urlWithParams = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}${bodyStr}`;
@@ -480,10 +504,19 @@
                 const htmlText = await response.text();
                 const doc = new DOMParser().parseFromString(htmlText, 'text/html');
 
-                const desc = extractDescription(doc);
-                const airlines = extractAirlines(doc);
-                const dest = extractDest(doc);
-                const weight = extractWeight(doc);
+                let desc, airlines, dest, weight;
+
+                if (isImportDetailList) {
+                    desc = extractFieldFromDOM(doc, ['ITEM Description', 'Item Description', 'Description']);
+                    airlines = extractFieldFromDOM(doc, ['Qty (UQC)', 'Qty', 'Quantity']);
+                    dest = extractFieldFromDOM(doc, ['Assessable Value', 'Value (Rs.)', 'Value(Rs.)']);
+                    weight = extractFieldFromDOM(doc, ['Name Of Consignee', 'Consignee', 'Consignee / Consignor']);
+                } else {
+                    desc = extractDescription(doc);
+                    airlines = extractAirlines(doc);
+                    dest = extractDest(doc);
+                    weight = extractWeight(doc);
+                }
 
                 const result = { desc, airlines, dest, weight };
                 try {
