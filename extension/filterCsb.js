@@ -624,10 +624,10 @@
             if (activeLoadId !== thisLoadId) return;
 
             // Update row UI instantly
-            task.descTd.textContent = (details && details.desc) ? details.desc : "N/A";
-            task.airTd.textContent = (details && details.airlines) ? details.airlines : "N/A";
-            task.destTd.textContent = (details && details.dest) ? details.dest : "N/A";
-            task.weightTd.textContent = (details && details.weight) ? details.weight : "N/A";
+            task.descTd.innerHTML = (details && details.desc) ? details.desc : "N/A";
+            task.airTd.innerHTML = (details && details.airlines) ? details.airlines : "N/A";
+            task.destTd.innerHTML = (details && details.dest) ? details.dest : "N/A";
+            task.weightTd.innerHTML = (details && details.weight) ? details.weight : "N/A";
         }
 
         // --- Load details for Export & Import Clearance Lists in ULTRA FAST parallel batches ---
