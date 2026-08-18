@@ -68,7 +68,7 @@
                 if (row.querySelector('td[colspan], th[colspan]')) return false;
                 
                 const hasInput = row.querySelector('input[type="checkbox"], input[type="radio"], input[name="selectedIndex"], input[name="indexes"], input[name="csbNum"]');
-                const hasDetailLink = row.querySelector('a[onmouseover*="view"], a[href*="view"], a[href*="CSB"], a[href*="csb"], a[href*="ExamReport"]');
+                const hasDetailLink = row.querySelector('a[onmouseover*="view"], a[href*="view"], a[href*="CSB"], a[href*="csb"], a[href*="ExamReport"], a[href*="getHawbDetails"], a[href*="CBE"], a[href*="cbe"]');
                 const cellCount = row.querySelectorAll('td').length;
                 return (hasInput || hasDetailLink) && cellCount >= 3;
             });
@@ -576,8 +576,8 @@
             // Step A: Append new columns to the far right of all rows immediately
             const rowTasks = dataRows.map((row, rowIndex) => {
                 const link = Array.from(row.querySelectorAll('a')).find(a => {
-                    const html = a.outerHTML || '';
-                    return html.includes('view') || html.includes('CSB') || html.includes('csb') || html.includes('CreateExamReport') || html.includes('ExamReport');
+                    const attr = a.getAttribute('onmouseover') || a.getAttribute('onclick') || a.getAttribute('href') || '';
+                    return attr.includes('view') || attr.includes('CSB') || attr.includes('csb') || attr.includes('ExamReport') || attr.includes('getHawbDetails') || attr.includes('CBE') || attr.includes('cbe');
                 });
                 
                 const targetAttr = link ? (link.getAttribute('onmouseover') || link.getAttribute('onclick') || link.getAttribute('href') || '') : '';
