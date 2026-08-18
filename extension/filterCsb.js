@@ -512,6 +512,17 @@
                     airlines = extractFieldFromDOM(doc, ['Qty (UQC)', 'Qty', 'Quantity']);
                     dest = extractFieldFromDOM(doc, ['Assessable Value', 'Value (Rs.)', 'Value(Rs.)']);
                     weight = extractFieldFromDOM(doc, ['Name Of Consignee', 'Consignee', 'Consignee / Consignor']);
+                    
+                    // Fallback for shifted tables in CBE
+                    if (!desc || desc.toUpperCase() === 'DUTIABLE GOODS' || desc.length < 3 || desc === airlines) {
+                        const htmlStr = htmlText.replace(/\s+/g, ' ');
+                        
+                        const descMatch = htmlStr.match(/ITEM Description.*?<\/tr>.*?<tr.*?>.*?<td.*?>.*?<\/td>.*?<td.*?>.*?<\/td>.*?<td.*?>.*?<\/td>.*?<td.*?>\s*([^<]+)/i);
+                        if (descMatch && descMatch[1]) desc = descMatch[1].trim();
+                        
+                        const qtyMatch = htmlStr.match(/Qty.*?<\/tr>.*?<tr.*?>.*?<td.*?>.*?<\/td>.*?<td.*?>.*?<\/td>.*?<td.*?>.*?<\/td>.*?<td.*?>.*?<\/td>.*?<td.*?>.*?<\/td>.*?<td.*?>\s*([^<]+)/i);
+                        if (qtyMatch && qtyMatch[1]) airlines = qtyMatch[1].trim();
+                    }
                 } else {
                     desc = extractDescription(doc);
                     airlines = extractAirlines(doc);
@@ -549,9 +560,9 @@
             task.weightTd.textContent = (details && details.weight) ? details.weight : "N/A";
         }
 
-        // --- Load details for Export Clearance Lists in ULTRA FAST parallel batches ---
+        // --- Load details for Export & Import Clearance Lists in ULTRA FAST parallel batches ---
         async function loadAllDetails() {
-            if (!isExportDetailList) return;
+            if (!isActiveDetailList) return;
 
             const thisLoadId = ++activeLoadId;
 
