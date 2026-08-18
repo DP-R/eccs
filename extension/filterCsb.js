@@ -508,28 +508,68 @@
                 const doc = new DOMParser().parseFromString(htmlText, 'text/html');
 
                 let desc, airlines, dest, weight;
-
                 if (isImportDetailList) {
-                    desc = extractFieldFromDOM(doc, ['ITEM Description', 'Item Description', 'Description']);
-                    airlines = extractFieldFromDOM(doc, ['Qty (UQC)', 'Qty', 'Quantity']);
-                    dest = extractFieldFromDOM(doc, ['Assessable Value', 'Value (Rs.)', 'Value(Rs.)']);
-                    weight = extractFieldFromDOM(doc, ['Name Of Consignee', 'Consignee', 'Consignee / Consignor']);
+                    const htmlStr = htmlText.replace(/\s+/g, ' ');
                     
-                    // Fallback for shifted tables in CBE
-                    if (!desc || desc.toUpperCase() === 'DUTIABLE GOODS' || desc.length < 3 || desc === airlines) {
-                        const htmlStr = htmlText.replace(/\s+/g, ' ');
+                    // 1. Name of Consignee
+                    const consigneeMatch = htmlStr.match(/>\s*Name Of Consignee\s*:?\s*<\/(?:td|th)>\s*<(?:td|th)[^>]*>\s*([^<]+)/i);
+                    weight = (consigneeMatch && consigneeMatch[1]) ? consigneeMatch[1].replace(/&nbsp;/g, '').trim() : "N/A";
+                    
+                    // 2. Assessable Value (Upper Table)
+                    const valMatch = htmlStr.match(/>\s*Assessable Value\s*\(Rs\.\)\s*:?\s*<\/(?:td|th)>\s*<(?:td|th)[^>]*>\s*([\d\.,]+)/i)
+                                  || htmlStr.match(/>\s*Assessable Value\s*:\s*<\/(?:td|th)>\s*<(?:td|th)[^>]*>\s*([\d\.,]+)/i);
+                    dest = (valMatch && valMatch[1]) ? valMatch[1].replace(/&nbsp;/g, '').trim() : "N/A";
+
+                    // 3. Item Description and Qty (Table Parsing)
+                    desc = "N/A";
+                    airlines = "N/A";
+                    
+                    // Extract the headers and first data row from the ITEMS table
+                    const tableMatch = htmlStr.match(/DETAILS OF ITEMS.*?<table[^>]*>.*?<tr[^>]*>(.*?)<\/tr>\s*(?:<input[^>]*>\s*)*<tr[^>]*>(.*?)<\/tr>/i) 
+                                    || htmlStr.match(/<td[^>]*>CTSH<\/td>(.*?)<\/tr>\s*(?:<input[^>]*>\s*)*<tr[^>]*>(.*?)<\/tr>/i);
+                    
+                    if (tableMatch) {
+                        const headersHtml = tableMatch[1];
+                        const dataHtml = tableMatch[2];
                         
-                        const descMatch = htmlStr.match(/ITEM Description.*?<\/tr>.*?<tr.*?>.*?<td.*?>.*?<\/td>.*?<td.*?>.*?<\/td>.*?<td.*?>.*?<\/td>.*?<td.*?>\s*([^<]+)/i);
-                        if (descMatch && descMatch[1]) desc = descMatch[1].trim();
+                        let itemIdx = -1, qtyIdx = -1;
+                        let currentIdx = headersHtml.toLowerCase().includes('s. no') ? 2 : 1; // Start after CTSH depending on regex match
                         
-                        const qtyMatch = htmlStr.match(/Qty.*?<\/tr>.*?<tr.*?>.*?<td.*?>.*?<\/td>.*?<td.*?>.*?<\/td>.*?<td.*?>.*?<\/td>.*?<td.*?>.*?<\/td>.*?<td.*?>.*?<\/td>.*?<td.*?>\s*([^<]+)/i);
-                        if (qtyMatch && qtyMatch[1]) airlines = qtyMatch[1].trim();
+                        // Count columns manually by parsing tds in headers
+                        const hCells = headersHtml.match(/<td[^>]*>(.*?)<\/td>/gi);
+                        if (hCells) {
+                            hCells.forEach((cell, idx) => {
+                                if (cell.match(/ITEM Description/i)) itemIdx = idx;
+                                if (cell.match(/Qty/i)) qtyIdx = idx;
+                            });
+                        }
+                        
+                        // Parse data row tds
+                        const dCells = dataHtml.match(/<td[^>]*>(.*?)<\/td>/gi);
+                        if (dCells) {
+                            if (itemIdx !== -1 && dCells[itemIdx]) {
+                                desc = dCells[itemIdx].replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, '').trim();
+                            }
+                            if (qtyIdx !== -1 && dCells[qtyIdx]) {
+                                airlines = dCells[qtyIdx].replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, '').trim();
+                            }
+                        }
+                    }
+                    
+                    // Ultimate Fallback if table regex fails
+                    if (desc === "N/A" || desc === "") {
+                        const fbDesc = htmlStr.match(/ITEM Description.*?<\/tr>\s*(?:<input[^>]*>\s*)*<tr[^>]*>.*?<td[^>]*>.*?<\/td>\s*<td[^>]*>.*?<\/td>\s*<td[^>]*>(.*?)<\/td>/i);
+                        if (fbDesc && fbDesc[1]) desc = fbDesc[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, '').trim();
+                    }
+                    if (airlines === "N/A" || airlines === "") {
+                        const fbQty = htmlStr.match(/Qty.*?<\/tr>\s*(?:<input[^>]*>\s*)*<tr[^>]*>.*?<td[^>]*>.*?<\/td>\s*<td[^>]*>.*?<\/td>\s*<td[^>]*>.*?<\/td>\s*<td[^>]*>.*?<\/td>\s*<td[^>]*>(.*?)<\/td>/i);
+                        if (fbQty && fbQty[1]) airlines = fbQty[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, '').trim();
                     }
                 } else {
-                    desc = extractDescription(doc);
-                    airlines = extractAirlines(doc);
-                    dest = extractDest(doc);
-                    weight = extractWeight(doc);
+                    desc = extractFieldFromDOM(doc, ['ITEM Description', 'Item Description', 'Description']);
+                    airlines = extractFieldFromDOM(doc, ['Airlines', 'Flight', 'Carrier']);
+                    dest = extractFieldFromDOM(doc, ['Destination', 'Port of Arrival', 'Port', 'Country']);
+                    weight = extractFieldFromDOM(doc, ['Gross Weight', 'Weight']);
                 }
 
                 const result = { desc, airlines, dest, weight };
