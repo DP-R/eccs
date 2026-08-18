@@ -9,17 +9,18 @@
         const path = window.location.pathname.toLowerCase();
         const actionName = path.substring(path.lastIndexOf('/') + 1);
         
-        // Exclude all non-list/non-search pages from filter injection
-        if (!actionName.includes('list') && !actionName.includes('search')) return;
+        // Exclude all non-list/non-search/non-submit pages from filter injection
+        if (!actionName.includes('list') && !actionName.includes('search') && !actionName.includes('submit')) return;
         
-        // Strictly whitelist ONLY the 6 exact Export List action endpoints
+        // Strictly whitelist ONLY the exact Export List action endpoints
         const exactExportPages = [
             'listexamcsb5.do',
             'listexamcsb4.do',
             'listcsb4.do',
             'listcsb3.do',
             'listcsb5.do',
-            'listsez.do'
+            'listsez.do',
+            'submitxrayremarks.do'
         ];
         // Whitelist Import List action endpoints
         const exactImportPages = [
