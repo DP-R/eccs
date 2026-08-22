@@ -9,17 +9,30 @@
     }
 
     // Toggle shortcut: Ctrl + Shift + Space toggles auto-clearance specifically
-    document.addEventListener("keydown", e => {
+    document.addEventListener("keydown", async (e) => {
         if (e.ctrlKey && e.shiftKey && e.code === "Space") {
             e.preventDefault();
             
-            const isEnabled = localStorage.autoXrayEnabled === "true";
-            localStorage.autoXrayEnabled = isEnabled ? "false" : "true";
+            const items = await new Promise(resolve => {
+                if (chrome && chrome.storage && chrome.storage.local) {
+                    chrome.storage.local.get({ autoXrayEnabled: true }, resolve);
+                } else {
+                    resolve({ autoXrayEnabled: localStorage.autoXrayEnabled !== "false" });
+                }
+            });
             
-            showToast(isEnabled ? 'OFF' : 'ON');
+            const newState = !items.autoXrayEnabled;
+            
+            if (chrome && chrome.storage && chrome.storage.local) {
+                chrome.storage.local.set({ autoXrayEnabled: newState });
+            }
+            // Keep localStorage in sync just in case
+            localStorage.autoXrayEnabled = newState ? "true" : "false";
+            
+            showToast(newState ? 'ON' : 'OFF');
             
             // If re-enabled, immediately run clearance check
-            if (!isEnabled) {
+            if (newState) {
                 automateXray();
             }
         }
