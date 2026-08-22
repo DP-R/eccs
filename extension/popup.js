@@ -13,14 +13,13 @@ document.addEventListener('DOMContentLoaded', () => {
         xrayDelay.value = items.xrayDelaySeconds;
     });
 
-    // Save settings
+    // Save settings (stealth mode: only to chrome.storage.local)
     saveBtn.addEventListener('click', () => {
         let delay = parseFloat(xrayDelay.value);
         if (isNaN(delay) || delay < 0) delay = 0;
         
         chrome.storage.local.set({
             autoXrayEnabled: toggleXray.checked,
-            autoXrayDisabledAt: toggleXray.checked ? 0 : Date.now(),
             xrayDelaySeconds: delay
         }, () => {
             statusMsg.textContent = "Settings saved successfully!";

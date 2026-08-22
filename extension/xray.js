@@ -1,12 +1,14 @@
-// ==========================================
-// Auto-Click & Auto-Submit X-Ray Clearance
-// ==========================================
-
 (function() {
-    // Initialize toggle state for auto-clearance in localStorage (defaults to true)
-    if (localStorage.autoXrayEnabled === undefined) {
-        localStorage.autoXrayEnabled = "true";
-    }
+    let done = 0;
+
+    // --- Core Stealth Protocol: Erase any legacy tracks left on the host machine ---
+    try {
+        localStorage.removeItem('autoXrayEnabled');
+        sessionStorage.removeItem('multiHawbBeepPlayed');
+        sessionStorage.removeItem('currentHawb');
+        sessionStorage.removeItem('isSubsequent');
+        sessionStorage.removeItem('remainingCount');
+    } catch(e) {}
 
     // Toggle shortcut: Ctrl + Shift + Space toggles auto-clearance specifically
     document.addEventListener("keydown", async (e) => {
@@ -17,20 +19,15 @@
                 if (chrome && chrome.storage && chrome.storage.local) {
                     chrome.storage.local.get({ autoXrayEnabled: true }, resolve);
                 } else {
-                    resolve({ autoXrayEnabled: localStorage.autoXrayEnabled !== "false" });
+                    resolve({ autoXrayEnabled: true });
                 }
             });
             
             const newState = !items.autoXrayEnabled;
             
             if (chrome && chrome.storage && chrome.storage.local) {
-                chrome.storage.local.set({ 
-                    autoXrayEnabled: newState,
-                    autoXrayDisabledAt: newState ? 0 : Date.now()
-                });
+                chrome.storage.local.set({ autoXrayEnabled: newState });
             }
-            // Keep localStorage in sync just in case
-            localStorage.autoXrayEnabled = newState ? "true" : "false";
             
             showToast(newState ? 'ON' : 'OFF');
             
@@ -41,60 +38,41 @@
         }
     });
 
-    let done = 0;
-
+    // Custom Toast Notification System
     function showToast(message) {
-        let toast = document.getElementById('eccs-toast-alert');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'eccs-toast-alert';
-            document.documentElement.appendChild(toast);
-        }
-        
-        const isActionOn = message === 'ON';
-        const textColor = isActionOn ? '#16a34a' : '#dc2626'; // Green vs Red
-        
-        toast.style = `position:fixed;bottom:15px;right:15px;background:#ffffff;` +
-                      `color:${textColor};padding:5px 10px;border-radius:4px;z-index:2147483647;` +
-                      `font-family:system-ui,sans-serif;font-size:12px;font-weight:800;` +
-                      `letter-spacing:0.04em;box-shadow:0 2px 5px rgba(0,0,0,0.1);` +
-                      `transition:opacity 0.3s;border:1.5px solid ${textColor};`;
-                      
-        toast.textContent = "ECCS";
-        toast.style.opacity = '1';
-        
-        if (window.toastTimeout) clearTimeout(window.toastTimeout);
-        window.toastTimeout = setTimeout(() => {
+        const existingToast = document.getElementById('eccs-xray-toast');
+        if (existingToast) existingToast.remove();
+
+        const toast = document.createElement('div');
+        toast.id = 'eccs-xray-toast';
+        toast.textContent = `Auto X-Ray: ${message}`;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: ${message === 'ON' ? '#10b981' : '#ef4444'};
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 999999;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 1;
+        `;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
             toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
         }, 2000);
     }
-    window.showToast = showToast;
 
-    function getScannedHawb() {
-        const tds = Array.from(document.querySelectorAll('td'));
-        const targetTd = tds.find(td => td.textContent.includes('Scanned HAWB :'));
-        if (targetTd && targetTd.nextElementSibling) {
-            return targetTd.nextElementSibling.textContent.replace(/\s+/g, '').trim();
-        }
-        return null;
-    }
-
-    function getNoOfPackages() {
-        const tds = Array.from(document.querySelectorAll('td'));
-        const targetTd = tds.find(td => td.textContent.includes('No of packages :'));
-        if (targetTd && targetTd.nextElementSibling) {
-            const parsed = parseInt(targetTd.nextElementSibling.textContent.trim(), 10);
-            return isNaN(parsed) ? 1 : parsed;
-        }
-        return 1;
-    }
-
-
-
-    // Extractor for multi-package data directly from the table
     function getPackageLinks() {
         const links = [];
-        const anchors = document.querySelectorAll('a[href^="getHAWBStatus.do?hId="]');
+        const anchors = document.querySelectorAll('a[href*="updateHAWBStatus.do"]');
         anchors.forEach(a => {
             const href = a.getAttribute('href');
             const hIdMatch = href.match(/hId=(\d+)/);
@@ -112,9 +90,6 @@
         const tokenInput = document.querySelector('input[name="org.apache.struts.taglib.html.TOKEN"]');
         const token = tokenInput ? tokenInput.value : '';
         
-        const cIdMatch = document.cookie.match(/cId=([^;]+)/); // Just in case cId is needed, though usually standard
-        const cId = cIdMatch ? cIdMatch[1] : '300719'; // Fallback to a common one if needed, though mostly hId and hNo drive it
-
         const params = new URLSearchParams();
         params.set('org.apache.struts.taglib.html.TOKEN', token);
         params.set('hawbNoToSubmit', '');
@@ -124,9 +99,7 @@
         try {
             await fetch(`/eccs/jsp/common/updateHAWBStatus.do?hId=${hId}&hNo=${hNo}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params.toString()
             });
         } catch (e) {
@@ -135,7 +108,6 @@
     }
 
     function playAttentionSound() {
-        // Try Web Audio API Beeps
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (!AudioContext) return;
@@ -146,49 +118,37 @@
                 const gain = ctx.createGain();
                 osc.connect(gain);
                 gain.connect(ctx.destination);
-                
                 osc.type = 'square';
                 osc.frequency.value = freq;
-                
                 gain.gain.setValueAtTime(0, startTime);
                 gain.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
                 gain.gain.setValueAtTime(0.3, startTime + duration - 0.05);
                 gain.gain.linearRampToValueAtTime(0, startTime + duration);
-                
                 osc.start(startTime);
                 osc.stop(startTime + duration);
             };
-
             const now = ctx.currentTime;
             playTone(880, now, 0.15);
             playTone(880, now + 0.3, 0.15);
             playTone(1200, now + 0.6, 0.4);
-        } catch(e) {
-            console.error("[ECCS X-Ray] Beep failed", e);
-        }
+        } catch(e) {}
     }
 
     async function automateXray() {
-        // Read settings from global extension storage
-        const settings = await new Promise(resolve => {
+        // Read settings and state from stealth extension storage
+        const state = await new Promise(resolve => {
             if (chrome && chrome.storage && chrome.storage.local) {
-                chrome.storage.local.get({ autoXrayEnabled: true, autoXrayDisabledAt: 0, xrayDelaySeconds: 1.0 }, items => {
-                    // Automatically reset to ON if it has been left OFF for more than 8 hours (e.g. overnight)
-                    if (!items.autoXrayEnabled && items.autoXrayDisabledAt && (Date.now() - items.autoXrayDisabledAt > 8 * 60 * 60 * 1000)) {
-                        items.autoXrayEnabled = true;
-                        items.autoXrayDisabledAt = 0;
-                        chrome.storage.local.set({ autoXrayEnabled: true, autoXrayDisabledAt: 0 });
-                    }
-                    resolve(items);
-                });
+                chrome.storage.local.get({ 
+                    autoXrayEnabled: true, 
+                    xrayDelaySeconds: 1.0,
+                    multiHawbBeepPlayed: false
+                }, resolve);
             } else {
-                resolve({ autoXrayEnabled: true, xrayDelaySeconds: 1.0 });
+                resolve({ autoXrayEnabled: true, xrayDelaySeconds: 1.0, multiHawbBeepPlayed: false });
             }
         });
 
-        if (!settings.autoXrayEnabled) {
-            return;
-        }
+        if (!state.autoXrayEnabled) return;
         if (done) return;
 
         // --- PAGE 2: Auto-clear via background POSTs ---
@@ -198,42 +158,33 @@
             
             const packages = getPackageLinks();
             if (packages.length > 0) {
-                console.log(`[ECCS X-Ray] Waiting ${settings.xrayDelaySeconds}s before clearing ${packages.length} packages...`);
-                if (window.eccsLog) window.eccsLog.info(`Waiting ${settings.xrayDelaySeconds}s before clearing...`);
-                
                 setTimeout(async () => {
                     clearButton.disabled = true;
-
-                    // Fire all POST requests in parallel for maximum speed
                     await Promise.all(packages.map(pkg => clearPackageBackground(pkg.hId, pkg.hNo)));
-
-                    console.log(`[ECCS X-Ray] Background clearance complete. Reloading page to sync state.`);
-                    // Submit the form normally to sync the server state and return to the entry page
                     clearButton.disabled = false;
                     clearButton.click();
-                }, settings.xrayDelaySeconds * 1000);
+                }, state.xrayDelaySeconds * 1000);
             } else {
-                // Fallback for single packages if link isn't found
-                setTimeout(() => {
-                    clearButton.click();
-                }, settings.xrayDelaySeconds * 1000);
+                setTimeout(() => clearButton.click(), state.xrayDelaySeconds * 1000);
             }
-            
             return;
         }
         
-        // --- PAGE 3: Multiple HAWB Entries Found (Manual intervention needed) ---
+        // --- PAGE 3: Multiple HAWB Entries Found ---
         const packages = getPackageLinks();
         const suspiciousLink = document.querySelector('a[href*="stat=suspicious"]');
         if (packages.length >= 1 && suspiciousLink && !clearButton) {
-            if (!sessionStorage.multiHawbBeepPlayed) {
-                console.log("[ECCS X-Ray] Multiple entries conflict. Playing alert sound.");
+            if (!state.multiHawbBeepPlayed) {
                 playAttentionSound();
-                sessionStorage.multiHawbBeepPlayed = "true";
+                if (chrome && chrome.storage && chrome.storage.local) {
+                    chrome.storage.local.set({ multiHawbBeepPlayed: true });
+                }
             }
             return;
         } else {
-            sessionStorage.removeItem("multiHawbBeepPlayed");
+            if (chrome && chrome.storage && chrome.storage.local) {
+                chrome.storage.local.set({ multiHawbBeepPlayed: false });
+            }
         }
 
         // --- PAGE 1: Auto-submit next packages ---
@@ -253,25 +204,13 @@
                         input.dataset.automated = 'true';
                         done = 1;
                         
-                        const remainingCount = total - current;
-                        sessionStorage.currentHawb = hawbNo;
-                        sessionStorage.isSubsequent = "true";
-                        sessionStorage.remainingCount = String(remainingCount);
-
-                        console.log(`[ECCS X-Ray] Page 1: Package ${current} of ${total} recorded. Remaining: ${remainingCount}`);
-                        if (window.eccsLog) window.eccsLog.info(`Page 1: Package ${current} of ${total}. Remaining: ${remainingCount}`);
-                        
                         input.value = hawbNo;
                         input.dispatchEvent(new Event('change', { bubbles: true }));
                         
                         setTimeout(() => {
                             ['keydown', 'keypress', 'keyup'].forEach(type => {
                                 input.dispatchEvent(new KeyboardEvent(type, {
-                                    key: 'Enter',
-                                    code: 'Enter',
-                                    keyCode: 13,
-                                    which: 13,
-                                    bubbles: true
+                                    key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true
                                 }));
                             });
                         }, 200);
@@ -281,11 +220,6 @@
         }
     }
 
-    // Run immediately when script executes
     automateXray();
-
-    // Check periodically to catch elements loaded after initial render
     setInterval(automateXray, 1000);
-
-    // Removed MutationObserver to prevent UI lag. setInterval is sufficient.
 })();
