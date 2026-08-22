@@ -177,14 +177,7 @@
                 console.log(`[ECCS X-Ray] Waiting ${settings.xrayDelaySeconds}s before clearing ${packages.length} packages...`);
                 if (window.eccsLog) window.eccsLog.info(`Waiting ${settings.xrayDelaySeconds}s before clearing...`);
                 
-                // Set the button to yellow to visually indicate it is in waiting mode
-                clearButton.value = `Clearing in ${settings.xrayDelaySeconds}s...`;
-                clearButton.style.backgroundColor = "#fbbf24";
-                clearButton.style.color = "#000";
-
                 setTimeout(async () => {
-                    clearButton.value = "Clearing...";
-                    clearButton.style.backgroundColor = "";
                     clearButton.disabled = true;
 
                     // Fire all POST requests in parallel for maximum speed
