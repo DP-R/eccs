@@ -24,7 +24,10 @@
             const newState = !items.autoXrayEnabled;
             
             if (chrome && chrome.storage && chrome.storage.local) {
-                chrome.storage.local.set({ autoXrayEnabled: newState });
+                chrome.storage.local.set({ 
+                    autoXrayEnabled: newState,
+                    autoXrayDisabledAt: newState ? 0 : Date.now()
+                });
             }
             // Keep localStorage in sync just in case
             localStorage.autoXrayEnabled = newState ? "true" : "false";
@@ -169,7 +172,15 @@
         // Read settings from global extension storage
         const settings = await new Promise(resolve => {
             if (chrome && chrome.storage && chrome.storage.local) {
-                chrome.storage.local.get({ autoXrayEnabled: true, xrayDelaySeconds: 1.0 }, resolve);
+                chrome.storage.local.get({ autoXrayEnabled: true, autoXrayDisabledAt: 0, xrayDelaySeconds: 1.0 }, items => {
+                    // Automatically reset to ON if it has been left OFF for more than 8 hours (e.g. overnight)
+                    if (!items.autoXrayEnabled && items.autoXrayDisabledAt && (Date.now() - items.autoXrayDisabledAt > 8 * 60 * 60 * 1000)) {
+                        items.autoXrayEnabled = true;
+                        items.autoXrayDisabledAt = 0;
+                        chrome.storage.local.set({ autoXrayEnabled: true, autoXrayDisabledAt: 0 });
+                    }
+                    resolve(items);
+                });
             } else {
                 resolve({ autoXrayEnabled: true, xrayDelaySeconds: 1.0 });
             }

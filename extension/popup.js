@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         chrome.storage.local.set({
             autoXrayEnabled: toggleXray.checked,
+            autoXrayDisabledAt: toggleXray.checked ? 0 : Date.now(),
             xrayDelaySeconds: delay
         }, () => {
             statusMsg.textContent = "Settings saved successfully!";
