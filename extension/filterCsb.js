@@ -37,6 +37,9 @@
         const isExportDetailList = exactExportPages.includes(actionName);
         const isImportDetailList = exactImportPages.includes(actionName);
         const isActiveDetailList = isExportDetailList || isImportDetailList;
+        
+        // Strict whitelist enforcement: DO NOT run on any unapproved pages
+        if (!isActiveDetailList) return;
 
         // Iterate through all tables to find the actual table containing data rows
         let targetTable = null;
@@ -47,6 +50,12 @@
 
         for (const table of candidateTables) {
             if (table.querySelector('.eccs-filter-row')) continue;
+            
+            const normText = table.textContent.replace(/\s+/g, ' ').toLowerCase();
+            
+            // Smart table verification: Must contain CSB/CBE/HAWB or 'Reference' keywords to avoid injecting into random ECCS lists
+            const hasTargetKeywords = /csb|cbe|shipping\s*bill|bill\s*of\s*entry|hawb|reference\s*no|ref\s*no/i.test(normText);
+            if (!hasTargetKeywords) continue;
 
             const rows = Array.from(table.querySelectorAll('tr'));
             
