@@ -74,8 +74,8 @@
                 return (hasInput || hasDetailLink) && cellCount >= 3;
             });
 
-            // ONLY target tables containing 2 or more data rows (multi-HAWB list views). Single-HAWB views are skipped.
-            if (foundDataRows.length >= 2) {
+            // ONLY target tables containing 1 or more data rows (multi-HAWB list views). 
+            if (foundDataRows.length >= 1) {
                 targetTable = table;
                 headerRow = foundHeader;
                 dataRows = foundDataRows;
@@ -83,8 +83,8 @@
             }
         }
 
-        // Do NOT inject filter rows or extra columns on single-HAWB tables or empty lists
-        if (!targetTable || !headerRow || dataRows.length < 2) return;
+        // Do NOT inject filter rows or extra columns on non-list views or empty lists
+        if (!targetTable || !headerRow || dataRows.length < 1) return;
         if (targetTable.querySelector('.eccs-filter-row')) return;
 
         console.log("[ECCS Extension] Initializing filters on target list view...");
