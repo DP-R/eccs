@@ -172,13 +172,13 @@
             Array.from(targetTable.querySelectorAll('td[colspan]')).forEach(td => {
                 const currentCols = parseInt(td.getAttribute('colspan'), 10);
                 if (currentCols >= 5) {
-                    td.setAttribute('colspan', currentCols + 4);
+                    td.setAttribute('colspan', currentCols + (isExportDetailList ? 6 : 4));
                 }
             });
 
             // Append 4 new header cells at the far right
             const headers = isExportDetailList ? [
-                "Description of Goods", "Airlines", "Airport of Destination", "Manifest Weight"
+                "Consignor Name", "Goods Description", "FOB Value (Rs.)", "Destination", "Weight", "Airlines / Flight"
             ] : [
                 "Item Description", "Qty", "Value (Rs.)", "Consignee"
             ];
@@ -448,7 +448,30 @@
             ]);
         }
 
+
+        function extractConsignor(container) {
+            return extractFieldFromDOM(container, [
+                'Name of Consignor',
+                'Consignor Name',
+                'Name of the Consignor',
+                'Exporter Name',
+                'Shipper Name'
+            ]);
+        }
+
+        function extractFobValue(container) {
+            return extractFieldFromDOM(container, [
+                'FOB Value',
+                'Invoice Value',
+                'Assessable Value',
+                'Total Value',
+                'Value (Rs.)',
+                'FOB Value(Rs.)'
+            ]);
+        }
+
         // Removed triggerNativeHover entirely to prevent DOM races
+
 
         // Silent Background Fetching (Fallback for ALL rows when hover is rate-limited or fails)
         async function fetchBackgroundDetails(actionUrl, idOrCsbNo, index, argMatches) {
@@ -608,10 +631,15 @@
                     dest = valArray.length > 0 ? valArray.join('<hr style="margin:4px 0;border-color:#cbd5e1;">') : "N/A";
                     weight = consignee;
                 } else {
-                    desc = extractFieldFromDOM(doc, ['ITEM Description', 'Item Description', 'Description']);
-                    airlines = extractFieldFromDOM(doc, ['Airlines', 'Flight', 'Carrier']);
-                    dest = extractFieldFromDOM(doc, ['Destination', 'Port of Arrival', 'Port', 'Country']);
-                    weight = extractFieldFromDOM(doc, ['Gross Weight', 'Weight']);
+                    desc = extractDescription(doc);
+                    airlines = extractAirlines(doc);
+                    dest = extractDest(doc);
+                    weight = extractWeight(doc);
+                    const consignor = extractConsignor(doc);
+                    const fob = extractFobValue(doc);
+                    const result = { desc, airlines, dest, weight, consignor, fob };
+                    try { sessionStorage.setItem(cacheKey, JSON.stringify(result)); } catch(e) {}
+                    return result;
                 }
 
                 const result = { desc, airlines, dest, weight };
@@ -638,10 +666,19 @@
             if (activeLoadId !== thisLoadId) return;
 
             // Update row UI instantly
-            task.descTd.innerHTML = (details && details.desc) ? details.desc : "N/A";
-            task.airTd.innerHTML = (details && details.airlines) ? details.airlines : "N/A";
-            task.destTd.innerHTML = (details && details.dest) ? details.dest : "N/A";
-            task.weightTd.innerHTML = (details && details.weight) ? details.weight : "N/A";
+            if (task.isExport) {
+                task.dynamicTds[0].innerHTML = (details && details.consignor) ? details.consignor : "N/A";
+                task.dynamicTds[1].innerHTML = (details && details.desc) ? details.desc : "N/A";
+                task.dynamicTds[2].innerHTML = (details && details.fob) ? details.fob : "N/A";
+                task.dynamicTds[3].innerHTML = (details && details.dest) ? details.dest : "N/A";
+                task.dynamicTds[4].innerHTML = (details && details.weight) ? details.weight : "N/A";
+                task.dynamicTds[5].innerHTML = (details && details.airlines) ? details.airlines : "N/A";
+            } else {
+                task.dynamicTds[0].innerHTML = (details && details.desc) ? details.desc : "N/A";
+                task.dynamicTds[1].innerHTML = (details && details.airlines) ? details.airlines : "N/A";
+                task.dynamicTds[2].innerHTML = (details && details.dest) ? details.dest : "N/A";
+                task.dynamicTds[3].innerHTML = (details && details.weight) ? details.weight : "N/A";
+            }
         }
 
         // --- Load details for Export & Import Clearance Lists in ULTRA FAST parallel batches ---
@@ -675,21 +712,15 @@
                 }
 
                 // Append 4 new columns at the far right of the row
-                const descTd = document.createElement('td');
-                descTd.height = "25"; descTd.width = "130"; descTd.align = "center"; descTd.className = "eccs-desc-cell"; descTd.textContent = "...";
-                row.appendChild(descTd);
-
-                const airTd = document.createElement('td');
-                airTd.height = "25"; airTd.width = "130"; airTd.align = "center"; airTd.className = "eccs-desc-cell"; airTd.textContent = "...";
-                row.appendChild(airTd);
-
-                const destTd = document.createElement('td');
-                destTd.height = "25"; destTd.width = "130"; destTd.align = "center"; destTd.className = "eccs-desc-cell"; destTd.textContent = "...";
-                row.appendChild(destTd);
-
-                const weightTd = document.createElement('td');
-                weightTd.height = "25"; weightTd.width = "130"; weightTd.align = "center"; weightTd.className = "eccs-desc-cell"; weightTd.textContent = "...";
-                row.appendChild(weightTd);
+                
+                const colsCount = isExportDetailList ? 6 : 4;
+                const dynamicTds = [];
+                for(let c = 0; c < colsCount; c++) {
+                    const td = document.createElement('td');
+                    td.height = "25"; td.width = "130"; td.align = "center"; td.className = "eccs-desc-cell"; td.innerHTML = "...";
+                    row.appendChild(td);
+                    dynamicTds.push(td);
+                }
 
                 return { row, rowIndex, index, link, csbNo, actionUrl, argMatches: cleanMatches, descTd, airTd, destTd, weightTd };
             });
