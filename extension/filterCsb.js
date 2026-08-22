@@ -59,10 +59,12 @@
 
             const rows = Array.from(table.querySelectorAll('tr'));
             
-            // Assume the header is the first row that has multiple columns and isn't a pagination footer
+            // Find the actual table header row using relaxed keywords
             const foundHeader = rows.find(row => {
-                const cells = row.querySelectorAll('td, th');
-                return cells.length >= 3 && !row.querySelector('td[colspan], th[colspan]');
+                const text = row.textContent.replace(/\s+/g, ' ').toLowerCase();
+                const hasPrimary = /csb|cbe|shipping\s*bill|bill\s*of\s*entry|hawb|reference\s*no|ref\s*no|s\.no|sno/i.test(text);
+                const hasSecondary = /date|status|courier|weight|value|destination/i.test(text);
+                return hasPrimary && hasSecondary && !row.querySelector('input[type="checkbox"]');
             });
 
             if (!foundHeader) continue;
