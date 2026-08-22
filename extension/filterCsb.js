@@ -48,16 +48,12 @@
         for (const table of candidateTables) {
             if (table.querySelector('.eccs-filter-row')) continue;
 
-            const normText = table.textContent.replace(/\s+/g, ' ');
-            const hasCsbOrCbe = /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry|HAWB/i.test(normText);
-            const hasCourierOrHawb = /Courier|HAWB|Status/i.test(normText);
-
-            if (!hasCsbOrCbe || !hasCourierOrHawb) continue;
-
             const rows = Array.from(table.querySelectorAll('tr'));
+            
+            // Assume the header is the first row that has multiple columns and isn't a pagination footer
             const foundHeader = rows.find(row => {
-                const text = row.textContent.replace(/\s+/g, ' ');
-                return /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry|HAWB/i.test(text) && (/Courier|HAWB|Status|Number/i.test(text));
+                const cells = row.querySelectorAll('td, th');
+                return cells.length >= 3 && !row.querySelector('td[colspan], th[colspan]');
             });
 
             if (!foundHeader) continue;
