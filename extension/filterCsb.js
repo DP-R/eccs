@@ -51,20 +51,17 @@
         for (const table of candidateTables) {
             if (table.querySelector('.eccs-filter-row')) continue;
             
-            const normText = table.textContent.replace(/\s+/g, ' ').toLowerCase();
-            
-            // Smart table verification: Must contain CSB/CBE/HAWB or 'Reference' keywords to avoid injecting into random ECCS lists
-            const hasTargetKeywords = /csb|cbe|shipping\s*bill|bill\s*of\s*entry|hawb|reference\s*no|ref\s*no/i.test(normText);
-            if (!hasTargetKeywords) continue;
+            const normText = table.textContent.replace(/\s+/g, ' ');
+            const hasCsbOrCbe = /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry|HAWB/i.test(normText);
+            const hasCourierOrHawb = /Courier|HAWB|Status/i.test(normText);
+
+            if (!hasCsbOrCbe || !hasCourierOrHawb) continue;
 
             const rows = Array.from(table.querySelectorAll('tr'));
             
-            // Find the actual table header row using relaxed keywords
             const foundHeader = rows.find(row => {
-                const text = row.textContent.replace(/\s+/g, ' ').toLowerCase();
-                const hasPrimary = /csb|cbe|shipping\s*bill|bill\s*of\s*entry|hawb|reference\s*no|ref\s*no|s\.no|sno/i.test(text);
-                const hasSecondary = /date|status|courier|weight|value|destination/i.test(text);
-                return hasPrimary && hasSecondary && !row.querySelector('input[type="checkbox"]');
+                const text = row.textContent.replace(/\s+/g, ' ');
+                return /CSB|CBE|Shipping\s*Bill|Bill\s*of\s*Entry|HAWB/i.test(text) && (/Courier|HAWB|Status|Number/i.test(text));
             });
 
             if (!foundHeader) continue;
