@@ -271,10 +271,24 @@
                     if (input && input.value.trim()) {
                         const query = input.value.toLowerCase().trim();
                         const cellText = (cells[i] ? cells[i].textContent : '').toLowerCase().replace(/\s+/g, ' ');
-                        if (!cellText.includes(query)) {
-                            isMatch = false;
-                            break;
+                        
+                        // Support comma-separated AND conditions and ! NOT conditions
+                        const terms = query.split(',').map(t => t.trim()).filter(t => t);
+                        for (const term of terms) {
+                            if (term.startsWith('!')) {
+                                const negTerm = term.substring(1).trim();
+                                if (negTerm && cellText.includes(negTerm)) {
+                                    isMatch = false;
+                                    break;
+                                }
+                            } else {
+                                if (!cellText.includes(term)) {
+                                    isMatch = false;
+                                    break;
+                                }
+                            }
                         }
+                        if (!isMatch) break;
                     }
                 }
 
