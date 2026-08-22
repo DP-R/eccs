@@ -746,7 +746,7 @@
                     dynamicTds.push(td);
                 }
 
-                return { row, rowIndex, index, link, csbNo, actionUrl, argMatches: cleanMatches, descTd, airTd, destTd, weightTd };
+                return { row, rowIndex, index, link, csbNo, actionUrl, argMatches: cleanMatches, dynamicTds, isExport: isExportDetailList };
             });
 
             // We MUST process sequentially due to Apache Struts 1.x session race conditions!
