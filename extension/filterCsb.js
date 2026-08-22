@@ -31,7 +31,8 @@
             'listcbexi.do',
             'listcbexii.do',
             'listcbexiii.do',
-            'searchrboe.do'
+            'searchrboe.do',
+            'submitexamreport11.do'
         ];
         const isExportDetailList = exactExportPages.includes(actionName);
         const isImportDetailList = exactImportPages.includes(actionName);
