@@ -153,7 +153,16 @@
     }
 
     async function automateXray() {
-        if (localStorage.autoXrayEnabled === "false") {
+        // Read settings from global extension storage
+        const settings = await new Promise(resolve => {
+            if (chrome && chrome.storage && chrome.storage.local) {
+                chrome.storage.local.get({ autoXrayEnabled: true, xrayDelaySeconds: 1.0 }, resolve);
+            } else {
+                resolve({ autoXrayEnabled: true, xrayDelaySeconds: 1.0 });
+            }
+        });
+
+        if (!settings.autoXrayEnabled) {
             return;
         }
         if (done) return;
@@ -165,22 +174,32 @@
             
             const packages = getPackageLinks();
             if (packages.length > 0) {
-                console.log(`[ECCS X-Ray] Executing direct API clear for ${packages.length} packages...`);
-                if (window.eccsLog) window.eccsLog.info(`Executing direct API clear for ${packages.length} packages...`);
+                console.log(`[ECCS X-Ray] Waiting ${settings.xrayDelaySeconds}s before clearing ${packages.length} packages...`);
+                if (window.eccsLog) window.eccsLog.info(`Waiting ${settings.xrayDelaySeconds}s before clearing...`);
+                
+                // Set the button to yellow to visually indicate it is in waiting mode
+                clearButton.value = `Clearing in ${settings.xrayDelaySeconds}s...`;
+                clearButton.style.backgroundColor = "#fbbf24";
+                clearButton.style.color = "#000";
 
-                clearButton.value = "Clearing...";
-                clearButton.disabled = true;
+                setTimeout(async () => {
+                    clearButton.value = "Clearing...";
+                    clearButton.style.backgroundColor = "";
+                    clearButton.disabled = true;
 
-                // Fire all POST requests in parallel for maximum speed
-                await Promise.all(packages.map(pkg => clearPackageBackground(pkg.hId, pkg.hNo)));
+                    // Fire all POST requests in parallel for maximum speed
+                    await Promise.all(packages.map(pkg => clearPackageBackground(pkg.hId, pkg.hNo)));
 
-                console.log(`[ECCS X-Ray] Background clearance complete. Reloading page to sync state.`);
-                // Submit the form normally to sync the server state and return to the entry page
-                clearButton.disabled = false;
-                clearButton.click();
+                    console.log(`[ECCS X-Ray] Background clearance complete. Reloading page to sync state.`);
+                    // Submit the form normally to sync the server state and return to the entry page
+                    clearButton.disabled = false;
+                    clearButton.click();
+                }, settings.xrayDelaySeconds * 1000);
             } else {
                 // Fallback for single packages if link isn't found
-                clearButton.click();
+                setTimeout(() => {
+                    clearButton.click();
+                }, settings.xrayDelaySeconds * 1000);
             }
             
             return;

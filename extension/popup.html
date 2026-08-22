@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECCS Control Panel</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            width: 320px;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background: #1e293b;
+            color: white;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .container {
+            padding: 16px;
+        }
+        .setting-group {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .setting-row:last-child {
+            margin-bottom: 0;
+        }
+        .setting-label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .setting-desc {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+            display: block;
+        }
+        
+        /* Toggle Switch CSS */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 22px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #10b981;
+        }
+        input:checked + .slider:before {
+            transform: translateX(18px);
+        }
+
+        /* Number Input */
+        .num-input {
+            width: 60px;
+            padding: 4px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 13px;
+            text-align: right;
+        }
+        .num-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .save-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+        .save-btn:hover {
+            background: #1d4ed8;
+        }
+        .status {
+            text-align: center;
+            font-size: 11px;
+            color: #10b981;
+            height: 16px;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <span>ECCS Dashboard Controller</span>
+    </div>
+
+    <div class="container">
+        <div class="setting-group">
+            <div class="setting-row">
+                <div>
+                    <span class="setting-label">X-Ray Auto-Clear</span>
+                    <span class="setting-desc">Automatically submit packages</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggleXray">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 10px 0;">
+            <div class="setting-row">
+                <div>
+                    <span class="setting-label">Clearance Delay</span>
+                    <span class="setting-desc">Wait time before clearing (seconds)</span>
+                </div>
+                <div>
+                    <input type="number" id="xrayDelay" class="num-input" min="0" max="60" step="0.5">
+                    <span style="font-size: 12px; color: #64748b; margin-left: 4px;">sec</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="save-btn" id="saveBtn">Save Settings</button>
+        <div class="status" id="statusMsg"></div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

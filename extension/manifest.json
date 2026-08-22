@@ -4,17 +4,38 @@
   "version": "1.0",
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["logger.js", "filterCsb.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "logger.js",
+        "filterCsb.js"
+      ],
       "run_at": "document_end",
       "all_frames": true,
       "world": "MAIN"
     },
     {
-      "matches": ["<all_urls>"],
-      "js": ["logger.js", "lock.js", "login.js", "expand.js", "resize.js", "xray.js", "beautifyDetails.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "logger.js",
+        "lock.js",
+        "login.js",
+        "expand.js",
+        "resize.js",
+        "xray.js"
+      ],
       "run_at": "document_end",
       "all_frames": true
     }
-  ]
+  ],
+  "permissions": [
+    "storage"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ECCS Settings"
+  }
 }
