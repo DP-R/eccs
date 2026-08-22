@@ -392,21 +392,46 @@
 
     if (ccrLink && ccrContainer) {
         let url = ccrLink.getAttribute('href');
+        let fetchUrl = url;
+        let fetchOptions = { cache: "no-store" };
+        
         if (url.startsWith("javascript:")) {
             const matches = url.match(/'([^']+)'/g);
             if (matches && matches.length >= 2) {
-                if (matches.length >= 3) {
-                    url = `${matches[0].replace(/'/g, '')}?refNo=${matches[1].replace(/'/g, '')}&hawbId=${matches[2].replace(/'/g, '')}`;
-                } else {
-                    url = `${matches[0].replace(/'/g, '')}?refNo=${matches[1].replace(/'/g, '')}`;
-                }
+                const actionUrl = matches[0].replace(/'/g, '');
+                const cbeRefNo = matches[1].replace(/'/g, '');
+                const hawbId = matches.length >= 3 ? matches[2].replace(/'/g, '') : '';
+                
+                fetchUrl = actionUrl;
+                const formData = new URLSearchParams();
+                if (hawbId) formData.append('hawbId', hawbId);
+                formData.append('cbeRefNo', cbeRefNo);
+                formData.append('cbeXIINumber', cbeRefNo);
+                formData.append('hawbNumber', hawbId || cbeRefNo);
+                
+                fetchOptions = {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    cache: "no-store"
+                };
             }
         }
-        url += (url.includes('?') ? '&' : '?') + '_ts=' + new Date().getTime(); // Cache buster
-        fetch(url, { cache: "no-store" })
+        
+        fetch(fetchUrl, fetchOptions)
             .then(res => res.text())
-            .then(html => { ccrContainer.innerHTML = cleanInstructionHTML(html, 'ccr'); })
-            .catch(() => { ccrContainer.innerHTML = pageCcrText !== "N/A" ? `<div style="font-size: 11px;">${pageCcrText}</div>` : `<div style="color: #64748b;">No CCR instructions required.</div>`; });
+            .then(html => { 
+                const cleaned = cleanInstructionHTML(html, 'ccr');
+                // Ensure it didn't just return an empty error page
+                if (cleaned.includes('No CCR') || cleaned.length < 50) {
+                    ccrContainer.innerHTML = `<button onclick="${url.replace(/"/g, '&quot;')}" style="background:#2563eb; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:600;">Open CCR Native Popup</button>`;
+                } else {
+                    ccrContainer.innerHTML = cleaned; 
+                }
+            })
+            .catch(() => { 
+                ccrContainer.innerHTML = `<button onclick="${url.replace(/"/g, '&quot;')}" style="background:#2563eb; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:600;">Open CCR Native Popup</button>`;
+            });
     } else if (ccrContainer) {
         ccrContainer.innerHTML = (pageCcrText && pageCcrText !== "N/A") ? `<div style="font-size: 11px;">${pageCcrText}</div>` : `<div style="color: #64748b;">No CCR instructions required.</div>`;
     }
@@ -418,21 +443,45 @@
 
     if (rmsLink && rmsContainer) {
         let url = rmsLink.getAttribute('href');
+        let fetchUrl = url;
+        let fetchOptions = { cache: "no-store" };
+        
         if (url.startsWith("javascript:")) {
             const matches = url.match(/'([^']+)'/g);
             if (matches && matches.length >= 2) {
-                if (matches.length >= 3) {
-                    url = `${matches[0].replace(/'/g, '')}?refNo=${matches[1].replace(/'/g, '')}&hawbId=${matches[2].replace(/'/g, '')}`;
-                } else {
-                    url = `${matches[0].replace(/'/g, '')}?refNo=${matches[1].replace(/'/g, '')}`;
-                }
+                const actionUrl = matches[0].replace(/'/g, '');
+                const cbeRefNo = matches[1].replace(/'/g, '');
+                const hawbId = matches.length >= 3 ? matches[2].replace(/'/g, '') : '';
+                
+                fetchUrl = actionUrl;
+                const formData = new URLSearchParams();
+                if (hawbId) formData.append('hawbId', hawbId);
+                formData.append('cbeRefNo', cbeRefNo);
+                formData.append('cbeXIINumber', cbeRefNo);
+                formData.append('hawbNumber', hawbId || cbeRefNo);
+                
+                fetchOptions = {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    cache: "no-store"
+                };
             }
         }
-        url += (url.includes('?') ? '&' : '?') + '_ts=' + new Date().getTime(); // Cache buster
-        fetch(url, { cache: "no-store" })
+        
+        fetch(fetchUrl, fetchOptions)
             .then(res => res.text())
-            .then(html => { rmsContainer.innerHTML = cleanInstructionHTML(html, 'rms'); })
-            .catch(() => { rmsContainer.innerHTML = pageRmsText !== "N/A" ? `<div style="font-size: 11px;">${pageRmsText}</div>` : `<div style="color: #64748b;">No RMS instructions.</div>`; });
+            .then(html => { 
+                const cleaned = cleanInstructionHTML(html, 'rms');
+                if (cleaned.includes('No RMS') || cleaned.length < 50) {
+                    rmsContainer.innerHTML = `<button onclick="${url.replace(/"/g, '&quot;')}" style="background:#2563eb; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:600;">Open RMS Native Popup</button>`;
+                } else {
+                    rmsContainer.innerHTML = cleaned; 
+                }
+            })
+            .catch(() => { 
+                rmsContainer.innerHTML = `<button onclick="${url.replace(/"/g, '&quot;')}" style="background:#2563eb; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:600;">Open RMS Native Popup</button>`;
+            });
     } else if (rmsContainer) {
         rmsContainer.innerHTML = (pageRmsText && pageRmsText !== "N/A") ? `<div style="font-size: 11px;">${pageRmsText}</div>` : `<div style="color: #64748b;">No RMS instructions.</div>`;
     }
