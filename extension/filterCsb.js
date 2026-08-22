@@ -172,15 +172,15 @@
             Array.from(targetTable.querySelectorAll('td[colspan]')).forEach(td => {
                 const currentCols = parseInt(td.getAttribute('colspan'), 10);
                 if (currentCols >= 5) {
-                    td.setAttribute('colspan', currentCols + (isExportDetailList ? 6 : 4));
+                    td.setAttribute('colspan', currentCols + headers.length);
                 }
             });
 
             // Append 4 new header cells at the far right
             const headers = isExportDetailList ? [
-                "Consignor Name", "Goods Description", "FOB Value (Rs.)", "Destination", "Weight", "Airlines / Flight"
+                "Consignor", "Goods Description", "FOB Value (Rs.)", "Destination", "Weight", "Airlines / Flight"
             ] : [
-                "Item Description", "Qty", "Value (Rs.)", "Consignee"
+                "Consignee", "Weight", "CTSH", "Item Description", "Origin", "Qty", "Assessable Value", "Duty (Rs.)"
             ];
             
             headers.forEach(title => {
@@ -549,18 +549,24 @@
                     let descArray = [];
                     let qtyArray = [];
                     let valArray = [];
+                    let ctshArray = [];
+                    let originArray = [];
                     let consignee = "N/A";
+                    let duty = "N/A";
                     
-                    // 1. Find the Consignee using native DOM
+                    // 1. Find Consignee, Weight, and Duty using native DOM
+                    weight = extractWeight(doc);
+                    
                     const allCells = Array.from(doc.querySelectorAll('td, th'));
                     for (let i = 0; i < allCells.length - 1; i++) {
                         const text = (allCells[i].textContent || '').trim().toLowerCase();
                         if (text === 'name of consignee:' || text === 'name of consignee :') {
                             const nextCell = allCells[i+1];
-                            if (nextCell) {
-                                consignee = (nextCell.textContent || '').replace(/&nbsp;/gi, '').trim();
-                                break;
-                            }
+                            if (nextCell) consignee = (nextCell.textContent || '').replace(/&nbsp;/gi, '').trim();
+                        }
+                        if (text === 'duty (rs.):' || text === 'duty(rs.):' || text === 'total duty (rs.):') {
+                            const nextCell = allCells[i+1];
+                            if (nextCell) duty = (nextCell.textContent || '').replace(/&nbsp;/gi, '').trim();
                         }
                     }
 
@@ -583,7 +589,7 @@
                     }
 
                     if (itemsTable && headerRow) {
-                        let descIdx = -1, qtyIdx = -1, valIdx = -1;
+                        let descIdx = -1, qtyIdx = -1, valIdx = -1, ctshIdx = -1, originIdx = -1;
                         const hCells = Array.from(headerRow.querySelectorAll('td, th'));
                         
                         hCells.forEach((cell, idx) => {
@@ -591,6 +597,8 @@
                             if (text.includes('description')) descIdx = idx;
                             else if (text.includes('qty') || text.includes('quantity')) qtyIdx = idx;
                             else if (text.includes('assessable value') || text.includes('value (rs')) valIdx = idx;
+                            else if (text === 'ctsh') ctshIdx = idx;
+                            else if (text.includes('origin')) originIdx = idx;
                         });
 
                         const allTrs = Array.from(itemsTable.querySelectorAll('tr'));
@@ -607,12 +615,16 @@
                                 const dText = (cells[descIdx].textContent || '').replace(/&nbsp;/gi, '').trim();
                                 const qText = qtyIdx !== -1 ? (cells[qtyIdx].textContent || '').replace(/&nbsp;/gi, '').trim() : "N/A";
                                 const vText = valIdx !== -1 ? (cells[valIdx].textContent || '').replace(/&nbsp;/gi, '').trim() : "N/A";
+                                const cText = ctshIdx !== -1 ? (cells[ctshIdx].textContent || '').replace(/&nbsp;/gi, '').trim() : "N/A";
+                                const oText = originIdx !== -1 ? (cells[originIdx].textContent || '').replace(/&nbsp;/gi, '').trim() : "N/A";
                                 
                                 // Only add if it looks like a valid item (not empty, not just a random label)
                                 if (dText && dText !== 'N/A' && dText.length > 1 && !dText.toLowerCase().includes('dutiable goods')) {
                                     descArray.push(dText);
                                     qtyArray.push(qText);
                                     valArray.push(vText);
+                                    ctshArray.push(cText);
+                                    originArray.push(oText);
                                 } else if (dText.toLowerCase().includes('dutiable goods') && cells.length > descIdx + 1) {
                                     // Sometimes shifted due to CTSH?
                                     const shiftedDText = (cells[descIdx + 1].textContent || '').replace(/&nbsp;/gi, '').trim();
@@ -620,6 +632,8 @@
                                         descArray.push(shiftedDText);
                                         qtyArray.push(qtyIdx !== -1 ? (cells[qtyIdx + 1]?.textContent || '').replace(/&nbsp;/gi, '').trim() : "N/A");
                                         valArray.push(valIdx !== -1 ? (cells[valIdx + 1]?.textContent || '').replace(/&nbsp;/gi, '').trim() : "N/A");
+                                        ctshArray.push(ctshIdx !== -1 ? (cells[ctshIdx + 1]?.textContent || '').replace(/&nbsp;/gi, '').trim() : "N/A");
+                                        originArray.push(originIdx !== -1 ? (cells[originIdx + 1]?.textContent || '').replace(/&nbsp;/gi, '').trim() : "N/A");
                                     }
                                 }
                             }
@@ -629,7 +643,13 @@
                     desc = descArray.length > 0 ? descArray.join('<hr style="margin:4px 0;border-color:#cbd5e1;">') : "N/A";
                     airlines = qtyArray.length > 0 ? qtyArray.join('<hr style="margin:4px 0;border-color:#cbd5e1;">') : "N/A";
                     dest = valArray.length > 0 ? valArray.join('<hr style="margin:4px 0;border-color:#cbd5e1;">') : "N/A";
-                    weight = consignee;
+                    
+                    const ctsh = ctshArray.length > 0 ? ctshArray.join('<hr style="margin:4px 0;border-color:#cbd5e1;">') : "N/A";
+                    const origin = originArray.length > 0 ? originArray.join('<hr style="margin:4px 0;border-color:#cbd5e1;">') : "N/A";
+                    
+                    const result = { consignee, weight, ctsh, desc, origin, airlines, dest, duty };
+                    try { sessionStorage.setItem(cacheKey, JSON.stringify(result)); } catch(e) {}
+                    return result;
                 } else {
                     desc = extractDescription(doc);
                     airlines = extractAirlines(doc);
@@ -674,10 +694,14 @@
                 task.dynamicTds[4].innerHTML = (details && details.weight) ? details.weight : "N/A";
                 task.dynamicTds[5].innerHTML = (details && details.airlines) ? details.airlines : "N/A";
             } else {
-                task.dynamicTds[0].innerHTML = (details && details.desc) ? details.desc : "N/A";
-                task.dynamicTds[1].innerHTML = (details && details.airlines) ? details.airlines : "N/A";
-                task.dynamicTds[2].innerHTML = (details && details.dest) ? details.dest : "N/A";
-                task.dynamicTds[3].innerHTML = (details && details.weight) ? details.weight : "N/A";
+                task.dynamicTds[0].innerHTML = (details && details.consignee) ? details.consignee : "N/A";
+                task.dynamicTds[1].innerHTML = (details && details.weight) ? details.weight : "N/A";
+                task.dynamicTds[2].innerHTML = (details && details.ctsh) ? details.ctsh : "N/A";
+                task.dynamicTds[3].innerHTML = (details && details.desc) ? details.desc : "N/A";
+                task.dynamicTds[4].innerHTML = (details && details.origin) ? details.origin : "N/A";
+                task.dynamicTds[5].innerHTML = (details && details.airlines) ? details.airlines : "N/A";
+                task.dynamicTds[6].innerHTML = (details && details.dest) ? details.dest : "N/A";
+                task.dynamicTds[7].innerHTML = (details && details.duty) ? details.duty : "N/A";
             }
         }
 
@@ -713,7 +737,7 @@
 
                 // Append 4 new columns at the far right of the row
                 
-                const colsCount = isExportDetailList ? 6 : 4;
+                const colsCount = isExportDetailList ? 6 : 8;
                 const dynamicTds = [];
                 for(let c = 0; c < colsCount; c++) {
                     const td = document.createElement('td');
