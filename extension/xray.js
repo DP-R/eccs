@@ -70,42 +70,7 @@
         }, 2000);
     }
 
-    function getPackageLinks() {
-        const links = [];
-        const anchors = document.querySelectorAll('a[href*="updateHAWBStatus.do"]');
-        anchors.forEach(a => {
-            const href = a.getAttribute('href');
-            const hIdMatch = href.match(/hId=(\d+)/);
-            const hNoMatch = href.match(/hNo=(\d+)/);
-            
-            if (hIdMatch && hNoMatch) {
-                links.push({ hId: hIdMatch[1], hNo: hNoMatch[1] });
-            }
-        });
-        return links;
-    }
-
-    // Direct API call to clear package instantly instead of clicking
-    async function clearPackageBackground(hId, hNo) {
-        const tokenInput = document.querySelector('input[name="org.apache.struts.taglib.html.TOKEN"]');
-        const token = tokenInput ? tokenInput.value : '';
-        
-        const params = new URLSearchParams();
-        params.set('org.apache.struts.taglib.html.TOKEN', token);
-        params.set('hawbNoToSubmit', '');
-        params.set('selecteduploadedDocID', '');
-        params.set('hawbNo', '');
-        
-        try {
-            await fetch(`/eccs/jsp/common/updateHAWBStatus.do?hId=${hId}&hNo=${hNo}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params.toString()
-            });
-        } catch (e) {
-            console.error('[ECCS X-Ray] Background fetch failed for', hId, e);
-        }
-    }
+    // Functions getPackageLinks and clearPackageBackground have been removed to optimize speed.
 
     function playAttentionSound() {
         try {
@@ -151,29 +116,22 @@
         if (!state.autoXrayEnabled) return;
         if (done) return;
 
-        // --- PAGE 2: Auto-clear via background POSTs ---
+        // --- PAGE 2: Auto-clear ---
         const clearButton = document.querySelector('input[value="X-Ray Clear"]');
         if (clearButton) {
             done = 1;
             
-            const packages = getPackageLinks();
-            if (packages.length > 0) {
-                setTimeout(async () => {
-                    clearButton.disabled = true;
-                    await Promise.all(packages.map(pkg => clearPackageBackground(pkg.hId, pkg.hNo)));
-                    clearButton.disabled = false;
-                    clearButton.click();
-                }, state.xrayDelaySeconds * 1000);
-            } else {
-                setTimeout(() => clearButton.click(), state.xrayDelaySeconds * 1000);
-            }
+            setTimeout(() => {
+                clearButton.click();
+            }, state.xrayDelaySeconds * 1000);
+            
             return;
         }
         
         // --- PAGE 3: Multiple HAWB Entries Found ---
-        const packages = getPackageLinks();
+        const packageLinksCount = document.querySelectorAll('a[href*="updateHAWBStatus.do"]').length;
         const suspiciousLink = document.querySelector('a[href*="stat=suspicious"]');
-        if (packages.length >= 1 && suspiciousLink && !clearButton) {
+        if (packageLinksCount >= 1 && suspiciousLink && !clearButton) {
             if (!state.multiHawbBeepPlayed) {
                 playAttentionSound();
                 if (chrome && chrome.storage && chrome.storage.local) {
