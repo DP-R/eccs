@@ -45,7 +45,7 @@
 
         const toast = document.createElement('div');
         toast.id = 'eccs-xray-toast';
-        toast.textContent = `Auto X-Ray: ${message}`;
+        toast.textContent = 'ECCS';
         toast.style.cssText = `
             position: fixed;
             bottom: 30px;
