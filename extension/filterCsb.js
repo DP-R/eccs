@@ -325,7 +325,37 @@
                     return cells[primaryIdx] ? (cells[primaryIdx].textContent || '').replace(/\s+/g, '').trim() : '';
                 }).filter(Boolean)).size;
                 
-                counterSpan.textContent = `[${visibleUnique}/${totalUnique} Items]`;
+                let totalVisibleWeight = 0;
+                let hasValidWeights = false;
+                
+                // Dynamically find the weight column by searching all headers (including the injected ones)
+                const allHeaders = Array.from(headerRow.querySelectorAll('td, th')).map(c => (c.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase());
+                const weightColIndex = allHeaders.findIndex(t => /weight/i.test(t));
+                
+                if (weightColIndex !== -1) {
+                    dataRows.filter(r => r.style.display !== 'none').forEach(row => {
+                        const cells = Array.from(row.querySelectorAll('td'));
+                        if (cells[weightColIndex]) {
+                            const wText = cells[weightColIndex].textContent || '';
+                            if (wText !== '...' && wText.toUpperCase() !== 'N/A' && wText.trim() !== '') {
+                                const numMatch = wText.match(/[\d.]+/);
+                                if (numMatch) {
+                                    const val = parseFloat(numMatch[0]);
+                                    if (!isNaN(val)) {
+                                        totalVisibleWeight += val;
+                                        hasValidWeights = true;
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                let counterHtml = `[${visibleUnique}/${totalUnique} Items]`;
+                if (hasValidWeights) {
+                    counterHtml += `<br><span style="color:#10b981;">Total Wt: ${totalVisibleWeight.toFixed(2)}</span>`;
+                }
+                counterSpan.innerHTML = counterHtml;
             }
         }
 
