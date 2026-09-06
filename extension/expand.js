@@ -35,8 +35,9 @@
         
         let textUpToCursor = val.substring(0, cursorStart);
         
+        // strictly require a space or newline AFTER the word to trigger it.
+        // This prevents "lv" from triggering when you are typing "solve".
         let match = textUpToCursor.match(/(^|\s+)([a-zA-Z0-9]+)(\s+)$/);
-        let exactMatch = (textUpToCursor.trim() === val.trim() && /^[a-zA-Z0-9]+$/.test(val.trim()));
         
         let prefix = "";
         let word = "";
@@ -46,11 +47,7 @@
             prefix = match[1];
             word = match[2];
             replaceStart = match.index;
-        } else if (exactMatch) {
-            word = textUpToCursor.trim();
-            replaceStart = 0;
-            prefix = "";
-        }
+        } 
         
         if (word) {
             let lowerWord = word.toLowerCase();
@@ -71,7 +68,6 @@
                 
                 let cursorOffset = newText.indexOf('|');
                 if (cursorOffset !== -1) {
-                    // Remove ONLY the first | symbol so others remain for Tab navigation
                     t.value = newText.substring(0, cursorOffset) + newText.substring(cursorOffset + 1);
                     t.setSelectionRange(cursorOffset, cursorOffset);
                 } else {
@@ -96,14 +92,10 @@
             let nextPipe = val.indexOf('|');
             
             if (nextPipe !== -1) {
-                // Prevent browser from tabbing to the next HTML element
                 e.preventDefault(); 
-                
-                // Remove the | placeholder and snap cursor to that exact location
                 let newText = val.substring(0, nextPipe) + val.substring(nextPipe + 1);
                 t.value = newText;
                 t.setSelectionRange(nextPipe, nextPipe);
-                
                 t.dispatchEvent(new Event("input", { bubbles: true }));
             }
         }
@@ -118,8 +110,8 @@
             if (targetInput) {
                 const val = targetInput.value.trim();
                 if (!val || val === "CBEXI_MAA_2026-2027_0" || val.endsWith("_0")) {
-                    targetInput.value = "zd";
-                    targetInput.selectionStart = 2; 
+                    targetInput.value = "zd "; // Added trailing space to cleanly trigger the strictly-space regex
+                    targetInput.selectionStart = 3; 
                     targetInput.dispatchEvent(new Event("input", { bubbles: true }));
                 }
             }
