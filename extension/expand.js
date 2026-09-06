@@ -102,7 +102,7 @@
     });
 
     // 3. Auto-trigger 'zd' expansion on listCBEXIDetailsInsp.do
-    if (window.location.pathname.toLowerCase().includes('listcbexidetailsinsp')) {
+    if (window.location.pathname.toLowerCase().includes('listcbexidetailsinsp') || window.location.pathname.toLowerCase().includes('searchfiledcbexi')) {
         setTimeout(() => {
             const inputs = document.querySelectorAll('input[type="text"]');
             const targetInput = Array.from(inputs).find(inp => !inp.classList.contains('eccs-filter-input') && !inp.readOnly && !inp.disabled && inp.style.display !== 'none');

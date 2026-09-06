@@ -12,7 +12,7 @@
             t.style.height = "480px";
         }
 
-        if (window.location.pathname.toLowerCase().includes('listcbexidetailsinsp')) {
+        if (window.location.pathname.toLowerCase().includes('listcbexidetailsinsp') || window.location.pathname.toLowerCase().includes('searchfiledcbexi')) {
             document.querySelectorAll('input[type="text"]').forEach(input => {
                 if (!input.classList.contains('eccs-filter-input')) {
                     input.style.width = "400px";
