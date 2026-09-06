@@ -175,7 +175,7 @@
 
             // Append 4 new header cells at the far right
             const headers = isExportDetailList ? [
-                "Consignor", "Goods Description", "FOB Value (Rs.)", "Destination", "Weight", "Airlines / Flight"
+                "Consignor", "Goods Description", "FOB Value (Rs.)", "Destination", "Weight", "Airlines / Flight", "Invoices"
             ] : [
                 "Consignee", "Weight", "CTSH", "Item Description", "Origin", "Qty", "Assessable Value", "Duty (Rs.)"
             ];
@@ -404,6 +404,46 @@
             return "";
         }
 
+        function extractInvoices(container) {
+            if (!container) return "N/A";
+            const links = Array.from(container.querySelectorAll('a'));
+            for (const link of links) {
+                const text = (link.textContent || '').toLowerCase();
+                const title = (link.getAttribute('title') || '').toLowerCase();
+                if (text.includes('uploaded') || text.includes('invoice') || text.includes('document') || title.includes('invoice') || title.includes('document')) {
+                    const clone = link.cloneNode(true);
+                    clone.style.color = '#2563eb';
+                    clone.style.fontWeight = 'bold';
+                    clone.style.textDecoration = 'underline';
+                    return clone.outerHTML;
+                }
+            }
+            
+            const tables = Array.from(container.querySelectorAll('table'));
+            for (const table of tables) {
+                const trs = Array.from(table.querySelectorAll('tr'));
+                for (const tr of trs) {
+                    const cells = Array.from(tr.querySelectorAll('td, th'));
+                    for (let i = 0; i < cells.length; i++) {
+                        const cellText = (cells[i].textContent || '').toLowerCase();
+                        if (cellText.includes('uploaded') || cellText.includes('invoice') || cellText.includes('document')) {
+                            const nextCell = cells[i + 1];
+                            if (nextCell) {
+                                const nextLink = nextCell.querySelector('a');
+                                if (nextLink) {
+                                    const clone = nextLink.cloneNode(true);
+                                    clone.style.color = '#2563eb';
+                                    clone.style.fontWeight = 'bold';
+                                    clone.style.textDecoration = 'underline';
+                                    return clone.outerHTML;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return "N/A";
+        }
         function extractDescription(container) {
             return extractFieldFromDOM(container, [
                 'Description of Goods (Item wise)',
@@ -662,7 +702,8 @@
                     weight = extractWeight(doc);
                     const consignor = extractConsignor(doc);
                     const fob = extractFobValue(doc);
-                    const result = { desc, airlines, dest, weight, consignor, fob };
+                    const invoices = extractInvoices(doc);
+                    const result = { desc, airlines, dest, weight, consignor, fob, invoices };
                     try { sessionStorage.setItem(cacheKey, JSON.stringify(result)); } catch(e) {}
                     return result;
                 }
@@ -698,6 +739,7 @@
                 task.dynamicTds[3].innerHTML = (details && details.dest) ? details.dest : "N/A";
                 task.dynamicTds[4].innerHTML = (details && details.weight) ? details.weight : "N/A";
                 task.dynamicTds[5].innerHTML = (details && details.airlines) ? details.airlines : "N/A";
+                task.dynamicTds[6].innerHTML = (details && details.invoices) ? details.invoices : "N/A";
             } else {
                 task.dynamicTds[0].innerHTML = (details && details.consignee) ? details.consignee : "N/A";
                 task.dynamicTds[1].innerHTML = (details && details.weight) ? details.weight : "N/A";
@@ -705,6 +747,7 @@
                 task.dynamicTds[3].innerHTML = (details && details.desc) ? details.desc : "N/A";
                 task.dynamicTds[4].innerHTML = (details && details.origin) ? details.origin : "N/A";
                 task.dynamicTds[5].innerHTML = (details && details.airlines) ? details.airlines : "N/A";
+                task.dynamicTds[6].innerHTML = (details && details.invoices) ? details.invoices : "N/A";
                 task.dynamicTds[6].innerHTML = (details && details.dest) ? details.dest : "N/A";
                 task.dynamicTds[7].innerHTML = (details && details.duty) ? details.duty : "N/A";
             }
@@ -742,7 +785,7 @@
 
                 // Append 4 new columns at the far right of the row
                 
-                const colsCount = isExportDetailList ? 6 : 8;
+                const colsCount = isExportDetailList ? 7 : 8;
                 const dynamicTds = [];
                 for(let c = 0; c < colsCount; c++) {
                     const td = document.createElement('td');
