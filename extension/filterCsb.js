@@ -10,7 +10,7 @@
         const actionName = path.substring(path.lastIndexOf('/') + 1);
         
         // Exclude all non-list/non-search/non-submit pages from filter injection
-        if (!actionName.includes('list') && !actionName.includes('search') && !actionName.includes('submit')) return;
+        // Redundant early return removed
         
         // Strictly whitelist ONLY the exact Export List action endpoints
         const exactExportPages = [
@@ -32,7 +32,8 @@
             'listcbexii.do',
             'listcbexiii.do',
             'searchrboe.do',
-            'submitexamreport11.do'
+            'submitexamreport11.do',
+            'addinsprecomendaction.do'
         ];
         const isExportDetailList = exactExportPages.includes(actionName);
         const isImportDetailList = exactImportPages.includes(actionName);
