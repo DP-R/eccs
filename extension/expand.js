@@ -12,63 +12,114 @@
 
     const ex = {
         uname: "14937314",
-        pwd: "Codelink@5",
-        ooc: `Opened and examined the package. As per examination order / instructions
-Contents: verified as declared under import documents
-`,
-        lv: `Opened and examined the package. As per examination order / instructions
-Contents: |
-As per the import documents, declared value for the examined quantity seems low, may be forwarded for assessment
-`,
-        hq: `Opened and examined the pkg. As per examination order / instructions
-Contents: |
-As per the import documents,examined quantity seems higher than what has been declared.`
+        pwd: "Codelink@51",
+        ooc: `Opened and examined the package as per examination instructions\nContents: verified as declared under import documents.\n`,
+        lv: `Opened and examined the package as per examination instructions\nContents: |\nAs per the import documents, declared value for the examined quantity seems low, may be forwarded for assessment.\n`,
+        hq: `Opened and examined the package as per examination instructions\nContents: |\nAs per the import documents, examined quantity seems higher than what has been declared.\n`,
+        ncf: `No concealment found.\n`,
+        leo: `Opened and examined the package as per examination instructions\nContents: verified as declared under export documents.\nGoods may be considered for export.\n`,
+        nkyc: `KYC documents may kindly be reuploaded.\n`
     };
 
+    // 1. Expansion Logic
     document.addEventListener("input", e => {
         let t = e.target;
 
-        if (t.tagName != "INPUT" && t.tagName != "TEXTAREA") {
+        if (t.tagName !== "INPUT" && t.tagName !== "TEXTAREA") {
             return;
         }
 
-        const rawVal = t.value.trim();
-        const lowerVal = rawVal.toLowerCase();
-        let s = null;
-
-        if (["cbexi", "cbe", "cbe1", "c1", "cbexi1", "zd"].includes(lowerVal)) {
-            const ddmm = getTodayDDMM();
-            s = `CBEXI_MAA_2026-2027_${ddmm}_|_01`;
-        } else if (ex[rawVal]) {
-            s = ex[rawVal];
+        let val = t.value;
+        let cursorStart = t.selectionStart;
+        if (cursorStart === undefined || cursorStart === null) return;
+        
+        let textUpToCursor = val.substring(0, cursorStart);
+        
+        let match = textUpToCursor.match(/(^|\s+)([a-zA-Z0-9]+)(\s+)$/);
+        let exactMatch = (textUpToCursor.trim() === val.trim() && /^[a-zA-Z0-9]+$/.test(val.trim()));
+        
+        let prefix = "";
+        let word = "";
+        let replaceStart = 0;
+        
+        if (match) {
+            prefix = match[1];
+            word = match[2];
+            replaceStart = match.index;
+        } else if (exactMatch) {
+            word = textUpToCursor.trim();
+            replaceStart = 0;
+            prefix = "";
         }
-
-        if (s) {
-            t.value = s;
+        
+        if (word) {
+            let lowerWord = word.toLowerCase();
             
-            // If template has cursor target symbol |
-            let cursorIndex = s.indexOf('|');
-            if (cursorIndex !== -1) {
-                t.value = s.replace('|', '');
-                t.setSelectionRange(cursorIndex, cursorIndex);
+            if (ex[lowerWord] !== undefined || lowerWord === "zd") {
+                let expansion = "";
+                
+                if (lowerWord === "zd") {
+                    expansion = `CBEXI_MAA_2026-2027_${getTodayDDMM()}_|_01`;
+                } else {
+                    expansion = ex[lowerWord];
+                }
+                
+                let before = val.substring(0, replaceStart) + prefix;
+                let after = val.substring(cursorStart); 
+                
+                let newText = before + expansion + after;
+                
+                let cursorOffset = newText.indexOf('|');
+                if (cursorOffset !== -1) {
+                    // Remove ONLY the first | symbol so others remain for Tab navigation
+                    t.value = newText.substring(0, cursorOffset) + newText.substring(cursorOffset + 1);
+                    t.setSelectionRange(cursorOffset, cursorOffset);
+                } else {
+                    t.value = newText;
+                    let newCursorPos = before.length + expansion.length;
+                    t.setSelectionRange(newCursorPos, newCursorPos);
+                }
+                
+                t.dispatchEvent(new Event("input", { bubbles: true }));
                 t.focus();
             }
         }
     });
 
-    // Auto-trigger 'zd' expansion on listCBEXIDetailsInsp.do
+    // 2. Tab Navigation Logic for '|' Snippet Placeholders
+    document.addEventListener("keydown", e => {
+        if (e.key === "Tab") {
+            let t = e.target;
+            if (t.tagName !== "INPUT" && t.tagName !== "TEXTAREA") return;
+            
+            let val = t.value;
+            let nextPipe = val.indexOf('|');
+            
+            if (nextPipe !== -1) {
+                // Prevent browser from tabbing to the next HTML element
+                e.preventDefault(); 
+                
+                // Remove the | placeholder and snap cursor to that exact location
+                let newText = val.substring(0, nextPipe) + val.substring(nextPipe + 1);
+                t.value = newText;
+                t.setSelectionRange(nextPipe, nextPipe);
+                
+                t.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+        }
+    });
+
+    // 3. Auto-trigger 'zd' expansion on listCBEXIDetailsInsp.do
     if (window.location.pathname.toLowerCase().includes('listcbexidetailsinsp')) {
-        // Run slightly after load to ensure DOM is ready
         setTimeout(() => {
             const inputs = document.querySelectorAll('input[type="text"]');
-            // Find the main input (not our injected filter inputs)
             const targetInput = Array.from(inputs).find(inp => !inp.classList.contains('eccs-filter-input') && !inp.readOnly && !inp.disabled && inp.style.display !== 'none');
             
             if (targetInput) {
                 const val = targetInput.value.trim();
-                // Overwrite if it's empty OR if it's the generic useless prefix ECCS puts by default
                 if (!val || val === "CBEXI_MAA_2026-2027_0" || val.endsWith("_0")) {
                     targetInput.value = "zd";
+                    targetInput.selectionStart = 2; 
                     targetInput.dispatchEvent(new Event("input", { bubbles: true }));
                 }
             }
