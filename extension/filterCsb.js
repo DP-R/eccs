@@ -32,7 +32,6 @@
             'listcbexii.do',
             'listcbexiii.do',
             'searchrboe.do',
-            'searchfiledcbexi.do',
             'submitexamreport11.do',
             'addinsprecomendaction.do'
         ];
