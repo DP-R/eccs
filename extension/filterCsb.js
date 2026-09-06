@@ -25,7 +25,6 @@
         // Whitelist Import List action endpoints
         const exactImportPages = [
             'listsuspicioushawbetails.do',
-            'listcbexidetailsinsp.do',
             'listinspexamcbexidetails.do',
             'listhawbdetailsinspnondocs.do',
             'listcbexi.do',
