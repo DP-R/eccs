@@ -174,6 +174,13 @@
             destColIdx = baseColCount + 2;
             weightColIdx = baseColCount + 3;
 
+            // Append 4 new header cells at the far right
+            const headers = isExportDetailList ? [
+                "Consignor", "Goods Description", "FOB Value (Rs.)", "Destination", "Weight", "Airlines / Flight"
+            ] : [
+                "Consignee", "Weight", "CTSH", "Item Description", "Origin", "Qty", "Assessable Value", "Duty (Rs.)"
+            ];
+
             // Increment Colspan of Header/Footer rows to fit 4 new columns
             Array.from(targetTable.querySelectorAll('td[colspan]')).forEach(td => {
                 const currentCols = parseInt(td.getAttribute('colspan'), 10);
@@ -181,13 +188,6 @@
                     td.setAttribute('colspan', currentCols + headers.length);
                 }
             });
-
-            // Append 4 new header cells at the far right
-            const headers = isExportDetailList ? [
-                "Consignor", "Goods Description", "FOB Value (Rs.)", "Destination", "Weight", "Airlines / Flight"
-            ] : [
-                "Consignee", "Weight", "CTSH", "Item Description", "Origin", "Qty", "Assessable Value", "Duty (Rs.)"
-            ];
             
             headers.forEach(title => {
                 const th = document.createElement('td');
